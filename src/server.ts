@@ -2,6 +2,7 @@ import { serve } from "@hono/node-server"
 import { serveStatic } from "@hono/node-server/serve-static"
 import { Hono } from "hono"
 import { readdir, realpath } from "node:fs/promises"
+import { networkInterfaces } from "node:os"
 import { resolve } from "node:path"
 import { pathToFileURL } from "node:url"
 import { ClineRuntime, SessionNotFoundError, validateUserImages, type RuntimeEvent } from "./runtime.js"
@@ -128,7 +129,18 @@ const isMainModule = process.argv[1] !== undefined
 if (isMainModule) {
   const port = Number(process.env.PORT ?? 3000)
   const hostname = process.env.HOST ?? "127.0.0.1"
-  serve({ fetch: app.fetch, port, hostname }, (info) => console.log(`cline-for-web listening on http://${hostname}:${info.port}`))
+  serve({ fetch: app.fetch, port, hostname }, (info) => {
+    console.log(`cline-for-web listening on http://${hostname}:${info.port}`)
+    // "0.0.0.0" isn't itself browsable — print the LAN addresses it's
+    // actually reachable at, e.g. for opening from a phone on the same network.
+    if (hostname === "0.0.0.0" || hostname === "::") {
+      for (const addresses of Object.values(networkInterfaces())) {
+        for (const address of addresses ?? []) {
+          if (address.family === "IPv4" && !address.internal) console.log(`  also reachable at http://${address.address}:${info.port}`)
+        }
+      }
+    }
+  })
   const shutdown = async () => { await runtime.dispose(); process.exit(0) }
   process.once("SIGINT", shutdown); process.once("SIGTERM", shutdown)
 }
