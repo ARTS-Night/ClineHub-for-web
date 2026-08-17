@@ -1,0 +1,48 @@
+{
+  "name": "cline-for-web",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "pnpm run build:client && node scripts/dev.mjs",
+    "start": "tsx src/server.ts",
+    "build:client": "vite build",
+    "build": "pnpm run build:client && tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "sessions:clear": "tsx scripts/clear-sessions.ts",
+    "test": "pnpm run build:client && node --check public/app.js && tsc --noEmit && tsx scripts/test-providers.ts && tsx scripts/test-agent-settings.ts && tsx scripts/test-mcp-extension.ts && tsx scripts/test-agent-settings-api.ts && tsx scripts/test-connection-store.ts && tsx scripts/test-profile-store.ts && tsx scripts/test-ssh-workspace.ts && tsx scripts/test-workspace-security.ts && tsx scripts/test-image-input.ts && tsx scripts/test-compaction-store.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "^11.1.1",
+      "onFail": "download"
+    }
+  },
+  "type": "module",
+  "dependencies": {
+    "@cline/sdk": "^0.0.75",
+    "@hono/node-server": "^2.1.1",
+    "ai-sdk-provider-claude-code": "^4.1.1",
+    "dompurify": "^3.4.13",
+    "hono": "^4.13.2",
+    "marked": "^18.0.9",
+    "mermaid": "^11.16.1",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "ssh2": "^1.17.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.2.0",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@types/ssh2": "^1.15.5",
+    "@vitejs/plugin-react": "^6.0.5",
+    "tsx": "^4.23.12",
+    "typescript": "^7.0.2",
+    "vite": "^8.2.1"
+  }
+}

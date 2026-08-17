@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "skills": {
+    "cline-sdk": {
+      "source": "cline/sdk-skill",
+      "sourceType": "github",
+      "skillPath": "skill/cline-sdk/SKILL.md",
+      "computedHash": "83d769b1bccb5b51a94fd38ce41160c103bb4c2a2a3b34fee9d262ed8cdf8066"
+    },
+    "hono": {
+      "source": "yusukebe/hono-skill",
+      "sourceType": "github",
+      "skillPath": "skills/hono/SKILL.md",
+      "computedHash": "24bad73932f309cec73a5a9171b838f59050990a634d8590c2d2c204507e64f9"
+    }
+  }
+}

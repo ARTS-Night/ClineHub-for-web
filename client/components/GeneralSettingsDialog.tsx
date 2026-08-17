@@ -1,0 +1,34 @@
+import { useEffect, useRef } from "react"
+import type { Locale, LocaleOption, TFunction } from "../i18n.js"
+
+type Props = {
+  t: TFunction
+  open: boolean
+  onClose: () => void
+  locale: Locale
+  onChangeLocale: (locale: Locale) => void
+  availableLocales: LocaleOption[]
+  theme: "dark" | "light"
+  onToggleTheme: () => void
+  hidePlanBanner: boolean
+  onChangeHidePlanBanner: (value: boolean) => void
+}
+
+export function GeneralSettingsDialog(props: Props) {
+  const { t, open, onClose, locale, onChangeLocale, availableLocales, theme, onToggleTheme, hidePlanBanner, onChangeHidePlanBanner } = props
+  const dialog = useRef<HTMLDialogElement>(null)
+
+  useEffect(() => { if (open) dialog.current?.showModal(); else dialog.current?.close() }, [open])
+
+  return <dialog ref={dialog} className="react-agent-dialog" onClose={onClose}><div className="settings-form">
+    <div className="setup-heading"><div><h1>{t("generalSettings")}</h1><p>{t("generalSettingsDescription")}</p></div><button className="secondary icon-button" type="button" onClick={() => dialog.current?.close()} aria-label="Close">×</button></div>
+    <label><span>{t("language")}</span>
+      <select value={locale} onChange={(event) => onChangeLocale(event.target.value)}>
+        {availableLocales.map((option) => <option key={option.code} value={option.code}>{option.label}</option>)}
+      </select>
+    </label>
+    <label className="check-row"><input type="checkbox" checked={theme === "light"} onChange={onToggleTheme} /><span>{t(theme === "dark" ? "switchLight" : "switchDark")}</span></label>
+    <label className="check-row"><input type="checkbox" checked={!hidePlanBanner} onChange={(event) => onChangeHidePlanBanner(!event.target.checked)} /><span>{t("planBannerSetting")}</span></label>
+    <small>{t("planBannerSettingHelp")}</small>
+  </div></dialog>
+}
