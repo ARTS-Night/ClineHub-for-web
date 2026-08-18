@@ -10034,7 +10034,7 @@ function Gt({ t: e, sessions: t, activeSession: n, onSelect: r, onOpenDetails: i
 		}), /* @__PURE__ */ (0, B.jsx)("button", {
 			id: "new-session",
 			type: "button",
-			title: "New session",
+			title: e("newSession"),
 			onClick: a,
 			children: "＋"
 		})] })]
@@ -10481,45 +10481,45 @@ function tn({ t: e, permissions: t, onCycle: n, mcpEnabled: r, onToggleMcp: i })
 }
 //#endregion
 //#region client/components/TemplateSwitcher.tsx
-function nn({ templates: e, activeTemplateId: t, disabled: n, onSelect: r }) {
-	let [i, a] = (0, u.useState)(!1), o = () => a(!1), { panelRef: s, toggleRef: c } = Kt(i, o);
-	if (e.length === 0) return null;
-	let l = e.find((e) => e.id === t)?.name ?? "Mode", d = (i = !1) => e.map((e) => /* @__PURE__ */ (0, B.jsx)("button", {
+function nn({ t: e, templates: t, activeTemplateId: n, disabled: r, onSelect: i }) {
+	let [a, o] = (0, u.useState)(!1), s = () => o(!1), { panelRef: c, toggleRef: l } = Kt(a, s);
+	if (t.length === 0) return null;
+	let d = t.find((e) => e.id === n)?.name ?? "Mode", f = (e = !1) => t.map((t) => /* @__PURE__ */ (0, B.jsx)("button", {
 		type: "button",
-		className: t === e.id ? "active" : "",
-		disabled: n || t === e.id,
+		className: n === t.id ? "active" : "",
+		disabled: r || n === t.id,
 		onClick: () => {
-			r(e.id), i && o();
+			i(t.id), e && s();
 		},
-		children: e.name
-	}, e.id));
+		children: t.name
+	}, t.id));
 	return /* @__PURE__ */ (0, B.jsxs)("div", {
 		className: "template-switcher-wrap",
 		children: [
 			/* @__PURE__ */ (0, B.jsx)("div", {
 				className: "plan-act-toggle template-options",
 				role: "group",
-				"aria-label": "Template",
-				children: d()
+				"aria-label": e("template"),
+				children: f()
 			}),
 			/* @__PURE__ */ (0, B.jsxs)("button", {
-				ref: c,
+				ref: l,
 				className: "secondary mobile-mode-toggle",
 				type: "button",
-				"aria-expanded": i,
+				"aria-expanded": a,
 				"aria-controls": "mobile-mode-panel",
-				disabled: n,
+				disabled: r,
 				onClick: (e) => {
-					e.stopPropagation(), a((e) => !e);
+					e.stopPropagation(), o((e) => !e);
 				},
-				children: ["◐ ", l]
+				children: ["◐ ", d]
 			}),
-			i && /* @__PURE__ */ (0, B.jsx)("section", {
-				ref: s,
+			a && /* @__PURE__ */ (0, B.jsx)("section", {
+				ref: c,
 				id: "mobile-mode-panel",
 				className: "mobile-mode-panel",
 				onClick: (e) => e.stopPropagation(),
-				children: d(!0)
+				children: f(!0)
 			})
 		]
 	});
@@ -10539,6 +10539,7 @@ function rn(e) {
 			/* @__PURE__ */ (0, B.jsxs)("div", {
 				className: "composer-toolbar",
 				children: [/* @__PURE__ */ (0, B.jsx)(nn, {
+					t,
 					templates: p?.templates ?? [],
 					activeTemplateId: p?.activeTemplateId,
 					disabled: !p || y,
@@ -10727,7 +10728,7 @@ function sn({ t: e, request: t, onClose: n, profilesData: r, onConnected: i }) {
 					children: [/* @__PURE__ */ (0, B.jsxs)("div", { children: [/* @__PURE__ */ (0, B.jsx)("h1", { children: e("connectAi") }), /* @__PURE__ */ (0, B.jsx)("p", { children: e("connectAiDescription") })] }), /* @__PURE__ */ (0, B.jsx)("button", {
 						className: "secondary icon-button",
 						type: "button",
-						"aria-label": "Close",
+						"aria-label": e("close"),
 						onClick: () => a.current?.close(),
 						children: "×"
 					})]
@@ -11036,7 +11037,7 @@ function un({ t: e, open: t, onClose: n, profilesData: r, onProfilesChanged: i, 
 					children: [/* @__PURE__ */ (0, B.jsxs)("div", { children: [/* @__PURE__ */ (0, B.jsx)("h1", { children: e("profiles") }), /* @__PURE__ */ (0, B.jsx)("p", { children: e("profilesDescription") })] }), /* @__PURE__ */ (0, B.jsx)("button", {
 						className: "secondary icon-button",
 						type: "button",
-						"aria-label": "Close",
+						"aria-label": e("close"),
 						onClick: () => o.current?.close(),
 						children: "×"
 					})]
@@ -11044,7 +11045,7 @@ function un({ t: e, open: t, onClose: n, profilesData: r, onProfilesChanged: i, 
 				/* @__PURE__ */ (0, B.jsxs)("div", {
 					className: "profile-tabs",
 					role: "tablist",
-					"aria-label": "Profile type",
+					"aria-label": e("profileType"),
 					children: [/* @__PURE__ */ (0, B.jsxs)("button", {
 						className: `profile-tab${s === "model" ? " active" : ""}`,
 						type: "button",
@@ -11456,7 +11457,7 @@ function fn({ t: e, locale: t, sessionId: n, onClose: r, onRenamed: i, onDeleted
 					children: [/* @__PURE__ */ (0, B.jsxs)("div", { children: [/* @__PURE__ */ (0, B.jsx)("h1", { children: e("sessionDetails") }), /* @__PURE__ */ (0, B.jsx)("p", { children: n })] }), /* @__PURE__ */ (0, B.jsx)("button", {
 						className: "secondary icon-button",
 						type: "button",
-						"aria-label": "Close",
+						"aria-label": e("close"),
 						onClick: () => o.current?.close(),
 						children: "×"
 					})]
@@ -11766,7 +11767,7 @@ function gn({ t: e, open: t, onClose: n, onSaved: r }) {
 						className: "secondary icon-button",
 						type: "button",
 						onClick: () => i.current?.close(),
-						"aria-label": "Close",
+						"aria-label": e("close"),
 						children: "×"
 					})]
 				}),
@@ -12239,7 +12240,7 @@ function _n(e) {
 						className: "secondary icon-button",
 						type: "button",
 						onClick: () => f.current?.close(),
-						"aria-label": "Close",
+						"aria-label": t("close"),
 						children: "×"
 					})]
 				}),
@@ -12294,7 +12295,7 @@ function vn({ t: e, open: t, onClose: n, onOpenConnection: r, onOpenProfiles: i,
 					className: "secondary icon-button",
 					type: "button",
 					onClick: () => o.current?.close(),
-					"aria-label": "Close",
+					"aria-label": e("close"),
 					children: "×"
 				})]
 			}), /* @__PURE__ */ (0, B.jsxs)("div", {
