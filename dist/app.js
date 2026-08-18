@@ -9974,32 +9974,29 @@ function Vt(e) {
 		/* @__PURE__ */ (0, B.jsxs)("div", {
 			className: "header-actions",
 			children: [
-				/* @__PURE__ */ (0, B.jsxs)("button", {
+				/* @__PURE__ */ (0, B.jsx)("button", {
 					id: "general-settings-button",
 					type: "button",
+					title: t("generalSettings"),
+					"aria-label": t("generalSettings"),
 					onClick: f,
-					children: [/* @__PURE__ */ (0, B.jsx)(Bt, { name: "settings" }), /* @__PURE__ */ (0, B.jsx)("span", {
-						className: "btn-label",
-						children: t("generalSettings")
-					})]
+					children: /* @__PURE__ */ (0, B.jsx)(Bt, { name: "settings" })
 				}),
-				/* @__PURE__ */ (0, B.jsxs)("button", {
+				/* @__PURE__ */ (0, B.jsx)("button", {
 					id: "ai-settings-button",
 					type: "button",
+					title: t("aiSettings"),
+					"aria-label": t("aiSettings"),
 					onClick: p,
-					children: [/* @__PURE__ */ (0, B.jsx)(Bt, { name: "smartToy" }), /* @__PURE__ */ (0, B.jsx)("span", {
-						className: "btn-label",
-						children: t("aiSettings")
-					})]
+					children: /* @__PURE__ */ (0, B.jsx)(Bt, { name: "smartToy" })
 				}),
-				m && /* @__PURE__ */ (0, B.jsxs)("button", {
+				m && /* @__PURE__ */ (0, B.jsx)("button", {
 					type: "button",
 					className: "secondary",
+					title: t("logout"),
+					"aria-label": t("logout"),
 					onClick: m,
-					children: [/* @__PURE__ */ (0, B.jsx)(Bt, { name: "logout" }), /* @__PURE__ */ (0, B.jsx)("span", {
-						className: "btn-label",
-						children: t("logout")
-					})]
+					children: /* @__PURE__ */ (0, B.jsx)(Bt, { name: "logout" })
 				})
 			]
 		})
