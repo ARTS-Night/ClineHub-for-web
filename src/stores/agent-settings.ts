@@ -453,7 +453,7 @@ function parseMcpServers(value: unknown): McpServerSettings[] {
 // actual file/command tools are still boxed in per-session to whichever
 // workspace is active, via workspace-security.ts's own guard; this check is
 // only an extra opt-in gate for shared/LAN deployments).
-function isWithin(root: string, target: string): boolean {
+export function isWithin(root: string, target: string): boolean {
   if (root === "") return true
   const path = relative(root, target)
   return path === "" || (!path.startsWith("..") && !isAbsolute(path))

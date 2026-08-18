@@ -30,5 +30,6 @@ export function GeneralSettingsDialog(props: Props) {
     <label className="check-row"><input type="checkbox" checked={theme === "light"} onChange={onToggleTheme} /><span>{t(theme === "dark" ? "switchLight" : "switchDark")}</span></label>
     <label className="check-row"><input type="checkbox" checked={!hidePlanBanner} onChange={(event) => onChangeHidePlanBanner(!event.target.checked)} /><span>{t("planBannerSetting")}</span></label>
     <small>{t("planBannerSettingHelp")}</small>
+    <div>https://github.com/ARTS-Night</div>
   </div></dialog>
 }

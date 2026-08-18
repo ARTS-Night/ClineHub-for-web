@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react"
 import { api } from "../lib/api.js"
 import type { TFunction } from "../lib/i18n.js"
 import type { AgentSettings, ManagedTool, McpServerSettings, McpTestResult, McpTestTool, McpTransport, PermissionPreset, PreviewResult, PromptTemplate, ToolPermission } from "../lib/types.js"
+import { DirectoryPicker } from "./DirectoryPicker.js"
 
 type Tab = "templates" | "mcp" | "automation"
 
@@ -25,6 +26,7 @@ export function AgentSettingsDialog({ t, open, onClose, onSaved }: Props) {
   const [preview, setPreview] = useState<PreviewResult | null>(null)
   const [status, setStatus] = useState("")
   const [saving, setSaving] = useState(false)
+  const [browsing, setBrowsing] = useState(false)
   const update = <K extends keyof AgentSettings>(key: K, value: AgentSettings[K]) => setSettings((current) => current ? { ...current, [key]: value } : current)
 
   useEffect(() => {
@@ -155,7 +157,14 @@ export function AgentSettingsDialog({ t, open, onClose, onSaved }: Props) {
     <div className="agent-settings-tabs" role="tablist">{tabs.map(([id, key]) => <button key={id} className={tab === id ? "active" : ""} type="button" role="tab" aria-selected={tab === id} onClick={() => setTab(id)}>{key === "MCP" ? "MCP" : t(key)}</button>)}</div>
     {!settings ? <p>{t("loading")}</p> : <>
       {tab === "templates" && <>
-        <label><span>{t("workingFolder")}</span><input value={settings.workspacePath} spellCheck={false} onChange={(event) => update("workspacePath", event.target.value)} /><small>{settings.allowedRoot ? <>{t("allowedRoot")}: <code>{settings.allowedRoot}</code></> : t("allowedRootUnrestricted")}</small></label>
+        <label><span>{t("workingFolder")}</span>
+          <span className="input-with-button">
+            <input value={settings.workspacePath} spellCheck={false} onChange={(event) => update("workspacePath", event.target.value)} />
+            <button type="button" className="secondary" onClick={() => setBrowsing(true)}>{t("browse")}</button>
+          </span>
+          <small>{settings.allowedRoot ? <>{t("allowedRoot")}: <code>{settings.allowedRoot}</code></> : t("allowedRootUnrestricted")}</small>
+        </label>
+        <DirectoryPicker t={t} open={browsing} initialPath={settings.workspacePath} onClose={() => setBrowsing(false)} onSelect={(path) => { update("workspacePath", path); setBrowsing(false) }} />
         <fieldset><legend>{t("templatesList")}</legend>
           <p className="settings-note">{t("templatesNote")}</p>
           <div className="profile-list">

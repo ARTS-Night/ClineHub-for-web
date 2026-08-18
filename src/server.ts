@@ -5,10 +5,12 @@ import { Hono } from "hono"
 import { readdir, realpath } from "node:fs/promises"
 import { networkInterfaces } from "node:os"
 import { dirname, resolve } from "node:path"
-import { fileURLToPath, pathToFileURL } from "node:url"
+import { fileURLToPath } from "node:url"
 import { authRequired, createSession, destroySession, isValidSession, verifyCredentials } from "./auth.js"
+import { addUser, flagString, parseArgs, removeUser } from "./cli.js"
 import { ClineRuntime, SessionNotFoundError, validateUserImages, type RuntimeEvent } from "./runtime.js"
 import type { ConnectionRequest } from "./providers.js"
+import { isWithin } from "./stores/agent-settings.js"
 
 try { process.loadEnvFile() } catch { /* no .env file — nothing to load */ }
 
@@ -20,6 +22,47 @@ try { process.loadEnvFile() } catch { /* no .env file — nothing to load */ }
 // tsup-bundled release it's <install>/dist/server.js (one level up is the
 // install root) — both layouts put dist/ and setting/ as siblings of that root.
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..")
+
+// realpath() on BOTH sides, not a raw string/URL compare — two independent
+// reasons either side alone can diverge on its own:
+//  1. import.meta.url reflects wherever the module was actually loaded from,
+//     which can be a symlink target — e.g. `pnpm add -g` installs are a
+//     symlink into pnpm's content-addressable store, so process.argv[1]
+//     (the symlink path) and import.meta.url (the resolved target) differ.
+//  2. On Windows, import.meta.url keeps the drive letter exactly as typed on
+//     the command line (e.g. "e:/..."), but realpath() normalizes it (e.g.
+//     "E:/...") — so realpath-ing only one side just trades one mismatch for
+//     another. Both sides need the same normalization to compare equal.
+// Either mismatch alone made this check silently false — no error, the
+// server just never called serve() and the process exited clean.
+const thisFile = await realpath(fileURLToPath(import.meta.url))
+const isMainModule = process.argv[1] !== undefined
+  && thisFile === await realpath(resolve(process.argv[1])).catch(() => null)
+
+// Only meaningful when actually launched as a CLI (isMainModule); importing
+// this module for tests must never read argv.
+const cli = isMainModule ? parseArgs(process.argv.slice(2)) : { flags: new Map<string, string | true>(), positional: [] }
+
+// --add-user/--remove-user manage the opt-in login gate's .env credentials and
+// exit immediately — they never start the server, so they run before any of the
+// runtime/workspace setup below.
+if (isMainModule) {
+  if (cli.flags.has("add-user")) {
+    const [username, password] = cli.positional
+    if (!username || !password) {
+      console.error("Usage: clinehub-for-web --add-user <username> <password>")
+      process.exit(1)
+    }
+    await addUser(username, password)
+    console.log(`Saved CLINEHUB_USER/CLINEHUB_PASSWORD to .env. Restart the server for login to take effect.`)
+    process.exit(0)
+  }
+  if (cli.flags.has("remove-user")) {
+    await removeUser()
+    console.log("Removed CLINEHUB_USER/CLINEHUB_PASSWORD from .env. Restart the server for the login gate to turn off.")
+    process.exit(0)
+  }
+}
 
 process.env.CLINE_DATA_DIR ??= resolve(process.cwd(), ".cline-data")
 
@@ -76,6 +119,23 @@ app.get("/api/sessions", async (c) => c.json(await runtime.list()))
 app.delete("/api/sessions", async (c) => c.json(await runtime.deleteAll()))
 app.get("/api/agent-settings", (c) => c.json(runtime.agentSettingsInfo()))
 app.patch("/api/agent-settings", async (c) => c.json(await runtime.updateAgentSettings(await c.req.json())))
+// Backs the folder-browse UI (workspace path fields): lists subdirectories of a
+// given path so the user can navigate the server's filesystem instead of typing
+// an absolute path blind. Subject to the same CLINE_ALLOWED_ROOT restriction as
+// workspace selection itself.
+app.get("/api/browse-directory", async (c) => {
+  const requested = c.req.query("path")
+  const target = requested && requested.trim() ? resolve(requested.trim()) : initialWorkspace
+  const real = await realpath(target).catch(() => null)
+  if (!real) return c.json({ error: "Path not found" }, 404)
+  if (!isWithin(allowedRoot, real)) return c.json({ error: `Must be inside: ${allowedRoot}` }, 400)
+  const entries = await readdir(real, { withFileTypes: true }).catch(() => null)
+  if (!entries) return c.json({ error: "Cannot read this directory" }, 400)
+  const directories = entries.filter((entry) => entry.isDirectory()).map((entry) => entry.name).sort((a, b) => a.localeCompare(b))
+  const parentPath = dirname(real)
+  const parent = parentPath !== real && isWithin(allowedRoot, parentPath) ? parentPath : null
+  return c.json({ path: real, parent, directories })
+})
 app.post("/api/agent-settings/preview", async (c) => {
   const body = await c.req.json<{ template?: unknown }>()
   return c.json(await runtime.previewSystemPrompt(body.template))
@@ -168,17 +228,11 @@ app.use("/*", async (c, next) => {
   await next()
 })
 app.use("/*", serveStatic({ root: resolve(packageRoot, "dist") }))
-// realpath, not resolve — import.meta.url reflects the module's real (symlink-
-// resolved) location, but resolve() doesn't follow symlinks. A global `pnpm add
-// -g` install is exactly this case: the package dir is a symlink into pnpm's
-// content-addressable store, so a plain resolve() comparison never matches and
-// the server would silently never start (no error — this check just goes false).
-const isMainModule = process.argv[1] !== undefined
-  && import.meta.url === pathToFileURL(await realpath(resolve(process.argv[1]))).href
 
 if (isMainModule) {
-  const port = Number(process.env.PORT ?? 3000)
-  const hostname = process.env.HOST ?? "127.0.0.1"
+  // --port=/--ip= win over PORT/HOST env vars, which win over the defaults.
+  const port = Number(flagString(cli.flags, "port") ?? process.env.PORT ?? 3000)
+  const hostname = flagString(cli.flags, "ip") ?? process.env.HOST ?? "127.0.0.1"
   serve({ fetch: app.fetch, port, hostname }, (info) => {
     console.log(`ClineHub-for-web listening on http://${hostname}:${info.port}`)
     // "0.0.0.0" isn't itself browsable — print the LAN addresses it's

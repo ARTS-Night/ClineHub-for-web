@@ -99,6 +99,50 @@ dialog {
   font-size: 13px;
 }
 
+.input-with-button {
+  display: flex;
+  gap: 7px;
+
+  input { flex: 1 1 auto; min-width: 0; }
+  button { flex: 0 0 auto; }
+}
+
+.directory-picker-path {
+  display: block;
+  padding: 8px 10px;
+  overflow-x: auto;
+  border: 1px solid var(--ui-border);
+  border-radius: 7px;
+  background: var(--ui-surface-soft);
+  color: var(--ui-text-muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.directory-picker-list {
+  display: grid;
+  gap: 3px;
+  max-height: 320px;
+  overflow-y: auto;
+  padding: 4px;
+  border: 1px solid var(--ui-border);
+  border-radius: 7px;
+
+  li { list-style: none; }
+
+  button {
+    width: 100%;
+    padding: 7px 9px;
+    background: transparent;
+    color: var(--ui-text);
+    text-align: left;
+
+    &:hover:not(:disabled) { background: var(--ui-accent-soft); color: var(--ui-accent); }
+  }
+}
+
+.directory-picker-empty { padding: 7px 9px; color: var(--ui-text-muted); font-size: 12px; }
+
 #setup-form input,
 #setup-form select,
 .settings-form input,

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react"
 import { api } from "../lib/api.js"
 import type { TFunction } from "../lib/i18n.js"
 import type { ModelProfile, ProfilesData, RemoteOperatingSystem, SudoPermission, WorkspaceProfile } from "../lib/types.js"
+import { DirectoryPicker } from "./DirectoryPicker.js"
 
 type WorkspaceForm = {
   editorId: string
@@ -51,6 +52,7 @@ export function ProfilesDialog({ t, open, onClose, profilesData, onProfilesChang
   const [modelEditBaseUrl, setModelEditBaseUrl] = useState("")
   const [modelEditModelId, setModelEditModelId] = useState("")
   const [modelSaving, setModelSaving] = useState(false)
+  const [browsing, setBrowsing] = useState(false)
 
   useEffect(() => {
     if (!open) { dialog.current?.close(); return }
@@ -234,7 +236,13 @@ export function ProfilesDialog({ t, open, onClose, profilesData, onProfilesChang
                   </select>
                 </label>
               </div>
-              {!isSsh && <label id="local-path-row"><span>{t("workingDirectory")}</span><input type="text" spellCheck={false} value={form.localPath} onChange={(event) => update("localPath", event.target.value)} /></label>}
+              {!isSsh && <label id="local-path-row"><span>{t("workingDirectory")}</span>
+                <span className="input-with-button">
+                  <input type="text" spellCheck={false} value={form.localPath} onChange={(event) => update("localPath", event.target.value)} />
+                  <button type="button" className="secondary" onClick={() => setBrowsing(true)}>{t("browse")}</button>
+                </span>
+              </label>}
+              {!isSsh && <DirectoryPicker t={t} open={browsing} initialPath={form.localPath || "."} onClose={() => setBrowsing(false)} onSelect={(path) => { update("localPath", path); setBrowsing(false) }} />}
               {isSsh && (
                 <div id="ssh-fields" className="ssh-fields">
                   <div className="two-columns ssh-host-row">
