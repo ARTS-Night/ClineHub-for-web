@@ -14,4 +14,7 @@ export default defineConfig({
   clean: false,
   sourcemap: false,
   dts: false,
+  // Lets the packed release's package.json point "bin" straight at this file and
+  // run it via `pnpm add -g` / `clinehub-for-web`, no separate wrapper script.
+  banner: { js: "#!/usr/bin/env node" },
 })

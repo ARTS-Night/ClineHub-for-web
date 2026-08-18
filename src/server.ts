@@ -4,13 +4,22 @@ import { getCookie, setCookie, deleteCookie } from "hono/cookie"
 import { Hono } from "hono"
 import { readdir, realpath } from "node:fs/promises"
 import { networkInterfaces } from "node:os"
-import { resolve } from "node:path"
-import { pathToFileURL } from "node:url"
+import { dirname, resolve } from "node:path"
+import { fileURLToPath, pathToFileURL } from "node:url"
 import { authRequired, createSession, destroySession, isValidSession, verifyCredentials } from "./auth.js"
 import { ClineRuntime, SessionNotFoundError, validateUserImages, type RuntimeEvent } from "./runtime.js"
 import type { ConnectionRequest } from "./providers.js"
 
 try { process.loadEnvFile() } catch { /* no .env file — nothing to load */ }
+
+// The app's own static assets (dist/, setting/language/) live next to this file,
+// not necessarily under the current working directory — e.g. installed globally
+// via `pnpm add -g` and launched as `clinehub-for-web` from an arbitrary project
+// folder. Resolve them relative to this file instead of process.cwd(): in dev
+// this file is <repo>/src/server.ts (one level up is the repo root); in the
+// tsup-bundled release it's <install>/dist/server.js (one level up is the
+// install root) — both layouts put dist/ and setting/ as siblings of that root.
+const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..")
 
 process.env.CLINE_DATA_DIR ??= resolve(process.cwd(), ".cline-data")
 
@@ -59,10 +68,10 @@ app.use("/api/*", async (c, next) => {
 // Language files live in ./setting/language/*.json (outside the client bundle)
 // so users can edit or add one — e.g. zh.json — without a rebuild.
 app.get("/api/languages", async (c) => {
-  const files = await readdir(resolve(process.cwd(), "setting", "language")).catch(() => [] as string[])
+  const files = await readdir(resolve(packageRoot, "setting", "language")).catch(() => [] as string[])
   return c.json({ locales: files.filter((file) => file.endsWith(".json")).map((file) => file.slice(0, -5)) })
 })
-app.use("/setting/language/*", serveStatic({ root: "./" }))
+app.use("/setting/language/*", serveStatic({ root: packageRoot }))
 app.get("/api/sessions", async (c) => c.json(await runtime.list()))
 app.delete("/api/sessions", async (c) => c.json(await runtime.deleteAll()))
 app.get("/api/agent-settings", (c) => c.json(runtime.agentSettingsInfo()))
@@ -158,9 +167,14 @@ app.use("/*", async (c, next) => {
   c.header("Cache-Control", "no-store")
   await next()
 })
-app.use("/*", serveStatic({ root: "./dist" }))
+app.use("/*", serveStatic({ root: resolve(packageRoot, "dist") }))
+// realpath, not resolve — import.meta.url reflects the module's real (symlink-
+// resolved) location, but resolve() doesn't follow symlinks. A global `pnpm add
+// -g` install is exactly this case: the package dir is a symlink into pnpm's
+// content-addressable store, so a plain resolve() comparison never matches and
+// the server would silently never start (no error — this check just goes false).
 const isMainModule = process.argv[1] !== undefined
-  && import.meta.url === pathToFileURL(resolve(process.argv[1])).href
+  && import.meta.url === pathToFileURL(await realpath(resolve(process.argv[1]))).href
 
 if (isMainModule) {
   const port = Number(process.env.PORT ?? 3000)
