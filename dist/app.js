@@ -764,17 +764,17 @@ var n = /* @__PURE__ */ e(((e) => {
 		data: null,
 		method: null,
 		action: null
-	}, se = [], M = -1;
-	function ce(e) {
+	}, M = [], N = -1;
+	function se(e) {
 		return { current: e };
 	}
-	function N(e) {
-		0 > M || (e.current = se[M], se[M] = null, M--);
+	function ce(e) {
+		0 > N || (e.current = M[N], M[N] = null, N--);
 	}
 	function P(e, t) {
-		M++, se[M] = e.current, e.current = t;
+		N++, M[N] = e.current, e.current = t;
 	}
-	var F = ce(null), le = ce(null), I = ce(null), ue = ce(null);
+	var F = se(null), le = se(null), I = se(null), ue = se(null);
 	function de(e, t) {
 		switch (P(I, t), P(le, e), P(F, null), t.nodeType) {
 			case 9:
@@ -792,10 +792,10 @@ var n = /* @__PURE__ */ e(((e) => {
 				default: e = 0;
 			}
 		}
-		N(F), P(F, e);
+		ce(F), P(F, e);
 	}
 	function fe() {
-		N(F), N(le), N(I);
+		ce(F), ce(le), ce(I);
 	}
 	function pe(e) {
 		e.memoizedState !== null && P(ue, e);
@@ -803,7 +803,7 @@ var n = /* @__PURE__ */ e(((e) => {
 		t !== n && (P(le, e), P(F, n));
 	}
 	function me(e) {
-		le.current === e && (N(F), N(le)), ue.current === e && (N(ue), Qf._currentValue = oe);
+		le.current === e && (ce(F), ce(le)), ue.current === e && (ce(ue), Qf._currentValue = oe);
 	}
 	var he, ge;
 	function _e(e) {
@@ -2191,12 +2191,12 @@ var n = /* @__PURE__ */ e(((e) => {
 	function Vi(e) {
 		Mi === null ? Mi = [e] : Mi.push(e);
 	}
-	var Hi = ce(null), Ui = null, Wi = null;
+	var Hi = se(null), Ui = null, Wi = null;
 	function Gi(e, t, n) {
 		P(Hi, t._currentValue), t._currentValue = n;
 	}
 	function Ki(e) {
-		e._currentValue = Hi.current, N(Hi);
+		e._currentValue = Hi.current, ce(Hi);
 	}
 	function qi(e, t, n) {
 		for (; e !== null;) {
@@ -2367,7 +2367,7 @@ var n = /* @__PURE__ */ e(((e) => {
 	A.S = function(e, t) {
 		eu = De(), typeof t == "object" && t && typeof t.then == "function" && da(e, t), ma !== null && ma(e, t);
 	};
-	var ha = ce(null);
+	var ha = se(null);
 	function ga() {
 		var e = ha.current;
 		return e === null ? q.pooledCache : e;
@@ -2782,7 +2782,7 @@ var n = /* @__PURE__ */ e(((e) => {
 		var n = e.callbacks;
 		if (n !== null) for (e.callbacks = null, e = 0; e < n.length; e++) qa(n[e], t);
 	}
-	var Ya = ce(null), Xa = ce(0);
+	var Ya = se(null), Xa = se(0);
 	function Za(e, t) {
 		e = Ul, P(Xa, e), P(Ya, t), Ul = e | t.baseLanes;
 	}
@@ -2790,9 +2790,9 @@ var n = /* @__PURE__ */ e(((e) => {
 		P(Xa, Ul), P(Ya, Ya.current);
 	}
 	function $a() {
-		Ul = Xa.current, N(Ya), N(Xa);
+		Ul = Xa.current, ce(Ya), ce(Xa);
 	}
-	var eo = ce(null), to = null;
+	var eo = se(null), to = null;
 	function no(e) {
 		var t = e.alternate;
 		P(so, so.current & 1), P(eo, e), to === null && (t === null || Ya.current !== null || t.memoizedState !== null) && (to = e);
@@ -2807,9 +2807,9 @@ var n = /* @__PURE__ */ e(((e) => {
 		P(so, so.current), P(eo, eo.current);
 	}
 	function oo(e) {
-		N(eo), to === e && (to = null), N(so);
+		ce(eo), to === e && (to = null), ce(so);
 	}
-	var so = ce(0);
+	var so = se(0);
 	function co(e) {
 		for (var t = e; t !== null;) {
 			if (t.tag === 13) {
@@ -4437,7 +4437,7 @@ var n = /* @__PURE__ */ e(((e) => {
 			case 4: return fe(), e === null && Sd(t.stateNode.containerInfo), G(t), null;
 			case 10: return Ki(t.type), G(t), null;
 			case 19:
-				if (N(so), r = t.memoizedState, r === null) return G(t), null;
+				if (ce(so), r = t.memoizedState, r === null) return G(t), null;
 				if (i = !!(t.flags & 128), a = r.rendering, a === null) {
 					if (i) Ic(r, !1);
 					else {
@@ -4460,7 +4460,7 @@ var n = /* @__PURE__ */ e(((e) => {
 				}
 				return r.tail === null ? (G(t), null) : (e = r.tail, r.rendering = e, r.tail = e.sibling, r.renderingStartTime = De(), e.sibling = null, n = so.current, P(so, i ? n & 1 | 2 : n & 1), H && Ei(t, r.treeForkCount), e);
 			case 22:
-			case 23: return oo(t), $a(), r = t.memoizedState !== null, e === null ? r && (t.flags |= 8192) : e.memoizedState !== null !== r && (t.flags |= 8192), r ? n & 536870912 && !(t.flags & 128) && (G(t), t.subtreeFlags & 6 && (t.flags |= 8192)) : G(t), n = t.updateQueue, n !== null && Fc(t, n.retryQueue), n = null, e !== null && e.memoizedState !== null && e.memoizedState.cachePool !== null && (n = e.memoizedState.cachePool.pool), r = null, t.memoizedState !== null && t.memoizedState.cachePool !== null && (r = t.memoizedState.cachePool.pool), r !== n && (t.flags |= 2048), e !== null && N(ha), null;
+			case 23: return oo(t), $a(), r = t.memoizedState !== null, e === null ? r && (t.flags |= 8192) : e.memoizedState !== null !== r && (t.flags |= 8192), r ? n & 536870912 && !(t.flags & 128) && (G(t), t.subtreeFlags & 6 && (t.flags |= 8192)) : G(t), n = t.updateQueue, n !== null && Fc(t, n.retryQueue), n = null, e !== null && e.memoizedState !== null && e.memoizedState.cachePool !== null && (n = e.memoizedState.cachePool.pool), r = null, t.memoizedState !== null && t.memoizedState.cachePool !== null && (r = t.memoizedState.cachePool.pool), r !== n && (t.flags |= 2048), e !== null && ce(ha), null;
 			case 24: return n = null, e !== null && (n = e.memoizedState.cache), t.memoizedState.cache !== n && (t.flags |= 2048), Ki(ia), G(t), null;
 			case 25: return null;
 			case 30: return null;
@@ -4486,11 +4486,11 @@ var n = /* @__PURE__ */ e(((e) => {
 					zi();
 				}
 				return e = t.flags, e & 65536 ? (t.flags = e & -65537 | 128, t) : null;
-			case 19: return N(so), null;
+			case 19: return ce(so), null;
 			case 4: return fe(), null;
 			case 10: return Ki(t.type), null;
 			case 22:
-			case 23: return oo(t), $a(), e !== null && N(ha), e = t.flags, e & 65536 ? (t.flags = e & -65537 | 128, t) : null;
+			case 23: return oo(t), $a(), e !== null && ce(ha), e = t.flags, e & 65536 ? (t.flags = e & -65537 | 128, t) : null;
 			case 24: return Ki(ia), null;
 			case 25: return null;
 			default: return null;
@@ -4516,14 +4516,14 @@ var n = /* @__PURE__ */ e(((e) => {
 				oo(t);
 				break;
 			case 19:
-				N(so);
+				ce(so);
 				break;
 			case 10:
 				Ki(t.type);
 				break;
 			case 22:
 			case 23:
-				oo(t), $a(), e !== null && N(ha);
+				oo(t), $a(), e !== null && ce(ha);
 				break;
 			case 24: Ki(ia);
 		}
@@ -8210,20 +8210,20 @@ var te = ((e = "") => {
 	headingBeginRegex: ee((e) => RegExp(`^ {0,${e}}#`)),
 	htmlBeginRegex: ee((e) => RegExp(`^ {0,${e}}<(?:[a-z].*>|!--)`, "i")),
 	blockquoteBeginRegex: ee((e) => RegExp(`^ {0,${e}}>`))
-}, ne = /^(?:[ \t]*(?:\n|$))+/, re = /^((?: {4}| {0,3}\t)[^\n]+(?:\n(?:[ \t]*(?:\n|$))*)?)+/, D = /^ {0,3}(`{3,}(?=[^`\n]*(?:\n|$))|~{3,})([^\n]*)(?:\n|$)(?:|([\s\S]*?)(?:\n|$))(?: {0,3}\1[~`]* *(?=\n|$)|$)/, O = /^ {0,3}((?:-[\t ]*){3,}|(?:_[ \t]*){3,}|(?:\*[ \t]*){3,})(?:\n+|$)/, ie = /^ {0,3}(#{1,6})(?=\s|$)(.*)(?:\n+|$)/, ae = / {0,3}(?:[*+-]|\d{1,9}[.)])/, k = /^(?!bull |blockCode|fences|blockquote|heading|html|table)((?:.|\n(?!\s*?\n|bull |blockCode|fences|blockquote|heading|html|table))+?)\n {0,3}(=+|-+) *(?:\n+|$)/, A = T(k).replace(/bull/g, ae).replace(/blockCode/g, /(?: {4}| {0,3}\t)/).replace(/fences/g, / {0,3}(?:`{3,}|~{3,})/).replace(/blockquote/g, / {0,3}>/).replace(/heading/g, / {0,3}#{1,6}(?:\s|$)/).replace(/html/g, / {0,3}<[^\n>]+>\n/).replace(/\|table/g, "").getRegex(), j = T(k).replace(/bull/g, ae).replace(/blockCode/g, /(?: {4}| {0,3}\t)/).replace(/fences/g, / {0,3}(?:`{3,}|~{3,})/).replace(/blockquote/g, / {0,3}>/).replace(/heading/g, / {0,3}#{1,6}(?:\s|$)/).replace(/html/g, / {0,3}<[^\n>]+>\n/).replace(/table/g, / {0,3}\|?(?:[:\- ]*\|)+[\:\- ]*\n/).getRegex(), oe = /^([^\n]+(?:\n(?!hr|heading|lheading|blockquote|fences|list|html|table|[ \t]+\n)[^\n]+)*)/, se = /^[^\n]+/, M = /(?!\s*\])(?:\\[\s\S]|[^\[\]\\])+/, ce = T(/^ {0,3}\[(label)\]: *(?:\n[ \t]*)?([^<\s][^\s]*|<.*?>)(?:(?: +(?:\n[ \t]*)?| *\n[ \t]*)(title))? *(?:\n+|$)/).replace("label", M).replace("title", /(?:"(?:\\"?|[^"\\])*"|'[^'\n]*(?:\n[^'\n]+)*\n?'|\([^()]*\))/).getRegex(), N = T(/^(bull)([ \t][^\n]*?)?(?:\n|$)/).replace(/bull/g, ae).getRegex(), P = "address|article|aside|base|basefont|blockquote|body|caption|center|col|colgroup|dd|details|dialog|dir|div|dl|dt|fieldset|figcaption|figure|footer|form|frame|frameset|h[1-6]|head|header|hr|html|iframe|legend|li|link|main|menu|menuitem|meta|nav|noframes|ol|optgroup|option|p|param|search|section|summary|table|tbody|td|tfoot|th|thead|title|tr|track|ul", F = /<!--(?:-?>|[\s\S]*?(?:-->|$))/, le = T("^ {0,3}(?:<(script|pre|style|textarea)[\\s>][\\s\\S]*?(?:</\\1>[^\\n]*\\n*|$)|comment[^\\n]*(\\n+|$)|<\\?[\\s\\S]*?(?:\\?>[^\\n]*\\n*|$)|<![A-Z][\\s\\S]*?(?:>[^\\n]*\\n*|$)|<!\\[CDATA\\[[\\s\\S]*?(?:\\]\\]>[^\\n]*\\n*|$)|</?(tag)(?: +|\\n|/?>)[\\s\\S]*?(?:(?:\\n[ 	]*)+\\n|$)|<(?!script|pre|style|textarea)([a-z][\\w-]*)(?:attribute)*? */?>(?=[ \\t]*(?:\\n|$))[\\s\\S]*?(?:(?:\\n[ 	]*)+\\n|$)|</(?!script|pre|style|textarea)[a-z][\\w-]*\\s*>(?=[ \\t]*(?:\\n|$))[\\s\\S]*?(?:(?:\\n[ 	]*)+\\n|$))", "i").replace("comment", F).replace("tag", P).replace("attribute", / +[a-zA-Z:_][\w.:-]*(?: *= *"[^"\n]*"| *= *'[^'\n]*'| *= *[^\s"'=<>`]+)?/).getRegex(), I = (e) => T(oe).replace("hr", O).replace("heading", " {0,3}#{1,6}(?:\\s|$)").replace("|lheading", "").replace("|table", "").replace("blockquote", " {0,3}>").replace("fences", " {0,3}(?:`{3,}(?=[^`\\n]*\\n)|~~~)[^\\n]*\\n").replace("list", e).replace("html", "</?(?:tag)(?: +|\\n|/?>)|<(?:script|pre|style|textarea|!--)").replace("tag", P).getRegex(), ue = I(/ {0,3}(?:[*+-]|1[.)])[ \t]+[^ \t\n]/), de = I(/ {0,3}(?:[*+-]|\d{1,9}[.)])(?:[ \t]|\n|$)/), fe = {
+}, ne = /^(?:[ \t]*(?:\n|$))+/, re = /^((?: {4}| {0,3}\t)[^\n]+(?:\n(?:[ \t]*(?:\n|$))*)?)+/, D = /^ {0,3}(`{3,}(?=[^`\n]*(?:\n|$))|~{3,})([^\n]*)(?:\n|$)(?:|([\s\S]*?)(?:\n|$))(?: {0,3}\1[~`]* *(?=\n|$)|$)/, O = /^ {0,3}((?:-[\t ]*){3,}|(?:_[ \t]*){3,}|(?:\*[ \t]*){3,})(?:\n+|$)/, ie = /^ {0,3}(#{1,6})(?=\s|$)(.*)(?:\n+|$)/, ae = / {0,3}(?:[*+-]|\d{1,9}[.)])/, k = /^(?!bull |blockCode|fences|blockquote|heading|html|table)((?:.|\n(?!\s*?\n|bull |blockCode|fences|blockquote|heading|html|table))+?)\n {0,3}(=+|-+) *(?:\n+|$)/, A = T(k).replace(/bull/g, ae).replace(/blockCode/g, /(?: {4}| {0,3}\t)/).replace(/fences/g, / {0,3}(?:`{3,}|~{3,})/).replace(/blockquote/g, / {0,3}>/).replace(/heading/g, / {0,3}#{1,6}(?:\s|$)/).replace(/html/g, / {0,3}<[^\n>]+>\n/).replace(/\|table/g, "").getRegex(), j = T(k).replace(/bull/g, ae).replace(/blockCode/g, /(?: {4}| {0,3}\t)/).replace(/fences/g, / {0,3}(?:`{3,}|~{3,})/).replace(/blockquote/g, / {0,3}>/).replace(/heading/g, / {0,3}#{1,6}(?:\s|$)/).replace(/html/g, / {0,3}<[^\n>]+>\n/).replace(/table/g, / {0,3}\|?(?:[:\- ]*\|)+[\:\- ]*\n/).getRegex(), oe = /^([^\n]+(?:\n(?!hr|heading|lheading|blockquote|fences|list|html|table|[ \t]+\n)[^\n]+)*)/, M = /^[^\n]+/, N = /(?!\s*\])(?:\\[\s\S]|[^\[\]\\])+/, se = T(/^ {0,3}\[(label)\]: *(?:\n[ \t]*)?([^<\s][^\s]*|<.*?>)(?:(?: +(?:\n[ \t]*)?| *\n[ \t]*)(title))? *(?:\n+|$)/).replace("label", N).replace("title", /(?:"(?:\\"?|[^"\\])*"|'[^'\n]*(?:\n[^'\n]+)*\n?'|\([^()]*\))/).getRegex(), ce = T(/^(bull)([ \t][^\n]*?)?(?:\n|$)/).replace(/bull/g, ae).getRegex(), P = "address|article|aside|base|basefont|blockquote|body|caption|center|col|colgroup|dd|details|dialog|dir|div|dl|dt|fieldset|figcaption|figure|footer|form|frame|frameset|h[1-6]|head|header|hr|html|iframe|legend|li|link|main|menu|menuitem|meta|nav|noframes|ol|optgroup|option|p|param|search|section|summary|table|tbody|td|tfoot|th|thead|title|tr|track|ul", F = /<!--(?:-?>|[\s\S]*?(?:-->|$))/, le = T("^ {0,3}(?:<(script|pre|style|textarea)[\\s>][\\s\\S]*?(?:</\\1>[^\\n]*\\n*|$)|comment[^\\n]*(\\n+|$)|<\\?[\\s\\S]*?(?:\\?>[^\\n]*\\n*|$)|<![A-Z][\\s\\S]*?(?:>[^\\n]*\\n*|$)|<!\\[CDATA\\[[\\s\\S]*?(?:\\]\\]>[^\\n]*\\n*|$)|</?(tag)(?: +|\\n|/?>)[\\s\\S]*?(?:(?:\\n[ 	]*)+\\n|$)|<(?!script|pre|style|textarea)([a-z][\\w-]*)(?:attribute)*? */?>(?=[ \\t]*(?:\\n|$))[\\s\\S]*?(?:(?:\\n[ 	]*)+\\n|$)|</(?!script|pre|style|textarea)[a-z][\\w-]*\\s*>(?=[ \\t]*(?:\\n|$))[\\s\\S]*?(?:(?:\\n[ 	]*)+\\n|$))", "i").replace("comment", F).replace("tag", P).replace("attribute", / +[a-zA-Z:_][\w.:-]*(?: *= *"[^"\n]*"| *= *'[^'\n]*'| *= *[^\s"'=<>`]+)?/).getRegex(), I = (e) => T(oe).replace("hr", O).replace("heading", " {0,3}#{1,6}(?:\\s|$)").replace("|lheading", "").replace("|table", "").replace("blockquote", " {0,3}>").replace("fences", " {0,3}(?:`{3,}(?=[^`\\n]*\\n)|~~~)[^\\n]*\\n").replace("list", e).replace("html", "</?(?:tag)(?: +|\\n|/?>)|<(?:script|pre|style|textarea|!--)").replace("tag", P).getRegex(), ue = I(/ {0,3}(?:[*+-]|1[.)])[ \t]+[^ \t\n]/), de = I(/ {0,3}(?:[*+-]|\d{1,9}[.)])(?:[ \t]|\n|$)/), fe = {
 	blockquote: T(/^( {0,3}> ?(paragraph|[^\n]*)(?:\n|$))+/).replace("paragraph", de).getRegex(),
 	code: re,
-	def: ce,
+	def: se,
 	fences: D,
 	heading: ie,
 	hr: O,
 	html: le,
 	lheading: A,
-	list: N,
+	list: ce,
 	newline: ne,
 	paragraph: ue,
 	table: w,
-	text: se
+	text: M
 }, pe = T("^ *([^\\n ].*)\\n {0,3}((?:\\| *)?:?-+:? *(?:\\| *:?-+:? *)*(?:\\| *)?)(?:\\n((?:(?! *\\n|hr|heading|blockquote|code|fences|list|html).*(?:\\n|$))*)\\n*|$)").replace("hr", O).replace("heading", " {0,3}#{1,6}(?:\\s|$)").replace("blockquote", " {0,3}>").replace("code", "(?: {4}| {0,3}	)[^\\n]").replace("fences", " {0,3}(?:`{3,}(?=[^`\\n]*\\n)|~~~)[^\\n]*\\n").replace("list", " {0,3}(?:[*+-]|1[.)])[ \\t]").replace("html", "</?(?:tag)(?: +|\\n|/?>)|<(?:script|pre|style|textarea|!--)").replace("tag", P).getRegex(), me = {
 	...fe,
 	lheading: j,
@@ -8237,7 +8237,7 @@ var te = ((e = "") => {
 	fences: w,
 	lheading: /^(.+?)\n {0,3}(=+|-+) *(?:\n+|$)/,
 	paragraph: T(oe).replace("hr", O).replace("heading", " *#{1,6} *[^\n]").replace("lheading", A).replace("|table", "").replace("blockquote", " {0,3}>").replace("|fences", "").replace("|list", "").replace("|html", "").replace("|tag", "").getRegex()
-}, ge = /^\\([!"#$%&'()*+,\-./:;<=>?@\[\]\\^_`{|}~])/, _e = /^(`+)([^`]|[^`][\s\S]*?[^`])\1(?!`)/, ve = /^( {2,}|\\)\n(?!\s*$)/, ye = /^(`+|[^`])(?:(?= {2,}\n)|[\s\S]*?(?:(?=[\\<!\[`*_]|\b_|$)|[^ ](?= {2,}\n)))/, be = /[\p{P}\p{S}]/u, xe = /[\s\p{P}\p{S}]/u, Se = /[^\s\p{P}\p{S}]/u, Ce = T(/^((?![*_])punctSpace)/, "u").replace(/punctSpace/g, xe).getRegex(), we = /[\p{Pi}\p{Ps}"']/u, Te = /(?!~)[\p{P}\p{S}]/u, Ee = /(?!~)[\s\p{P}\p{S}]/u, De = /(?:[^\s\p{P}\p{S}]|~)/u, Oe = T(/link|precode-code|html/, "g").replace("link", /\[(?:[^\[\]`]|(?<a>`+)[^`]+\k<a>(?!`))*?\]\((?:\\[\s\S]|[^\\\(\)]|\((?:\\[\s\S]|[^\\\(\)])*\))*\)/).replace("precode-", te ? "(?<!`)()" : "(^^|[^`])").replace("code", /(?<b>`+)[^`]+\k<b>(?!`)/).replace("html", /<(?! )[^<>]*?>/).getRegex(), ke = /^(?:\*+(?:((?!\*)punct)|([^\s*]))?)|^_+(?:((?!_)punct)|([^\s_]))?/, Ae = T(ke, "u").replace(/punct/g, be).getRegex(), je = T(ke, "u").replace(/punct/g, Te).getRegex(), Me = T(/^(?:\*+(?:((?!\*)(?!openQuote)punct)|([^\s*]))?)|^_+(?:((?!_)(?!openQuote)punct)|([^\s_]))?/, "u").replace(/openQuote/g, we).replace(/punct/g, be).getRegex(), Ne = "^[^_*]*?__[^_*]*?\\*[^_*]*?(?=__)|[^*]+(?=[^*])|(?!\\*)punct(\\*+)(?=[\\s]|$)|notPunctSpace(\\*+)(?!\\*)(?=punctSpace|$)|(?!\\*)punctSpace(\\*+)(?=notPunctSpace)|[\\s](\\*+)(?!\\*)(?=punct)|(?!\\*)punct(\\*+)(?!\\*)(?=punct)|notPunctSpace(\\*+)(?=notPunctSpace)", Pe = T(Ne, "gu").replace(/notPunctSpace/g, Se).replace(/punctSpace/g, xe).replace(/punct/g, be).getRegex(), Fe = T(Ne, "gu").replace(/notPunctSpace/g, De).replace(/punctSpace/g, Ee).replace(/punct/g, Te).getRegex(), Ie = T("^[^_*]*?__[^_*]*?\\*[^_*]*?(?=__)|[^*]+(?=[^*])|(?!\\*)punct(\\*+)(?=[\\s]|$)|notPunctSpace(\\*+)(?!\\*)(?=punctSpace|$)|(?!\\*)[\\s](\\*+)(?=notPunctSpace)|[\\s](\\*+)(?!\\*)(?=punct)|(?!\\*)punct(\\*+)(?!\\*)(?=punct)|(?:(?!\\*)punct|notPunctSpace)(\\*+)(?!\\*)(?=notPunctSpace)", "gu").replace(/notPunctSpace/g, Se).replace(/punctSpace/g, xe).replace(/punct/g, be).getRegex(), Le = T("^[^_*]*?\\*\\*[^_*]*?_[^_*]*?(?=\\*\\*)|[^_]+(?=[^_])|(?!_)punct(_+)(?=[\\s]|$)|notPunctSpace(_+)(?!_)(?=punctSpace|$)|(?!_)punctSpace(_+)(?=notPunctSpace)|[\\s](_+)(?!_)(?=punct)|(?!_)punct(_+)(?!_)(?=punct)", "gu").replace(/notPunctSpace/g, Se).replace(/punctSpace/g, xe).replace(/punct/g, be).getRegex(), Re = T("^[^_*]*?\\*\\*[^_*]*?_[^_*]*?(?=\\*\\*)|[^_]+(?=[^_])|(?!_)punct(_+)(?=[\\s]|$)|notPunctSpace(_+)(?!_)(?=punctSpace|$)|(?!_)[\\s](_+)(?=notPunctSpace)|[\\s](_+)(?!_)(?=punct)|(?!_)punct(_+)(?!_)(?=punct)|(?:(?!_)punct|notPunctSpace)(_+)(?!_)(?=notPunctSpace)", "gu").replace(/notPunctSpace/g, Se).replace(/punctSpace/g, xe).replace(/punct/g, be).getRegex(), ze = T(/^~~?(?:((?!~)punct)|[^\s~])/, "u").replace(/punct/g, be).getRegex(), Be = T("^[^~]+(?=[^~])|(?!~)punct(~~?)(?=[\\s]|$)|notPunctSpace(~~?)(?!~)(?=punctSpace|$)|(?!~)punctSpace(~~?)(?=notPunctSpace)|[\\s](~~?)(?!~)(?=punct)|(?!~)punct(~~?)(?!~)(?=punct)|notPunctSpace(~~?)(?=notPunctSpace)", "gu").replace(/notPunctSpace/g, Se).replace(/punctSpace/g, xe).replace(/punct/g, be).getRegex(), Ve = T(/\\(punct)/, "gu").replace(/punct/g, be).getRegex(), He = T(/^<(scheme:[^\s\x00-\x1f<>]*|email)>/).replace("scheme", /[a-zA-Z][a-zA-Z0-9+.-]{1,31}/).replace("email", /[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+(@)[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(?![-_])/).getRegex(), Ue = T(F).replace("(?:-->|$)", "-->").getRegex(), We = T("^comment|^</[a-zA-Z][\\w:-]*\\s*>|^<[a-zA-Z][\\w-]*(?:attribute)*?\\s*/?>|^<\\?[\\s\\S]*?\\?>|^<![a-zA-Z]+\\s[\\s\\S]*?>|^<!\\[CDATA\\[[\\s\\S]*?\\]\\]>").replace("comment", Ue).replace("attribute", /\s+[a-zA-Z:_][\w.:-]*(?:\s*=\s*"[^"]*"|\s*=\s*'[^']*'|\s*=\s*[^\s"'=<>`]+)?/).getRegex(), Ge = /(?:\[(?:\\[\s\S]|[^\[\]\\])*\]|\\[\s\S]|`+(?!`)[^`]*?`+(?!`)|``+(?=\])|[^\[\]\\`])*?/, Ke = T(/^!?\[(label)\]\(\s*(href)(?:(?:[ \t]+(?:\n[ \t]*)?|\n[ \t]*)(title))?\s*\)/).replace("label", Ge).replace("href", /<(?:\\.|[^\n<>\\])+>|[^ \t\n\x00-\x1f]+|(?=\))/).replace("title", /"(?:\\"?|[^"\\])*"|'(?:\\'?|[^'\\])*'|\((?:\\\)?|[^)\\])*\)/).getRegex(), qe = T(/^!?\[(label)\]\[(ref)\]/).replace("label", Ge).replace("ref", M).getRegex(), Je = T(/^!?\[(ref)\](?:\[\])?/).replace("ref", M).getRegex(), L = T("reflink|nolink(?!\\()", "g").replace("reflink", qe).replace("nolink", Je).getRegex(), Ye = /[hH][tT][tT][pP][sS]?|[fF][tT][pP]/, Xe = {
+}, ge = /^\\([!"#$%&'()*+,\-./:;<=>?@\[\]\\^_`{|}~])/, _e = /^(`+)([^`]|[^`][\s\S]*?[^`])\1(?!`)/, ve = /^( {2,}|\\)\n(?!\s*$)/, ye = /^(`+|[^`])(?:(?= {2,}\n)|[\s\S]*?(?:(?=[\\<!\[`*_]|\b_|$)|[^ ](?= {2,}\n)))/, be = /[\p{P}\p{S}]/u, xe = /[\s\p{P}\p{S}]/u, Se = /[^\s\p{P}\p{S}]/u, Ce = T(/^((?![*_])punctSpace)/, "u").replace(/punctSpace/g, xe).getRegex(), we = /[\p{Pi}\p{Ps}"']/u, Te = /(?!~)[\p{P}\p{S}]/u, Ee = /(?!~)[\s\p{P}\p{S}]/u, De = /(?:[^\s\p{P}\p{S}]|~)/u, Oe = T(/link|precode-code|html/, "g").replace("link", /\[(?:[^\[\]`]|(?<a>`+)[^`]+\k<a>(?!`))*?\]\((?:\\[\s\S]|[^\\\(\)]|\((?:\\[\s\S]|[^\\\(\)])*\))*\)/).replace("precode-", te ? "(?<!`)()" : "(^^|[^`])").replace("code", /(?<b>`+)[^`]+\k<b>(?!`)/).replace("html", /<(?! )[^<>]*?>/).getRegex(), ke = /^(?:\*+(?:((?!\*)punct)|([^\s*]))?)|^_+(?:((?!_)punct)|([^\s_]))?/, Ae = T(ke, "u").replace(/punct/g, be).getRegex(), je = T(ke, "u").replace(/punct/g, Te).getRegex(), Me = T(/^(?:\*+(?:((?!\*)(?!openQuote)punct)|([^\s*]))?)|^_+(?:((?!_)(?!openQuote)punct)|([^\s_]))?/, "u").replace(/openQuote/g, we).replace(/punct/g, be).getRegex(), Ne = "^[^_*]*?__[^_*]*?\\*[^_*]*?(?=__)|[^*]+(?=[^*])|(?!\\*)punct(\\*+)(?=[\\s]|$)|notPunctSpace(\\*+)(?!\\*)(?=punctSpace|$)|(?!\\*)punctSpace(\\*+)(?=notPunctSpace)|[\\s](\\*+)(?!\\*)(?=punct)|(?!\\*)punct(\\*+)(?!\\*)(?=punct)|notPunctSpace(\\*+)(?=notPunctSpace)", Pe = T(Ne, "gu").replace(/notPunctSpace/g, Se).replace(/punctSpace/g, xe).replace(/punct/g, be).getRegex(), Fe = T(Ne, "gu").replace(/notPunctSpace/g, De).replace(/punctSpace/g, Ee).replace(/punct/g, Te).getRegex(), Ie = T("^[^_*]*?__[^_*]*?\\*[^_*]*?(?=__)|[^*]+(?=[^*])|(?!\\*)punct(\\*+)(?=[\\s]|$)|notPunctSpace(\\*+)(?!\\*)(?=punctSpace|$)|(?!\\*)[\\s](\\*+)(?=notPunctSpace)|[\\s](\\*+)(?!\\*)(?=punct)|(?!\\*)punct(\\*+)(?!\\*)(?=punct)|(?:(?!\\*)punct|notPunctSpace)(\\*+)(?!\\*)(?=notPunctSpace)", "gu").replace(/notPunctSpace/g, Se).replace(/punctSpace/g, xe).replace(/punct/g, be).getRegex(), Le = T("^[^_*]*?\\*\\*[^_*]*?_[^_*]*?(?=\\*\\*)|[^_]+(?=[^_])|(?!_)punct(_+)(?=[\\s]|$)|notPunctSpace(_+)(?!_)(?=punctSpace|$)|(?!_)punctSpace(_+)(?=notPunctSpace)|[\\s](_+)(?!_)(?=punct)|(?!_)punct(_+)(?!_)(?=punct)", "gu").replace(/notPunctSpace/g, Se).replace(/punctSpace/g, xe).replace(/punct/g, be).getRegex(), Re = T("^[^_*]*?\\*\\*[^_*]*?_[^_*]*?(?=\\*\\*)|[^_]+(?=[^_])|(?!_)punct(_+)(?=[\\s]|$)|notPunctSpace(_+)(?!_)(?=punctSpace|$)|(?!_)[\\s](_+)(?=notPunctSpace)|[\\s](_+)(?!_)(?=punct)|(?!_)punct(_+)(?!_)(?=punct)|(?:(?!_)punct|notPunctSpace)(_+)(?!_)(?=notPunctSpace)", "gu").replace(/notPunctSpace/g, Se).replace(/punctSpace/g, xe).replace(/punct/g, be).getRegex(), ze = T(/^~~?(?:((?!~)punct)|[^\s~])/, "u").replace(/punct/g, be).getRegex(), Be = T("^[^~]+(?=[^~])|(?!~)punct(~~?)(?=[\\s]|$)|notPunctSpace(~~?)(?!~)(?=punctSpace|$)|(?!~)punctSpace(~~?)(?=notPunctSpace)|[\\s](~~?)(?!~)(?=punct)|(?!~)punct(~~?)(?!~)(?=punct)|notPunctSpace(~~?)(?=notPunctSpace)", "gu").replace(/notPunctSpace/g, Se).replace(/punctSpace/g, xe).replace(/punct/g, be).getRegex(), Ve = T(/\\(punct)/, "gu").replace(/punct/g, be).getRegex(), He = T(/^<(scheme:[^\s\x00-\x1f<>]*|email)>/).replace("scheme", /[a-zA-Z][a-zA-Z0-9+.-]{1,31}/).replace("email", /[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+(@)[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(?![-_])/).getRegex(), Ue = T(F).replace("(?:-->|$)", "-->").getRegex(), We = T("^comment|^</[a-zA-Z][\\w:-]*\\s*>|^<[a-zA-Z][\\w-]*(?:attribute)*?\\s*/?>|^<\\?[\\s\\S]*?\\?>|^<![a-zA-Z]+\\s[\\s\\S]*?>|^<!\\[CDATA\\[[\\s\\S]*?\\]\\]>").replace("comment", Ue).replace("attribute", /\s+[a-zA-Z:_][\w.:-]*(?:\s*=\s*"[^"]*"|\s*=\s*'[^']*'|\s*=\s*[^\s"'=<>`]+)?/).getRegex(), Ge = /(?:\[(?:\\[\s\S]|[^\[\]\\])*\]|\\[\s\S]|`+(?!`)[^`]*?`+(?!`)|``+(?=\])|[^\[\]\\`])*?/, Ke = T(/^!?\[(label)\]\(\s*(href)(?:(?:[ \t]+(?:\n[ \t]*)?|\n[ \t]*)(title))?\s*\)/).replace("label", Ge).replace("href", /<(?:\\.|[^\n<>\\])+>|[^ \t\n\x00-\x1f]+|(?=\))/).replace("title", /"(?:\\"?|[^"\\])*"|'(?:\\'?|[^'\\])*'|\((?:\\\)?|[^)\\])*\)/).getRegex(), qe = T(/^!?\[(label)\]\[(ref)\]/).replace("label", Ge).replace("ref", N).getRegex(), Je = T(/^!?\[(ref)\](?:\[\])?/).replace("ref", N).getRegex(), L = T("reflink|nolink(?!\\()", "g").replace("reflink", qe).replace("nolink", Je).getRegex(), Ye = /[hH][tT][tT][pP][sS]?|[fF][tT][pP]/, Xe = {
 	_backpedal: w,
 	anyPunctuation: Ve,
 	autolink: He,
@@ -9892,8 +9892,26 @@ var Lt = "data:image/svg+xml,%3c?xml%20version='1.0'%20encoding='UTF-8'?%3e%3csv
 	e.Fragment = n, e.jsx = r, e.jsxs = r;
 })), B = (/* @__PURE__ */ e(((e, t) => {
 	t.exports = Rt();
-})))();
-function zt(e) {
+})))(), zt = {
+	settings: "m370-80-16-128q-13-5-24.5-12T307-235l-119 50L78-375l103-78q-1-7-1-13.5v-27q0-6.5 1-13.5L78-585l110-190 119 50q11-8 23-15t24-12l16-128h220l16 128q13 5 24.5 12t22.5 15l119-50 110 190-103 78q1 7 1 13.5v27q0 6.5-2 13.5l103 78-110 190-118-50q-11 8-23 15t-24 12L590-80H370Zm70-80h79l14-106q31-8 57.5-23.5T639-327l99 41 39-68-86-65q5-14 7-29.5t2-31.5q0-16-2-31.5t-7-29.5l86-65-39-68-99 42q-22-23-48.5-38.5T533-694l-13-106h-79l-14 106q-31 8-57.5 23.5T321-633l-99-41-39 68 86 64q-5 15-7 30t-2 32q0 16 2 31t7 30l-86 65 39 68 99-42q22 23 48.5 38.5T427-266l13 106Zm42-180q58 0 99-41t41-99q0-58-41-99t-99-41q-59 0-99.5 41T342-480q0 58 40.5 99t99.5 41Zm-2-140Z",
+	smartToy: "M160-360q-50 0-85-35t-35-85q0-50 35-85t85-35v-80q0-33 23.5-56.5T240-760h120q0-50 35-85t85-35q50 0 85 35t35 85h120q33 0 56.5 23.5T800-680v80q50 0 85 35t35 85q0 50-35 85t-85 35v160q0 33-23.5 56.5T720-120H240q-33 0-56.5-23.5T160-200v-160Zm200-80q25 0 42.5-17.5T420-500q0-25-17.5-42.5T360-560q-25 0-42.5 17.5T300-500q0 25 17.5 42.5T360-440Zm240 0q25 0 42.5-17.5T660-500q0-25-17.5-42.5T600-560q-25 0-42.5 17.5T540-500q0 25 17.5 42.5T600-440ZM320-280h320v-80H320v80Zm-80 80h480v-480H240v480Zm240-240Z",
+	logout: "M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h280v80H200Zm440-160-55-58 102-102H360v-80h327L585-622l55-58 200 200-200 200Z"
+};
+function Bt({ name: e }) {
+	return /* @__PURE__ */ (0, B.jsx)("svg", {
+		className: "header-btn-icon",
+		viewBox: "0 -960 960 960",
+		width: "18",
+		height: "18",
+		"aria-hidden": "true",
+		focusable: "false",
+		children: /* @__PURE__ */ (0, B.jsx)("path", {
+			fill: "currentColor",
+			d: zt[e]
+		})
+	});
+}
+function Vt(e) {
 	let { t, connectionText: n, connectionColor: r, workspaceDisplay: i, profilesData: a, onModelProfileChange: o, onWorkspaceProfileChange: s, modelProfileBusy: c, workspaceProfileBusy: l, sidebarCollapsed: u, onToggleSidebar: d, onOpenGeneralSettings: f, onOpenAiSettings: p, onLogout: m } = e, h = a.models.find((e) => e.id === a.activeModelProfileId), g = a.workspaces.find((e) => e.id === a.activeWorkspaceProfileId);
 	return /* @__PURE__ */ (0, B.jsxs)("header", { children: [
 		/* @__PURE__ */ (0, B.jsx)("button", {
@@ -9956,23 +9974,32 @@ function zt(e) {
 		/* @__PURE__ */ (0, B.jsxs)("div", {
 			className: "header-actions",
 			children: [
-				/* @__PURE__ */ (0, B.jsx)("button", {
+				/* @__PURE__ */ (0, B.jsxs)("button", {
 					id: "general-settings-button",
 					type: "button",
 					onClick: f,
-					children: t("generalSettings")
+					children: [/* @__PURE__ */ (0, B.jsx)(Bt, { name: "settings" }), /* @__PURE__ */ (0, B.jsx)("span", {
+						className: "btn-label",
+						children: t("generalSettings")
+					})]
 				}),
-				/* @__PURE__ */ (0, B.jsx)("button", {
+				/* @__PURE__ */ (0, B.jsxs)("button", {
 					id: "ai-settings-button",
 					type: "button",
 					onClick: p,
-					children: t("aiSettings")
+					children: [/* @__PURE__ */ (0, B.jsx)(Bt, { name: "smartToy" }), /* @__PURE__ */ (0, B.jsx)("span", {
+						className: "btn-label",
+						children: t("aiSettings")
+					})]
 				}),
-				m && /* @__PURE__ */ (0, B.jsx)("button", {
+				m && /* @__PURE__ */ (0, B.jsxs)("button", {
 					type: "button",
 					className: "secondary",
 					onClick: m,
-					children: t("logout")
+					children: [/* @__PURE__ */ (0, B.jsx)(Bt, { name: "logout" }), /* @__PURE__ */ (0, B.jsx)("span", {
+						className: "btn-label",
+						children: t("logout")
+					})]
 				})
 			]
 		})
@@ -9980,7 +10007,7 @@ function zt(e) {
 }
 //#endregion
 //#region client/lib/format.ts
-function Bt(e) {
+function Ht(e) {
 	return {
 		codex: "Codex",
 		"openai-codex": "Codex",
@@ -9991,15 +10018,15 @@ function Bt(e) {
 		"openai-compatible": "OpenAI Compatible"
 	}[e ?? ""] ?? e ?? "—";
 }
-function Vt(e) {
+function Ut(e) {
 	return String(e ?? "").split(/[\\/]/).filter(Boolean).at(-1) ?? "—";
 }
-function Ht(e, t) {
+function Wt(e, t) {
 	return e == null ? "—" : new Intl.NumberFormat(b(t)).format(e);
 }
 //#endregion
 //#region client/components/Sidebar.tsx
-function Ut({ t: e, sessions: t, activeSession: n, onSelect: r, onOpenDetails: i, onNewSession: a, onClearSessions: o }) {
+function Gt({ t: e, sessions: t, activeSession: n, onSelect: r, onOpenDetails: i, onNewSession: a, onClearSessions: o }) {
 	return /* @__PURE__ */ (0, B.jsxs)("aside", { children: [/* @__PURE__ */ (0, B.jsxs)("div", {
 		className: "section-title",
 		children: [/* @__PURE__ */ (0, B.jsx)("span", { children: e("sessions") }), /* @__PURE__ */ (0, B.jsxs)("div", { children: [/* @__PURE__ */ (0, B.jsx)("button", {
@@ -10023,7 +10050,7 @@ function Ut({ t: e, sessions: t, activeSession: n, onSelect: r, onOpenDetails: i
 				children: [/* @__PURE__ */ (0, B.jsxs)("button", {
 					type: "button",
 					className: "session",
-					title: `${Bt(a)} · ${o ?? "—"}${s ? ` · ${s}` : ""}`,
+					title: `${Ht(a)} · ${o ?? "—"}${s ? ` · ${s}` : ""}`,
 					onClick: () => r(t.sessionId),
 					children: [/* @__PURE__ */ (0, B.jsx)("span", {
 						className: "session-title",
@@ -10031,9 +10058,9 @@ function Ut({ t: e, sessions: t, activeSession: n, onSelect: r, onOpenDetails: i
 					}), /* @__PURE__ */ (0, B.jsxs)("span", {
 						className: "session-agent",
 						children: [
-							Bt(a),
+							Ht(a),
 							" · ",
-							Vt(o),
+							Ut(o),
 							s ? ` · ${s}` : ""
 						]
 					})]
@@ -10050,7 +10077,7 @@ function Ut({ t: e, sessions: t, activeSession: n, onSelect: r, onOpenDetails: i
 }
 //#endregion
 //#region client/hooks/useDismissiblePopover.ts
-function Wt(e, t) {
+function Kt(e, t) {
 	let n = (0, u.useRef)(null), r = (0, u.useRef)(null);
 	return (0, u.useEffect)(() => {
 		if (!e) return;
@@ -10070,8 +10097,8 @@ function Wt(e, t) {
 }
 //#endregion
 //#region client/components/SessionEnvironment.tsx
-function Gt({ t: e, session: t }) {
-	let [n, r] = (0, u.useState)(!1), { panelRef: i, toggleRef: a } = Wt(n, () => r(!1)), o = t?.metadata?.environmentSnapshot, s = o?.model?.profileName ?? t?.metadata?.appModelId ?? t?.model ?? "—", c = o?.workspace?.name ?? t?.metadata?.workspace ?? t?.cwd ?? "—", l = o?.workspace?.display ?? o?.workspace?.path ?? t?.metadata?.workspace ?? t?.cwd, d = !!t;
+function qt({ t: e, session: t }) {
+	let [n, r] = (0, u.useState)(!1), { panelRef: i, toggleRef: a } = Kt(n, () => r(!1)), o = t?.metadata?.environmentSnapshot, s = o?.model?.profileName ?? t?.metadata?.appModelId ?? t?.model ?? "—", c = o?.workspace?.name ?? t?.metadata?.workspace ?? t?.cwd ?? "—", l = o?.workspace?.display ?? o?.workspace?.path ?? t?.metadata?.workspace ?? t?.cwd, d = !!t;
 	return /* @__PURE__ */ (0, B.jsxs)("div", {
 		className: "session-environment-wrap",
 		children: [/* @__PURE__ */ (0, B.jsxs)("button", {
@@ -10149,12 +10176,12 @@ function Gt({ t: e, session: t }) {
 }
 //#endregion
 //#region client/components/ContextPanel.tsx
-function Kt({ t: e, locale: t, context: n, compactions: r, showToolDetails: i, onToggleShowToolDetails: a, session: o }) {
-	let [s, c] = (0, u.useState)(() => typeof window < "u" && window.matchMedia("(max-width: 760px)").matches), l = n?.utilizationPercent ?? 0, d = n?.compactionTriggerPercent ?? 90, f = n ? n.inputTokens === null ? `— / ${Ht(n.maxInputTokens, t)}` : `${Ht(n.inputTokens, t)} / ${Ht(n.maxInputTokens, t)} (${n.utilizationPercent}%)` : "—", p = n?.source === "override" ? e("sourceOverride") : n?.source === "provider" ? e("sourceProvider") : e("sourceDefault"), m = n ? n.inputTokens === null ? `${e("contextUnknown", { max: Ht(n.maxInputTokens, t) })} · ${p}` : `${e("contextDetail", {
-		window: Ht(n.contextWindow, t),
-		max: Ht(n.maxInputTokens, t),
+function Jt({ t: e, locale: t, context: n, compactions: r, showToolDetails: i, onToggleShowToolDetails: a, session: o }) {
+	let [s, c] = (0, u.useState)(() => typeof window < "u" && window.matchMedia("(max-width: 760px)").matches), l = n?.utilizationPercent ?? 0, d = n?.compactionTriggerPercent ?? 90, f = n ? n.inputTokens === null ? `— / ${Wt(n.maxInputTokens, t)}` : `${Wt(n.inputTokens, t)} / ${Wt(n.maxInputTokens, t)} (${n.utilizationPercent}%)` : "—", p = n?.source === "override" ? e("sourceOverride") : n?.source === "provider" ? e("sourceProvider") : e("sourceDefault"), m = n ? n.inputTokens === null ? `${e("contextUnknown", { max: Wt(n.maxInputTokens, t) })} · ${p}` : `${e("contextDetail", {
+		window: Wt(n.contextWindow, t),
+		max: Wt(n.maxInputTokens, t),
 		trigger: n.compactionTriggerPercent,
-		tokens: Ht(n.compactionTriggerTokens, t),
+		tokens: Wt(n.compactionTriggerTokens, t),
 		strategy: n.compactionStrategy
 	})} · ${p}` : e("contextWaiting"), h = r.at(-1);
 	return /* @__PURE__ */ (0, B.jsxs)("div", {
@@ -10174,7 +10201,7 @@ function Kt({ t: e, locale: t, context: n, compactions: r, showToolDetails: i, o
 					}), /* @__PURE__ */ (0, B.jsx)("span", { children: e("context") })]
 				}), /* @__PURE__ */ (0, B.jsxs)("div", {
 					className: "context-title-actions",
-					children: [/* @__PURE__ */ (0, B.jsx)(Gt, {
+					children: [/* @__PURE__ */ (0, B.jsx)(qt, {
 						t: e,
 						session: o
 					}, o?.sessionId ?? "none"), /* @__PURE__ */ (0, B.jsx)("strong", {
@@ -10223,7 +10250,7 @@ function Kt({ t: e, locale: t, context: n, compactions: r, showToolDetails: i, o
 }
 //#endregion
 //#region client/components/ApprovalList.tsx
-function qt({ t: e, approvals: t, onResolve: n }) {
+function Yt({ t: e, approvals: t, onResolve: n }) {
 	return /* @__PURE__ */ (0, B.jsx)("div", {
 		id: "approval",
 		children: t.map((t) => {
@@ -10250,7 +10277,7 @@ function qt({ t: e, approvals: t, onResolve: n }) {
 }
 //#endregion
 //#region client/components/QueueStatus.tsx
-function Jt({ t: e, entries: t, onUpdate: n, onCancel: r }) {
+function Xt({ t: e, entries: t, onUpdate: n, onCancel: r }) {
 	return t.length === 0 ? /* @__PURE__ */ (0, B.jsx)("section", {
 		id: "queue-status",
 		className: "queue-status",
@@ -10265,7 +10292,7 @@ function Jt({ t: e, entries: t, onUpdate: n, onCancel: r }) {
 			children: e("queueCount", { count: t.length })
 		}), /* @__PURE__ */ (0, B.jsx)("div", {
 			className: "queue-list",
-			children: t.map((i, a) => /* @__PURE__ */ (0, B.jsx)(Yt, {
+			children: t.map((i, a) => /* @__PURE__ */ (0, B.jsx)(Zt, {
 				t: e,
 				entry: i,
 				index: a,
@@ -10276,7 +10303,7 @@ function Jt({ t: e, entries: t, onUpdate: n, onCancel: r }) {
 		})]
 	});
 }
-function Yt({ t: e, entry: t, index: n, total: r, onUpdate: i, onCancel: a }) {
+function Zt({ t: e, entry: t, index: n, total: r, onUpdate: i, onCancel: a }) {
 	let [o, s] = (0, u.useState)(t.prompt), [c, l] = (0, u.useState)(!1), [d, f] = (0, u.useState)(""), [p, m] = (0, u.useState)(!1), h = t.imageCount ?? t.images?.length ?? 0;
 	return /* @__PURE__ */ (0, B.jsxs)("div", {
 		className: `queue-item${p ? " invalid" : ""}`,
@@ -10344,7 +10371,7 @@ function Yt({ t: e, entry: t, index: n, total: r, onUpdate: i, onCancel: a }) {
 }
 //#endregion
 //#region client/components/QuickPermissions.tsx
-var Xt = [
+var Qt = [
 	"read_files",
 	"search_codebase",
 	"fetch_web_content",
@@ -10352,11 +10379,11 @@ var Xt = [
 	"run_commands",
 	"editor",
 	"apply_patch"
-], Zt = [
+], $t = [
 	"disabled",
 	"ask",
 	"allow"
-], Qt = {
+], en = {
 	read_files: "▤",
 	search_codebase: "⌕",
 	fetch_web_content: "◎",
@@ -10365,8 +10392,8 @@ var Xt = [
 	editor: "✎",
 	apply_patch: "±"
 };
-function $t({ t: e, permissions: t, onCycle: n, mcpEnabled: r, onToggleMcp: i }) {
-	let [a, o] = (0, u.useState)(!1), { panelRef: s, toggleRef: c } = Wt(a, () => o(!1)), l = Zt.map((e) => [e, Object.values(t ?? {}).filter((t) => t === e).length]), d = t ? `${e("quickPermissions")} · ${e("allow")} ${l.find(([e]) => e === "allow")?.[1]} / ${e("ask")} ${l.find(([e]) => e === "ask")?.[1]} / ${e("disabled")} ${l.find(([e]) => e === "disabled")?.[1]} / MCP ${e(r ? "allow" : "disabled")}` : e("quickPermissions"), f = r ? "allow" : "disabled";
+function tn({ t: e, permissions: t, onCycle: n, mcpEnabled: r, onToggleMcp: i }) {
+	let [a, o] = (0, u.useState)(!1), { panelRef: s, toggleRef: c } = Kt(a, () => o(!1)), l = $t.map((e) => [e, Object.values(t ?? {}).filter((t) => t === e).length]), d = t ? `${e("quickPermissions")} · ${e("allow")} ${l.find(([e]) => e === "allow")?.[1]} / ${e("ask")} ${l.find(([e]) => e === "ask")?.[1]} / ${e("disabled")} ${l.find(([e]) => e === "disabled")?.[1]} / MCP ${e(r ? "allow" : "disabled")}` : e("quickPermissions"), f = r ? "allow" : "disabled";
 	return /* @__PURE__ */ (0, B.jsxs)("div", {
 		className: "quick-permissions-wrap",
 		children: [/* @__PURE__ */ (0, B.jsx)("button", {
@@ -10385,12 +10412,12 @@ function $t({ t: e, permissions: t, onCycle: n, mcpEnabled: r, onToggleMcp: i })
 				id: "quick-permissions-indicator",
 				className: "quick-permissions-indicator",
 				"aria-hidden": "true",
-				children: [Xt.map((n) => {
+				children: [Qt.map((n) => {
 					let r = t?.[n] ?? "ask";
 					return /* @__PURE__ */ (0, B.jsx)("span", {
 						className: `permission-tool-icon state-${r}`,
 						title: `${e(n)}: ${e(r)}`,
-						children: Qt[n]
+						children: en[n]
 					}, n);
 				}), /* @__PURE__ */ (0, B.jsx)("span", {
 					className: `permission-tool-icon state-${f}`,
@@ -10409,7 +10436,7 @@ function $t({ t: e, permissions: t, onCycle: n, mcpEnabled: r, onToggleMcp: i })
 			}), /* @__PURE__ */ (0, B.jsxs)("div", {
 				id: "quick-permissions-list",
 				className: "quick-permissions-list",
-				children: [Xt.map((r) => {
+				children: [Qt.map((r) => {
 					let i = t[r] ?? "ask";
 					return /* @__PURE__ */ (0, B.jsxs)("button", {
 						type: "button",
@@ -10419,7 +10446,7 @@ function $t({ t: e, permissions: t, onCycle: n, mcpEnabled: r, onToggleMcp: i })
 						children: [
 							/* @__PURE__ */ (0, B.jsx)("span", {
 								className: "quick-tool-icon",
-								children: Qt[r]
+								children: en[r]
 							}),
 							/* @__PURE__ */ (0, B.jsx)("span", {
 								className: "quick-tool-name",
@@ -10457,8 +10484,8 @@ function $t({ t: e, permissions: t, onCycle: n, mcpEnabled: r, onToggleMcp: i })
 }
 //#endregion
 //#region client/components/TemplateSwitcher.tsx
-function en({ templates: e, activeTemplateId: t, disabled: n, onSelect: r }) {
-	let [i, a] = (0, u.useState)(!1), o = () => a(!1), { panelRef: s, toggleRef: c } = Wt(i, o);
+function nn({ templates: e, activeTemplateId: t, disabled: n, onSelect: r }) {
+	let [i, a] = (0, u.useState)(!1), o = () => a(!1), { panelRef: s, toggleRef: c } = Kt(i, o);
 	if (e.length === 0) return null;
 	let l = e.find((e) => e.id === t)?.name ?? "Mode", d = (i = !1) => e.map((e) => /* @__PURE__ */ (0, B.jsx)("button", {
 		type: "button",
@@ -10502,8 +10529,8 @@ function en({ templates: e, activeTemplateId: t, disabled: n, onSelect: r }) {
 }
 //#endregion
 //#region client/components/Composer.tsx
-function tn(e) {
-	let { t, prompt: n, onPromptChange: r, onSubmit: i, onAbort: a, running: o, stalled: s, pendingImages: c, onAddImages: l, onRemoveImage: d, imagesEnabled: f, agentSettings: p, effectivePermissions: m, onCyclePermission: h, mcpEnabled: g, onToggleMcp: _, onSelectTemplate: v, templateBusy: y } = e, [b, x] = (0, u.useState)(!1), { panelRef: S, toggleRef: C } = Wt(b, () => x(!1));
+function rn(e) {
+	let { t, prompt: n, onPromptChange: r, onSubmit: i, onAbort: a, running: o, stalled: s, pendingImages: c, onAddImages: l, onRemoveImage: d, imagesEnabled: f, agentSettings: p, effectivePermissions: m, onCyclePermission: h, mcpEnabled: g, onToggleMcp: _, onSelectTemplate: v, templateBusy: y } = e, [b, x] = (0, u.useState)(!1), { panelRef: S, toggleRef: C } = Kt(b, () => x(!1));
 	return (0, u.useEffect)(() => {
 		c.length === 0 && x(!1);
 	}, [c.length]), /* @__PURE__ */ (0, B.jsxs)("form", {
@@ -10514,12 +10541,12 @@ function tn(e) {
 		children: [
 			/* @__PURE__ */ (0, B.jsxs)("div", {
 				className: "composer-toolbar",
-				children: [/* @__PURE__ */ (0, B.jsx)(en, {
+				children: [/* @__PURE__ */ (0, B.jsx)(nn, {
 					templates: p?.templates ?? [],
 					activeTemplateId: p?.activeTemplateId,
 					disabled: !p || y,
 					onSelect: v
-				}), /* @__PURE__ */ (0, B.jsx)($t, {
+				}), /* @__PURE__ */ (0, B.jsx)(tn, {
 					t,
 					permissions: m,
 					onCycle: h,
@@ -10609,20 +10636,20 @@ function tn(e) {
 }
 //#endregion
 //#region client/components/SetupDialog.tsx
-var nn = {
+var an = {
 	lmstudio: "http://192.168.8.223:1234",
 	llamacpp: "http://127.0.0.1:8080",
 	ollama: "http://127.0.0.1:11434",
 	codex: "https://chatgpt.com/backend-api/codex",
 	"claude-code": ""
-}, rn = {
+}, on = {
 	lmstudio: "helpLmstudio",
 	llamacpp: "helpLlamacpp",
 	ollama: "helpOllama",
 	codex: "helpCodex",
 	"claude-code": "helpClaude"
 };
-function an({ t: e, request: t, onClose: n, profilesData: r, onConnected: i }) {
+function sn({ t: e, request: t, onClose: n, profilesData: r, onConnected: i }) {
 	let a = (0, u.useRef)(null), [o, s] = (0, u.useState)("lmstudio"), [c, l] = (0, u.useState)(""), [d, f] = (0, u.useState)(""), [m, h] = (0, u.useState)([]), [g, _] = (0, u.useState)({}), [v, y] = (0, u.useState)(""), [b, x] = (0, u.useState)(!1), [S, C] = (0, u.useState)(""), [w, ee] = (0, u.useState)(""), [T, te] = (0, u.useState)(!1), [E, ne] = (0, u.useState)(""), [re, D] = (0, u.useState)(!1), [O, ie] = (0, u.useState)(null), [ae, k] = (0, u.useState)(!1), [A, j] = (0, u.useState)(!1);
 	(0, u.useEffect)(() => {
 		if (!t) return;
@@ -10631,13 +10658,13 @@ function an({ t: e, request: t, onClose: n, profilesData: r, onConnected: i }) {
 		let i = r.models.find((e) => e.id === r.activeModelProfileId);
 		ee(t.newProfile ? "" : i?.id ?? ""), C(t.newProfile ? "" : i?.name ?? (n && e && "provider" in e ? `${e.provider} · ${e.modelId}` : ""));
 		let o = n && e && "provider" in e ? e.provider : "lmstudio";
-		s(o), l(n && e && "baseUrl" in e ? e.baseUrl : nn[o]), y(n && e && "timeoutMs" in e && e.timeoutMs ? String(e.timeoutMs / 1e3) : ""), x(n && e && "imagesEnabled" in e ? e.imagesEnabled === !0 : !1), n && e && "modelId" in e ? (h([e.modelId]), _({ [e.modelId]: {
+		s(o), l(n && e && "baseUrl" in e ? e.baseUrl : an[o]), y(n && e && "timeoutMs" in e && e.timeoutMs ? String(e.timeoutMs / 1e3) : ""), x(n && e && "imagesEnabled" in e ? e.imagesEnabled === !0 : !1), n && e && "modelId" in e ? (h([e.modelId]), _({ [e.modelId]: {
 			id: e.modelId,
 			imageSupport: e.imageSupport ?? "unknown"
 		} }), f(e.modelId)) : (h([]), _({}), f("")), ie(null), ne(n && o === "codex" ? "Signed in with ChatGPT. Fetch models to refresh the list." : ""), D(!1), a.current?.open || a.current?.showModal();
 	}, [t?.token]);
-	let oe = e(rn[o]), se = o === "codex", M = o === "claude-code", ce = se || M, N = (e) => {
-		s(e), l(nn[e]), h([]), _({}), f(""), x(!1), ie(null), ne(""), D(!1);
+	let oe = e(on[o]), M = o === "codex", N = o === "claude-code", se = M || N, ce = (e) => {
+		s(e), l(an[e]), h([]), _({}), f(""), x(!1), ie(null), ne(""), D(!1);
 	}, P = (e, t, n) => {
 		let r = t[e]?.imageSupport ?? "unknown";
 		return r === "unsupported" ? x(!1) : r === "supported" && n && x(!0), r;
@@ -10650,10 +10677,10 @@ function an({ t: e, request: t, onClose: n, profilesData: r, onConnected: i }) {
 		profileName: S.trim(),
 		profileId: w || void 0
 	}), I = async () => {
-		let t = se ? window.open("about:blank", "cline-codex-auth") : null;
-		k(!0), ne(se ? "Starting ChatGPT sign-in..." : "Connecting to the model server..."), D(!1);
+		let t = M ? window.open("about:blank", "cline-codex-auth") : null;
+		k(!0), ne(M ? "Starting ChatGPT sign-in..." : "Connecting to the model server..."), D(!1);
 		try {
-			if (se) {
+			if (M) {
 				let e = await p("/api/codex/login", {
 					method: "POST",
 					body: "{}"
@@ -10663,12 +10690,12 @@ function an({ t: e, request: t, onClose: n, profilesData: r, onConnected: i }) {
 				ie(null), ne(e.email ? `Signed in as ${e.email}. Loading models...` : "Signed in. Loading models...");
 			}
 			let n = null;
-			M && (n = await p("/api/claude-code/status"));
+			N && (n = await p("/api/claude-code/status"));
 			let r = await p("/api/models/discover", {
 				method: "POST",
 				body: JSON.stringify(le())
 			}), i = r.models.includes(d) ? d : r.models[0] ?? "";
-			h(r.models), _(r.modelInfo ?? {}), f(i), P(i, r.modelInfo ?? {}, !0), l(r.baseUrl), M ? (ne(n?.status === "authenticated" ? e("claudeSignedIn") : e("claudeLoginRequired")), D(n?.status !== "authenticated")) : ne(`${r.models.length} model(s) found.`);
+			h(r.models), _(r.modelInfo ?? {}), f(i), P(i, r.modelInfo ?? {}, !0), l(r.baseUrl), N ? (ne(n?.status === "authenticated" ? e("claudeSignedIn") : e("claudeLoginRequired")), D(n?.status !== "authenticated")) : ne(`${r.models.length} model(s) found.`);
 		} catch (e) {
 			ne(e instanceof Error ? e.message : String(e)), D(!0);
 		} finally {
@@ -10710,7 +10737,7 @@ function an({ t: e, request: t, onClose: n, profilesData: r, onConnected: i }) {
 				}),
 				/* @__PURE__ */ (0, B.jsxs)("label", { children: [/* @__PURE__ */ (0, B.jsx)("span", { children: e("provider") }), /* @__PURE__ */ (0, B.jsxs)("select", {
 					value: o,
-					onChange: (e) => N(e.target.value),
+					onChange: (e) => ce(e.target.value),
 					children: [
 						/* @__PURE__ */ (0, B.jsx)("option", {
 							value: "lmstudio",
@@ -10748,14 +10775,14 @@ function an({ t: e, request: t, onClose: n, profilesData: r, onConnected: i }) {
 						/* @__PURE__ */ (0, B.jsx)("span", { children: e("serverUrl") }),
 						/* @__PURE__ */ (0, B.jsx)("input", {
 							type: "url",
-							required: !ce,
-							disabled: ce,
+							required: !se,
+							disabled: se,
 							spellCheck: !1,
 							value: c,
-							placeholder: ce ? e(M ? "urlManagedClaude" : "urlManagedCodex") : nn[o],
+							placeholder: se ? e(N ? "urlManagedClaude" : "urlManagedCodex") : an[o],
 							onChange: (e) => l(e.target.value)
 						}),
-						/* @__PURE__ */ (0, B.jsx)("small", { children: e(M ? "urlManagedClaude" : se ? "urlManagedCodex" : "urlRequired") })
+						/* @__PURE__ */ (0, B.jsx)("small", { children: e(N ? "urlManagedClaude" : M ? "urlManagedCodex" : "urlRequired") })
 					]
 				}),
 				/* @__PURE__ */ (0, B.jsxs)("section", {
@@ -10786,7 +10813,7 @@ function an({ t: e, request: t, onClose: n, profilesData: r, onConnected: i }) {
 						type: "button",
 						disabled: ae,
 						onClick: () => void I(),
-						children: ae ? "…" : e(se ? "signInChatgpt" : "fetchModels")
+						children: ae ? "…" : e(M ? "signInChatgpt" : "fetchModels")
 					})]
 				}),
 				/* @__PURE__ */ (0, B.jsxs)("details", {
@@ -10857,7 +10884,7 @@ function an({ t: e, request: t, onClose: n, profilesData: r, onConnected: i }) {
 }
 //#endregion
 //#region client/components/ProfilesDialog.tsx
-var on = {
+var cn = {
 	editorId: "",
 	name: "",
 	type: "local",
@@ -10875,15 +10902,15 @@ var on = {
 	sshPassphrase: "",
 	sudoPassword: ""
 };
-function sn(e) {
+function ln(e) {
 	return e ? e.type === "local" ? {
-		...on,
+		...cn,
 		editorId: e.id,
 		name: e.name,
 		type: "local",
 		localPath: e.path
 	} : {
-		...on,
+		...cn,
 		editorId: e.id,
 		name: e.name,
 		type: "ssh",
@@ -10896,26 +10923,26 @@ function sn(e) {
 		sshKeyPath: e.keyPath ?? "",
 		sshHostFingerprint: e.hostFingerprint ?? "",
 		sudoPermission: e.sudoPermission ?? "ask"
-	} : on;
+	} : cn;
 }
-function cn({ t: e, open: t, onClose: n, profilesData: r, onProfilesChanged: i, onAddModelProfile: a }) {
-	let o = (0, u.useRef)(null), [s, c] = (0, u.useState)("model"), [l, d] = (0, u.useState)(on), [f, m] = (0, u.useState)(""), [h, g] = (0, u.useState)(!1), [_, v] = (0, u.useState)(!1), [y, b] = (0, u.useState)(!1), [x, S] = (0, u.useState)(null), [C, w] = (0, u.useState)(""), [ee, T] = (0, u.useState)(""), [te, E] = (0, u.useState)(!1), [ne, re] = (0, u.useState)(""), [D, O] = (0, u.useState)(""), [ie, ae] = (0, u.useState)(!1);
+function un({ t: e, open: t, onClose: n, profilesData: r, onProfilesChanged: i, onAddModelProfile: a }) {
+	let o = (0, u.useRef)(null), [s, c] = (0, u.useState)("model"), [l, d] = (0, u.useState)(cn), [f, m] = (0, u.useState)(""), [h, g] = (0, u.useState)(!1), [_, v] = (0, u.useState)(!1), [y, b] = (0, u.useState)(!1), [x, S] = (0, u.useState)(null), [C, w] = (0, u.useState)(""), [ee, T] = (0, u.useState)(""), [te, E] = (0, u.useState)(!1), [ne, re] = (0, u.useState)(""), [D, O] = (0, u.useState)(""), [ie, ae] = (0, u.useState)(!1);
 	(0, u.useEffect)(() => {
 		if (!t) {
 			o.current?.close();
 			return;
 		}
-		c("model"), d(sn(r.workspaces.find((e) => e.id === r.activeWorkspaceProfileId))), m(""), g(!1), o.current?.open || o.current?.showModal();
+		c("model"), d(ln(r.workspaces.find((e) => e.id === r.activeWorkspaceProfileId))), m(""), g(!1), o.current?.open || o.current?.showModal();
 	}, [t]);
 	let k = (e, t) => d((n) => ({
 		...n,
 		[e]: t
-	})), A = (e) => d(sn(r.workspaces.find((t) => t.id === e))), j = async (e, t) => {
+	})), A = (e) => d(ln(r.workspaces.find((t) => t.id === e))), j = async (e, t) => {
 		confirm(`Delete model profile "${t}"?`) && (await p(`/api/profiles/models/${encodeURIComponent(e)}`, { method: "DELETE" }), i(await p("/api/profiles")));
 	}, oe = (e) => {
 		S(e.id), w(e.name), T(e.timeoutMs ? String(e.timeoutMs / 1e3) : ""), E(e.imagesEnabled), re(e.baseUrl), O(e.modelId), m(""), g(!1);
-	}, se = r.models.find((e) => e.id === x), M = !se || se.provider !== "codex" && se.provider !== "claude-code", ce = async () => {
-		if (!(!x || !se)) {
+	}, M = r.models.find((e) => e.id === x), N = !M || M.provider !== "codex" && M.provider !== "claude-code", se = async () => {
+		if (!(!x || !M)) {
 			ae(!0), m(""), g(!1);
 			try {
 				let e = {
@@ -10923,7 +10950,7 @@ function cn({ t: e, open: t, onClose: n, profilesData: r, onProfilesChanged: i, 
 					timeoutMs: ee.trim() ? Number(ee) * 1e3 : null,
 					imagesEnabled: te
 				};
-				M && ne !== se.baseUrl && (e.baseUrl = ne), D !== se.modelId && (e.modelId = D), i((await p(`/api/profiles/models/${encodeURIComponent(x)}`, {
+				N && ne !== M.baseUrl && (e.baseUrl = ne), D !== M.modelId && (e.modelId = D), i((await p(`/api/profiles/models/${encodeURIComponent(x)}`, {
 					method: "PATCH",
 					body: JSON.stringify(e)
 				})).profiles), S(null);
@@ -10933,7 +10960,7 @@ function cn({ t: e, open: t, onClose: n, profilesData: r, onProfilesChanged: i, 
 				ae(!1);
 			}
 		}
-	}, N = () => {
+	}, ce = () => {
 		let e = l.editorId || void 0;
 		return l.type === "local" ? {
 			id: e,
@@ -10963,9 +10990,9 @@ function cn({ t: e, open: t, onClose: n, profilesData: r, onProfilesChanged: i, 
 			try {
 				let t = await p("/api/profiles/workspaces", {
 					method: "POST",
-					body: JSON.stringify(N())
+					body: JSON.stringify(ce())
 				});
-				i(t.profiles), d(sn(t.profiles.workspaces.find((e) => e.id === t.profile.id))), m(t.test ? `${e("profileSaved")} ${e("sshSuccess", t.test)}` : e("profileSaved"));
+				i(t.profiles), d(ln(t.profiles.workspaces.find((e) => e.id === t.profile.id))), m(t.test ? `${e("profileSaved")} ${e("sshSuccess", t.test)}` : e("profileSaved"));
 			} catch (e) {
 				m(e instanceof Error ? e.message : String(e)), g(!0);
 			} finally {
@@ -10991,7 +11018,7 @@ function cn({ t: e, open: t, onClose: n, profilesData: r, onProfilesChanged: i, 
 		}
 	}, le = async () => {
 		if (!(!l.editorId || !confirm("Delete this workspace profile?"))) try {
-			await p(`/api/profiles/workspaces/${encodeURIComponent(l.editorId)}`, { method: "DELETE" }), i(await p("/api/profiles")), d(on);
+			await p(`/api/profiles/workspaces/${encodeURIComponent(l.editorId)}`, { method: "DELETE" }), i(await p("/api/profiles")), d(cn);
 		} catch (e) {
 			m(e instanceof Error ? e.message : String(e)), g(!0);
 		}
@@ -11071,7 +11098,7 @@ function cn({ t: e, open: t, onClose: n, profilesData: r, onProfilesChanged: i, 
 									}),
 									/* @__PURE__ */ (0, B.jsxs)("div", {
 										className: "two-columns",
-										children: [M ? /* @__PURE__ */ (0, B.jsxs)("label", { children: [/* @__PURE__ */ (0, B.jsx)("span", { children: e("serverUrl") }), /* @__PURE__ */ (0, B.jsx)("input", {
+										children: [N ? /* @__PURE__ */ (0, B.jsxs)("label", { children: [/* @__PURE__ */ (0, B.jsx)("span", { children: e("serverUrl") }), /* @__PURE__ */ (0, B.jsx)("input", {
 											type: "url",
 											spellCheck: !1,
 											value: ne,
@@ -11107,7 +11134,7 @@ function cn({ t: e, open: t, onClose: n, profilesData: r, onProfilesChanged: i, 
 										}), /* @__PURE__ */ (0, B.jsx)("button", {
 											type: "button",
 											disabled: ie,
-											onClick: () => void ce(),
+											onClick: () => void se(),
 											children: e(ie ? "savingShort" : "saveSettings")
 										})]
 									})
@@ -11383,10 +11410,10 @@ function cn({ t: e, open: t, onClose: n, profilesData: r, onProfilesChanged: i, 
 }
 //#endregion
 //#region client/components/SessionDialog.tsx
-function ln(e, t) {
+function dn(e, t) {
 	return t ? Object.entries(t).map(([t, n]) => `${e(t)}: ${e(n)}`).join(" · ") : "—";
 }
-function un({ t: e, locale: t, sessionId: n, onClose: r, onRenamed: i, onDeleted: a }) {
+function fn({ t: e, locale: t, sessionId: n, onClose: r, onRenamed: i, onDeleted: a }) {
 	let o = (0, u.useRef)(null), [s, c] = (0, u.useState)(null), [l, d] = (0, u.useState)(""), [f, m] = (0, u.useState)("");
 	if ((0, u.useEffect)(() => {
 		if (!n) {
@@ -11450,7 +11477,7 @@ function un({ t: e, locale: t, sessionId: n, onClose: r, onRenamed: i, onDeleted
 						/* @__PURE__ */ (0, B.jsx)("dt", { children: e("status") }),
 						/* @__PURE__ */ (0, B.jsx)("dd", { children: h.status ?? "—" }),
 						/* @__PURE__ */ (0, B.jsx)("dt", { children: e("provider") }),
-						/* @__PURE__ */ (0, B.jsx)("dd", { children: Bt(h.metadata?.appProvider ?? h.provider) }),
+						/* @__PURE__ */ (0, B.jsx)("dd", { children: Ht(h.metadata?.appProvider ?? h.provider) }),
 						/* @__PURE__ */ (0, B.jsx)("dt", { children: e("model") }),
 						/* @__PURE__ */ (0, B.jsx)("dd", { children: h.metadata?.appModelId ?? h.model ?? "—" }),
 						/* @__PURE__ */ (0, B.jsx)("dt", { children: e("modelProfile") }),
@@ -11462,7 +11489,7 @@ function un({ t: e, locale: t, sessionId: n, onClose: r, onRenamed: i, onDeleted
 						/* @__PURE__ */ (0, B.jsx)("dt", { children: e("permissionPreset") }),
 						/* @__PURE__ */ (0, B.jsx)("dd", { children: _?.permissionPreset ? e(String(_.permissionPreset)) : e("settingsNotRecorded") }),
 						/* @__PURE__ */ (0, B.jsx)("dt", { children: e("effectivePermissions") }),
-						/* @__PURE__ */ (0, B.jsx)("dd", { children: ln(e, _?.effectivePermissions ?? _?.permissions) }),
+						/* @__PURE__ */ (0, B.jsx)("dd", { children: dn(e, _?.effectivePermissions ?? _?.permissions) }),
 						/* @__PURE__ */ (0, B.jsx)("dt", { children: e("maxIterations") }),
 						/* @__PURE__ */ (0, B.jsx)("dd", { children: _?.maxIterations == null ? "—" : String(_.maxIterations) }),
 						/* @__PURE__ */ (0, B.jsx)("dt", { children: e("autoCompaction") }),
@@ -11474,13 +11501,13 @@ function un({ t: e, locale: t, sessionId: n, onClose: r, onRenamed: i, onDeleted
 						/* @__PURE__ */ (0, B.jsx)("dt", { children: e("updated") }),
 						/* @__PURE__ */ (0, B.jsx)("dd", { children: h.updatedAt ? new Date(h.updatedAt).toLocaleString() : "—" }),
 						/* @__PURE__ */ (0, B.jsx)("dt", { children: e("currentContext") }),
-						/* @__PURE__ */ (0, B.jsx)("dd", { children: s.context?.inputTokens == null ? "—" : `${Ht(s.context.inputTokens, t)} / ${Ht(s.context.maxInputTokens, t)} (${s.context.utilizationPercent}%)` }),
+						/* @__PURE__ */ (0, B.jsx)("dd", { children: s.context?.inputTokens == null ? "—" : `${Wt(s.context.inputTokens, t)} / ${Wt(s.context.maxInputTokens, t)} (${s.context.utilizationPercent}%)` }),
 						/* @__PURE__ */ (0, B.jsx)("dt", { children: e("compactionHistory") }),
 						/* @__PURE__ */ (0, B.jsx)("dd", { children: s.lastCompaction ? `${Ft(s.lastCompaction.at, t)} · ${s.compactions.length}` : e("noCompactions") }),
 						/* @__PURE__ */ (0, B.jsx)("dt", { children: e("inputTokens") }),
-						/* @__PURE__ */ (0, B.jsx)("dd", { children: Ht(Number(h.metadata?.aggregateUsage?.inputTokens ?? 0), t) }),
+						/* @__PURE__ */ (0, B.jsx)("dd", { children: Wt(Number(h.metadata?.aggregateUsage?.inputTokens ?? 0), t) }),
 						/* @__PURE__ */ (0, B.jsx)("dt", { children: e("outputTokens") }),
-						/* @__PURE__ */ (0, B.jsx)("dd", { children: Ht(Number(h.metadata?.aggregateUsage?.outputTokens ?? 0), t) }),
+						/* @__PURE__ */ (0, B.jsx)("dd", { children: Wt(Number(h.metadata?.aggregateUsage?.outputTokens ?? 0), t) }),
 						/* @__PURE__ */ (0, B.jsx)("dt", { children: e("messagesFile") }),
 						/* @__PURE__ */ (0, B.jsx)("dd", { children: s.messagesPath ?? "—" })
 					]
@@ -11508,7 +11535,7 @@ function un({ t: e, locale: t, sessionId: n, onClose: r, onRenamed: i, onDeleted
 }
 //#endregion
 //#region client/components/AgentSettingsDialog.tsx
-var dn = [
+var pn = [
 	"read_files",
 	"search_codebase",
 	"fetch_web_content",
@@ -11516,7 +11543,7 @@ var dn = [
 	"run_commands",
 	"editor",
 	"apply_patch"
-], fn = {
+], mn = {
 	readonly: {
 		read_files: "allow",
 		search_codebase: "allow",
@@ -11544,13 +11571,13 @@ var dn = [
 		editor: "allow",
 		apply_patch: "allow"
 	}
-}, pn = () => ({
+}, hn = () => ({
 	name: "",
 	prompt: "",
 	permissionPreset: "balanced",
-	permissions: { ...fn.balanced }
+	permissions: { ...mn.balanced }
 });
-function mn({ t: e, open: t, onClose: n, onSaved: r }) {
+function gn({ t: e, open: t, onClose: n, onSaved: r }) {
 	let i = (0, u.useRef)(null), [a, o] = (0, u.useState)(null), [s, c] = (0, u.useState)("templates"), [l, d] = (0, u.useState)(null), [f, m] = (0, u.useState)(null), [h, g] = (0, u.useState)(null), [_, v] = (0, u.useState)(""), [y, b] = (0, u.useState)(!1), x = (e, t) => o((n) => n && {
 		...n,
 		[e]: t
@@ -11569,14 +11596,14 @@ function mn({ t: e, open: t, onClose: n, onSaved: r }) {
 	let S = (e) => {
 		d(e.id), m(e), g(null);
 	}, C = () => {
-		d(null), m(pn()), g(null);
+		d(null), m(hn()), g(null);
 	}, w = (e, t) => m((n) => n && {
 		...n,
 		[e]: t
 	}), ee = (e) => m((t) => t && {
 		...t,
 		permissionPreset: e,
-		permissions: e === "custom" ? t.permissions : { ...fn[e] }
+		permissions: e === "custom" ? t.permissions : { ...mn[e] }
 	}), T = (e, t) => m((n) => n && {
 		...n,
 		permissionPreset: "custom",
@@ -11667,9 +11694,9 @@ function mn({ t: e, open: t, onClose: n, onSaved: r }) {
 	}, [k, A] = (0, u.useState)({}), j = (e) => k[e.id] ?? e.args.join(", "), oe = (e) => {
 		let t = k[e.id];
 		t !== void 0 && O(e.id, { args: t.split(",").map((e) => e.trim()).filter(Boolean) });
-	}, [se, M] = (0, u.useState)({}), ce = (0, u.useRef)({}), N = async (t) => {
+	}, [M, N] = (0, u.useState)({}), se = (0, u.useRef)({}), ce = async (t) => {
 		let n = new AbortController();
-		ce.current[t.id] = n, M((n) => ({
+		se.current[t.id] = n, N((n) => ({
 			...n,
 			[t.id]: {
 				busy: !0,
@@ -11688,7 +11715,7 @@ function mn({ t: e, open: t, onClose: n, onSaved: r }) {
 				}),
 				signal: n.signal
 			}), i = r.ok ? e("mcpTestSuccess", { count: r.toolCount }) : r.error;
-			M((e) => ({
+			N((e) => ({
 				...e,
 				[t.id]: {
 					busy: !1,
@@ -11699,7 +11726,7 @@ function mn({ t: e, open: t, onClose: n, onSaved: r }) {
 			}));
 		} catch (r) {
 			if (n.signal.aborted) {
-				M((n) => ({
+				N((n) => ({
 					...n,
 					[t.id]: {
 						busy: !1,
@@ -11709,7 +11736,7 @@ function mn({ t: e, open: t, onClose: n, onSaved: r }) {
 				}));
 				return;
 			}
-			M((e) => ({
+			N((e) => ({
 				...e,
 				[t.id]: {
 					busy: !1,
@@ -11718,10 +11745,10 @@ function mn({ t: e, open: t, onClose: n, onSaved: r }) {
 				}
 			}));
 		} finally {
-			delete ce.current[t.id];
+			delete se.current[t.id];
 		}
 	}, P = (e) => {
-		ce.current[e]?.abort(), delete ce.current[e], M((t) => {
+		se.current[e]?.abort(), delete se.current[e], N((t) => {
 			let { [e]: n, ...r } = t;
 			return r;
 		}), A((t) => {
@@ -11902,7 +11929,7 @@ function mn({ t: e, open: t, onClose: n, onSaved: r }) {
 							})] }),
 							/* @__PURE__ */ (0, B.jsx)("div", {
 								className: "tool-permissions",
-								children: dn.map((t) => /* @__PURE__ */ (0, B.jsxs)("label", {
+								children: pn.map((t) => /* @__PURE__ */ (0, B.jsxs)("label", {
 									className: "tool-row",
 									children: [/* @__PURE__ */ (0, B.jsx)("span", { children: e(t) }), /* @__PURE__ */ (0, B.jsxs)("select", {
 										value: f.permissions[t] ?? "ask",
@@ -11990,7 +12017,7 @@ function mn({ t: e, open: t, onClose: n, onSaved: r }) {
 						/* @__PURE__ */ (0, B.jsx)("div", {
 							className: "mcp-list",
 							children: a.mcpServers.map((t, n) => {
-								let r = se[t.id];
+								let r = M[t.id];
 								return /* @__PURE__ */ (0, B.jsxs)("fieldset", {
 									className: "mcp-card",
 									children: [
@@ -12021,7 +12048,7 @@ function mn({ t: e, open: t, onClose: n, onSaved: r }) {
 													className: "secondary",
 													type: "button",
 													disabled: r?.busy,
-													onClick: () => void N(t),
+													onClick: () => void ce(t),
 													children: r?.busy ? e("mcpTesting") : e("testMcp")
 												}), /* @__PURE__ */ (0, B.jsx)("button", {
 													className: "secondary",
@@ -12198,7 +12225,7 @@ function mn({ t: e, open: t, onClose: n, onSaved: r }) {
 }
 //#endregion
 //#region client/components/GeneralSettingsDialog.tsx
-function hn(e) {
+function _n(e) {
 	let { t, open: n, onClose: r, locale: i, onChangeLocale: a, availableLocales: o, theme: s, onToggleTheme: c, hidePlanBanner: l, onChangeHidePlanBanner: d } = e, f = (0, u.useRef)(null);
 	return (0, u.useEffect)(() => {
 		n ? f.current?.showModal() : f.current?.close();
@@ -12250,7 +12277,7 @@ function hn(e) {
 }
 //#endregion
 //#region client/components/AiSettingsMenu.tsx
-function gn({ t: e, open: t, onClose: n, onOpenConnection: r, onOpenProfiles: i, onOpenAgentSettings: a }) {
+function vn({ t: e, open: t, onClose: n, onOpenConnection: r, onOpenProfiles: i, onOpenAgentSettings: a }) {
 	let o = (0, u.useRef)(null);
 	(0, u.useEffect)(() => {
 		t ? o.current?.showModal() : o.current?.close();
@@ -12328,11 +12355,11 @@ function gn({ t: e, open: t, onClose: n, onOpenConnection: r, onOpenProfiles: i,
 }
 //#endregion
 //#region client/App.tsx
-var _n = {
+var yn = {
 	models: [],
 	workspaces: []
 };
-function vn({ onLogout: e } = {}) {
+function bn({ onLogout: e } = {}) {
 	let [t, n] = (0, u.useState)(y), [r, i] = (0, u.useState)({}), [a, o] = (0, u.useState)({}), [s, c] = (0, u.useState)([]), l = (e) => {
 		localStorage.setItem("cline-language", e), n(e);
 	};
@@ -12346,10 +12373,10 @@ function vn({ onLogout: e } = {}) {
 	let d = (0, u.useMemo)(() => (e, t) => v(r, a, e, t), [r, a]), [m, h] = (0, u.useState)(() => localStorage.getItem("cline-theme") ?? (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark")), [b, x] = (0, u.useState)(() => {
 		let e = localStorage.getItem("cline-sidebar-collapsed");
 		return e === null ? matchMedia("(max-width: 760px)").matches : e === "true";
-	}), [S, C] = (0, u.useState)(() => localStorage.getItem("cline-show-tool-details") === "true"), [w, ee] = (0, u.useState)(() => localStorage.getItem("cline-hide-plan-banner") === "true"), [T, te] = (0, u.useState)(!1), [E, ne] = (0, u.useState)([]), [re, D, O] = It(null), [ie, ae] = (0, u.useState)(null), [k, A] = (0, u.useState)(!1), [j, oe] = (0, u.useState)(!1), se = (0, u.useRef)(0), [M, ce] = (0, u.useState)(null), [N, P] = (0, u.useState)(null), [F, le] = (0, u.useState)(_n), [I, ue] = (0, u.useState)(null), [de, fe] = (0, u.useState)(null), [pe, me] = (0, u.useState)([]), [he, ge] = (0, u.useState)([]), [_e, ve] = (0, u.useState)(""), [ye, be] = (0, u.useState)([]), [xe, Se, Ce] = It([]), [we, Te] = (0, u.useState)([]), [Ee, De] = (0, u.useState)(!1), [Oe, ke] = (0, u.useState)("connecting"), [Ae, je] = (0, u.useState)(!1), [Me, Ne] = (0, u.useState)(!1), [Pe, Fe] = (0, u.useState)(null), [Ie, Le] = (0, u.useState)(!1), [Re, ze] = (0, u.useState)(!1), [Be, Ve] = (0, u.useState)(!1), [He, Ue] = (0, u.useState)(!1), [We, Ge] = (0, u.useState)(null), Ke = (0, u.useRef)(0), qe = (0, u.useRef)(null), Je = (0, u.useRef)(null), L = () => Je.current;
+	}), [S, C] = (0, u.useState)(() => localStorage.getItem("cline-show-tool-details") === "true"), [w, ee] = (0, u.useState)(() => localStorage.getItem("cline-hide-plan-banner") === "true"), [T, te] = (0, u.useState)(!1), [E, ne] = (0, u.useState)([]), [re, D, O] = It(null), [ie, ae] = (0, u.useState)(null), [k, A] = (0, u.useState)(!1), [j, oe] = (0, u.useState)(!1), M = (0, u.useRef)(0), [N, se] = (0, u.useState)(null), [ce, P] = (0, u.useState)(null), [F, le] = (0, u.useState)(yn), [I, ue] = (0, u.useState)(null), [de, fe] = (0, u.useState)(null), [pe, me] = (0, u.useState)([]), [he, ge] = (0, u.useState)([]), [_e, ve] = (0, u.useState)(""), [ye, be] = (0, u.useState)([]), [xe, Se, Ce] = It([]), [we, Te] = (0, u.useState)([]), [Ee, De] = (0, u.useState)(!1), [Oe, ke] = (0, u.useState)("connecting"), [Ae, je] = (0, u.useState)(!1), [Me, Ne] = (0, u.useState)(!1), [Pe, Fe] = (0, u.useState)(null), [Ie, Le] = (0, u.useState)(!1), [Re, ze] = (0, u.useState)(!1), [Be, Ve] = (0, u.useState)(!1), [He, Ue] = (0, u.useState)(!1), [We, Ge] = (0, u.useState)(null), Ke = (0, u.useRef)(0), qe = (0, u.useRef)(null), Je = (0, u.useRef)(null), L = () => Je.current;
 	(0, u.useEffect)(() => {
 		let e = () => {
-			let e = k && se.current > 0 && Date.now() - se.current >= 1e4;
+			let e = k && M.current > 0 && Date.now() - M.current >= 1e4;
 			oe(e);
 		}, t = window.setInterval(e, 1e3);
 		return document.addEventListener("visibilitychange", e), () => {
@@ -12429,7 +12456,7 @@ function vn({ onLogout: e } = {}) {
 			for (let e of t) L().renderHistoryMessage(e);
 			me(n.compactions ?? []);
 			for (let e of n.compactions ?? []) L().addCompactionEvent(e);
-			A(n.session?.status === "running"), se.current = n.session?.status === "running" ? Date.now() : 0, oe(!1), fe(n.context), await $e(), await Ze(), matchMedia("(max-width: 760px)").matches && x(!0);
+			A(n.session?.status === "running"), M.current = n.session?.status === "running" ? Date.now() : 0, oe(!1), fe(n.context), await $e(), await Ze(), matchMedia("(max-width: 760px)").matches && x(!0);
 		} catch (e) {
 			if (e instanceof f && e.status === 404) {
 				D(null), ae(null), A(!1), fe(null), await Ze(), L().addMessage("tool", "This session is no longer available. Select another session or start a new one.");
@@ -12438,11 +12465,11 @@ function vn({ onLogout: e } = {}) {
 			L().showError(e, "Session load failed");
 		}
 	}, it = () => {
-		if (!M) {
+		if (!N) {
 			Ye();
 			return;
 		}
-		D(null), ae(null), De(!1), A(!1), se.current = 0, oe(!1), Se([]), Te([]), nt(), fe(null), L().addMessage("tool", "New session ready. Enter a message and press Send."), Ze().catch((e) => L().showError(e, "Session list failed"));
+		D(null), ae(null), De(!1), A(!1), M.current = 0, oe(!1), Se([]), Te([]), nt(), fe(null), L().addMessage("tool", "New session ready. Enter a message and press Send."), Ze().catch((e) => L().showError(e, "Session list failed"));
 	}, at = async () => {
 		if (confirm("Delete all Cline sessions? This cannot be undone.")) try {
 			let e = await p("/api/sessions", { method: "DELETE" });
@@ -12473,7 +12500,7 @@ function vn({ onLogout: e } = {}) {
 		}
 		ge((e) => [...e, ...r]);
 	}, R = async () => {
-		if (!M) {
+		if (!N) {
 			Ye();
 			return;
 		}
@@ -12489,7 +12516,7 @@ function vn({ onLogout: e } = {}) {
 				}]);
 				return;
 			}
-			k || L().resetStreamNodes(), A(!0), se.current = Date.now(), oe(!1);
+			k || L().resetStreamNodes(), A(!0), M.current = Date.now(), oe(!1);
 			try {
 				if (!re) De(!0), await p("/api/sessions", {
 					method: "POST",
@@ -12509,7 +12536,7 @@ function vn({ onLogout: e } = {}) {
 					t.sessionId && t.sessionId !== re && (D(t.sessionId), Ze().catch(() => {}), et());
 				}
 			} catch (e) {
-				re || De(!1), A(!1), se.current = 0, oe(!1), he.length === 0 && ge(t), L().showError(e, "Send failed");
+				re || De(!1), A(!1), M.current = 0, oe(!1), he.length === 0 && ge(t), L().showError(e, "Send failed");
 			}
 		}
 	}, st = async () => {
@@ -12623,7 +12650,7 @@ function vn({ onLogout: e } = {}) {
 			});
 			le(t.profiles);
 			let n = t.connection;
-			ce("modelId" in n ? n.modelId : null), P(n), fe(await p("/api/context"));
+			se("modelId" in n ? n.modelId : null), P(n), fe(await p("/api/context"));
 		} catch (e) {
 			le((e) => ({
 				...e,
@@ -12650,13 +12677,13 @@ function vn({ onLogout: e } = {}) {
 			Ne(!1);
 		}
 	}, bt = (e) => {
-		ce(e.modelId), P(e), D(null), ae(null), nt(), L().resetStreamNodes(), fe(null), p("/api/context").then(fe).catch(() => {}), Xe().catch(() => {}), L().addMessage("tool", `AI connected: ${e.provider} / ${e.modelId}`);
+		se(e.modelId), P(e), D(null), ae(null), nt(), L().resetStreamNodes(), fe(null), p("/api/context").then(fe).catch(() => {}), Xe().catch(() => {}), L().addMessage("tool", `AI connected: ${e.provider} / ${e.modelId}`);
 	}, xt = (e) => {
 		ue(e), Xe().catch(() => {}), p("/api/context").then(fe).catch(() => {});
 	};
 	(0, u.useEffect)(() => {
 		Ze().catch((e) => L().showError(e, "Session list failed")), Xe().catch((e) => L().showError(e, "Profile load failed")), Qe().catch((e) => L().showError(e, "Agent settings failed")), p("/api/config").then((e) => {
-			e.configured ? (ce(e.modelId), P(e), p("/api/context").then(fe).catch(() => {})) : Ye(e);
+			e.configured ? (se(e.modelId), P(e), p("/api/context").then(fe).catch(() => {})) : Ye(e);
 		}).catch((e) => L().showError(e, "Configuration failed"));
 		let e = new EventSource("/api/events");
 		e.onopen = () => ke("open"), e.onerror = () => ke("retry");
@@ -12695,7 +12722,7 @@ function vn({ onLogout: e } = {}) {
 					"iteration",
 					"usage",
 					"status"
-				].includes(t) && (se.current = Date.now(), oe(!1)), t === "queue" && Te(Array.isArray(n.data?.prompts) ? n.data.prompts : []), t === "prompt_started" && (r.finishStreamNodes(), r.resetStreamNodes(), typeof n.data?.prompt == "string" && r.addMessage("user", n.data.prompt, Array.isArray(n.data?.images) ? n.data.images : []), Ze().catch(() => {}), et()), t === "text" && r.appendStream("text", n.data), t === "reasoning" && r.appendStream("reasoning", typeof n.data == "string" ? n.data : n.data?.text, !!n.data?.redacted), t === "iteration" && (r.finishStreamNodes(), r.resetStreamNodes()), t === "tool" && (r.finishStreamNodes(), r.addToolActivity(n.data)), t === "tool_result" && r.finishToolActivity(n.data), t === "approval" && be((e) => [...e, n.data]), t === "usage" && fe(n.data), t === "status" && n.data?.reason === "auto_compaction") {
+				].includes(t) && (M.current = Date.now(), oe(!1)), t === "queue" && Te(Array.isArray(n.data?.prompts) ? n.data.prompts : []), t === "prompt_started" && (r.finishStreamNodes(), r.resetStreamNodes(), typeof n.data?.prompt == "string" && r.addMessage("user", n.data.prompt, Array.isArray(n.data?.images) ? n.data.images : []), Ze().catch(() => {}), et()), t === "text" && r.appendStream("text", n.data), t === "reasoning" && r.appendStream("reasoning", typeof n.data == "string" ? n.data : n.data?.text, !!n.data?.redacted), t === "iteration" && (r.finishStreamNodes(), r.resetStreamNodes()), t === "tool" && (r.finishStreamNodes(), r.addToolActivity(n.data)), t === "tool_result" && r.finishToolActivity(n.data), t === "approval" && be((e) => [...e, n.data]), t === "usage" && fe(n.data), t === "status" && n.data?.reason === "auto_compaction") {
 					let e = {
 						at: n.data.at ?? (/* @__PURE__ */ new Date()).toISOString(),
 						message: n.data.message ?? ""
@@ -12703,7 +12730,7 @@ function vn({ onLogout: e } = {}) {
 					me((t) => [...t, e]), r.addCompactionEvent(e);
 				}
 				if (t === "status" && typeof n.data == "string" && (A(n.data === "running"), n.data === "idle" && $e().catch(() => {})), t === "turn_finished" || t === "ended") {
-					A(!1), se.current = 0, oe(!1), t === "turn_finished" && $e().catch(() => {}), t === "ended" && r.finishStreamNodes(), r.resetStreamNodes();
+					A(!1), M.current = 0, oe(!1), t === "turn_finished" && $e().catch(() => {}), t === "ended" && r.finishStreamNodes(), r.resetStreamNodes();
 					let e = O.current;
 					e && p(`/api/sessions/${encodeURIComponent(e)}`).then((e) => {
 						ae(e), fe(e.context);
@@ -12713,9 +12740,9 @@ function vn({ onLogout: e } = {}) {
 		});
 		return () => e.close();
 	}, []);
-	let St = Oe === "retry" ? d("sseRetry") : M ? `${d("connected")} · ${M}` : d(Oe === "open" ? "serverConnected" : "connecting"), Ct = Oe === "retry" ? "#f5c979" : M ? "#79d69a" : "#f5c979", wt = F.workspaces.find((e) => e.id === F.activeWorkspaceProfileId), Tt = wt ? `${wt.type === "ssh" ? "SSH" : "workspace"}: ${wt.type === "ssh" ? `${wt.username}@${wt.host}:${wt.remoteDirectory}` : wt.path}` : "workspace: loading...";
+	let St = Oe === "retry" ? d("sseRetry") : N ? `${d("connected")} · ${N}` : d(Oe === "open" ? "serverConnected" : "connecting"), Ct = Oe === "retry" ? "#f5c979" : N ? "#79d69a" : "#f5c979", wt = F.workspaces.find((e) => e.id === F.activeWorkspaceProfileId), Tt = wt ? `${wt.type === "ssh" ? "SSH" : "workspace"}: ${wt.type === "ssh" ? `${wt.username}@${wt.host}:${wt.remoteDirectory}` : wt.path}` : "workspace: loading...";
 	return /* @__PURE__ */ (0, B.jsxs)(B.Fragment, { children: [
-		/* @__PURE__ */ (0, B.jsx)(zt, {
+		/* @__PURE__ */ (0, B.jsx)(Vt, {
 			t: d,
 			connectionText: St,
 			connectionColor: Ct,
@@ -12734,7 +12761,7 @@ function vn({ onLogout: e } = {}) {
 			onOpenAiSettings: () => Ue(!0),
 			onLogout: e
 		}),
-		/* @__PURE__ */ (0, B.jsxs)("main", { children: [/* @__PURE__ */ (0, B.jsx)(Ut, {
+		/* @__PURE__ */ (0, B.jsxs)("main", { children: [/* @__PURE__ */ (0, B.jsx)(Gt, {
 			t: d,
 			sessions: E,
 			activeSession: re,
@@ -12745,7 +12772,7 @@ function vn({ onLogout: e } = {}) {
 		}), /* @__PURE__ */ (0, B.jsxs)("section", {
 			className: "conversation",
 			children: [
-				/* @__PURE__ */ (0, B.jsx)(Kt, {
+				/* @__PURE__ */ (0, B.jsx)(Jt, {
 					t: d,
 					locale: t,
 					context: de,
@@ -12761,12 +12788,12 @@ function vn({ onLogout: e } = {}) {
 					className: "messages",
 					ref: qe
 				}),
-				/* @__PURE__ */ (0, B.jsx)(qt, {
+				/* @__PURE__ */ (0, B.jsx)(Yt, {
 					t: d,
 					approvals: ye,
 					onResolve: vt
 				}),
-				/* @__PURE__ */ (0, B.jsx)(Jt, {
+				/* @__PURE__ */ (0, B.jsx)(Xt, {
 					t: d,
 					entries: ct,
 					onUpdate: lt,
@@ -12792,7 +12819,7 @@ function vn({ onLogout: e } = {}) {
 						})]
 					})]
 				}),
-				/* @__PURE__ */ (0, B.jsx)(tn, {
+				/* @__PURE__ */ (0, B.jsx)(rn, {
 					t: d,
 					prompt: _e,
 					onPromptChange: ve,
@@ -12803,7 +12830,7 @@ function vn({ onLogout: e } = {}) {
 					pendingImages: he,
 					onAddImages: (e) => void ot(e).catch((e) => L().showError(e, "Image attachment failed")),
 					onRemoveImage: (e) => ge((t) => t.filter((t, n) => n !== e)),
-					imagesEnabled: !!(N && "imagesEnabled" in N && N.imagesEnabled),
+					imagesEnabled: !!(ce && "imagesEnabled" in ce && ce.imagesEnabled),
 					agentSettings: I,
 					effectivePermissions: ft,
 					onCyclePermission: pt,
@@ -12814,7 +12841,7 @@ function vn({ onLogout: e } = {}) {
 				})
 			]
 		})] }),
-		/* @__PURE__ */ (0, B.jsx)(hn, {
+		/* @__PURE__ */ (0, B.jsx)(_n, {
 			t: d,
 			open: Be,
 			onClose: () => Ve(!1),
@@ -12828,7 +12855,7 @@ function vn({ onLogout: e } = {}) {
 				ee(e), localStorage.setItem("cline-hide-plan-banner", String(e));
 			}
 		}),
-		/* @__PURE__ */ (0, B.jsx)(gn, {
+		/* @__PURE__ */ (0, B.jsx)(vn, {
 			t: d,
 			open: He,
 			onClose: () => Ue(!1),
@@ -12838,14 +12865,14 @@ function vn({ onLogout: e } = {}) {
 			},
 			onOpenAgentSettings: () => ze(!0)
 		}),
-		/* @__PURE__ */ (0, B.jsx)(an, {
+		/* @__PURE__ */ (0, B.jsx)(sn, {
 			t: d,
 			request: We,
 			onClose: () => {},
 			profilesData: F,
 			onConnected: bt
 		}),
-		/* @__PURE__ */ (0, B.jsx)(cn, {
+		/* @__PURE__ */ (0, B.jsx)(un, {
 			t: d,
 			open: Ie,
 			onClose: () => Le(!1),
@@ -12855,7 +12882,7 @@ function vn({ onLogout: e } = {}) {
 				Le(!1), Ye(await p("/api/config"), !0);
 			}
 		}),
-		/* @__PURE__ */ (0, B.jsx)(un, {
+		/* @__PURE__ */ (0, B.jsx)(fn, {
 			t: d,
 			locale: t,
 			sessionId: Pe,
@@ -12867,7 +12894,7 @@ function vn({ onLogout: e } = {}) {
 				Fe(null), re === e && (D(null), ae(null), nt(), fe(null)), Ze().catch(() => {});
 			}
 		}),
-		/* @__PURE__ */ (0, B.jsx)(mn, {
+		/* @__PURE__ */ (0, B.jsx)(gn, {
 			t: d,
 			open: Re,
 			onClose: () => ze(!1),
@@ -12877,7 +12904,7 @@ function vn({ onLogout: e } = {}) {
 }
 //#endregion
 //#region client/components/LoginScreen.tsx
-function yn({ t: e, onSuccess: t }) {
+function xn({ t: e, onSuccess: t }) {
 	let [n, r] = (0, u.useState)(""), [i, a] = (0, u.useState)(""), [o, s] = (0, u.useState)(!1), [c, l] = (0, u.useState)(""), d = async (e) => {
 		e.preventDefault(), s(!0), l("");
 		try {
@@ -12935,7 +12962,7 @@ function yn({ t: e, onSuccess: t }) {
 }
 //#endregion
 //#region client/components/AuthGate.tsx
-function bn() {
+function Sn() {
 	let [e, t] = (0, u.useState)(null), [n, r] = (0, u.useState)({}), [i, a] = (0, u.useState)({}), o = (0, u.useMemo)(() => (e, t) => v(n, i, e, t), [n, i]);
 	if ((0, u.useEffect)(() => {
 		fetch("/api/auth/status").then((e) => e.json()).then(t).catch(() => t({
@@ -12945,7 +12972,7 @@ function bn() {
 	}, []), (0, u.useEffect)(() => {
 		!e?.required || e.authenticated || (g("en").then(a).catch(() => {}), g(y()).then(r).catch(() => {}));
 	}, [e]), !e) return null;
-	if (e.required && !e.authenticated) return /* @__PURE__ */ (0, B.jsx)(yn, {
+	if (e.required && !e.authenticated) return /* @__PURE__ */ (0, B.jsx)(xn, {
 		t: o,
 		onSuccess: () => t({
 			required: !0,
@@ -12958,10 +12985,10 @@ function bn() {
 			authenticated: !1
 		}));
 	} : void 0;
-	return /* @__PURE__ */ (0, B.jsx)(vn, { onLogout: s });
+	return /* @__PURE__ */ (0, B.jsx)(bn, { onLogout: s });
 }
 //#endregion
 //#region client/main.tsx
-var xn = document.querySelector("#root");
-xn && (0, d.createRoot)(xn).render(/* @__PURE__ */ (0, B.jsx)(bn, {}));
+var Cn = document.querySelector("#root");
+Cn && (0, d.createRoot)(Cn).render(/* @__PURE__ */ (0, B.jsx)(Sn, {}));
 //#endregion
