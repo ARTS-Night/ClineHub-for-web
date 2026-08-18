@@ -13,6 +13,13 @@ pnpm dev
 
 ブラウザで http://localhost:3000 を開きます。
 
+`pnpm dev` は既定で `0.0.0.0` にバインドするため、スマートフォンなど同じLAN上の他端末からも `http://<このPCのIP>:3000` でアクセスできます。認証機能はないため、信頼できないネットワークでは公開しないでください。localhostのみに限定する場合は起動前に指定します。
+
+```powershell
+$env:HOST = "127.0.0.1"
+pnpm dev
+```
+
 起動時に接続設定画面が表示されます。
 
 - Providerを選ぶ
@@ -81,15 +88,18 @@ Claude Code選択時はサーバーURLとAPIキーは不要です。このモー
 
 ヘッダーには現在のworking directoryを常時表示します。`Agent settings` では以下を変更できます。
 
-- Working directory（既定ではサーバー起動フォルダー配下のみ）
+- Working directory（絶対パスで指定、既定では起動した場所以外も自由に選べます。詳細は後述）
 - System prompt
 - 最大iteration数（1〜500）
 - Tool permissionプリセット
 - `read_files`、`search_codebase`、`fetch_web_content`、`skills`、`run_commands`、`editor`、`apply_patch` の個別権限
 - 自動コンテキスト圧縮の有効/無効、圧縮方式、保持する直近トークン数
 - モデルのコンテキスト上限（通常は自動取得、必要な場合のみ手動指定）
+- MCPサーバーの登録（後述）
 
 権限は `Disabled`（モデルからも非表示）、`Ask`（Web承認が必要）、`Allow`（自動承認）の3段階です。プリセットは `Read only`、`Ask before changes`、`Full access` を用意しています。
+
+`Agent settings` の `テンプレート` タブでは、System promptと権限プリセットをセットにした「テンプレート」を切り替えられます。標準では `日常`、`コーディング`、`プラン`、`Linux` の4種類があり、いずれも自由に編集・削除・既定値へのリセットが可能です。メッセージ入力欄のテンプレート切替からもワンクリックで変更でき、`プラン`を選んでいる間は「内容を確認し、実行する場合は`コーディング`に切り替えてください」というバナーを会話上部に表示します（一般設定で非表示にできます）。
 
 エージェント設定を保存した後は、現在の会話履歴を保持した内部セッションへ切り替え、次に送信するメッセージからシステムプロンプト、権限、最大iteration数、圧縮設定、作業場所をまとめて反映します。設定は`.cline-data/agent-settings.json`へ保存され、サーバー再起動後も維持されます。
 
@@ -111,15 +121,19 @@ pnpm dev
 
 ## MCPサーバー
 
-`Agent settings` の `MCP` タブで、stdio・SSE・Streamable HTTPのMCPサーバーを登録できます。サーバーごとに有効/無効を切り替えられ、無効なサーバーは次のメッセージからClineのツール一覧に含まれません。
+`Agent settings` の `MCP` タブで、stdio・SSE・Streamable HTTPのMCPサーバーを登録できます。MCP全体のオン/オフはメッセージ入力欄のクイック権限（⛁アイコン）からもワンクリックで切り替えられます。サーバーごとにも有効/無効を切り替えられ、無効なサーバーは次のメッセージからClineのツール一覧に含まれません。
 
-各カードの「接続テスト」ボタンは、保存前のフォーム内容のまま実際に接続します（stdioなら実際にコマンドを起動、SSE/HTTPなら実際にURLへ接続してツール一覧を取得）。stdioサーバーのテスト中に該当カードを削除すると、その場でプロセスを終了させてからカードを削除します。
+各カードの「接続テスト」ボタンは、保存前のフォーム内容のまま実際に接続します（stdioなら実際にコマンドを起動、SSE/HTTPなら実際にURLへ接続してツール一覧を取得）。stdioサーバーのテスト中に該当カードを削除すると、その場でプロセスを終了させてからカードを削除します。接続に成功すると、そのサーバーが公開しているツール名と説明の一覧が表示され、ツールごとにチェックボックスでモデルへの公開/非公開を切り替えられます。
+
+MCPツールの呼び出しは既定でWeb画面の承認が必要です（会話ログとApproval表示は「⛁ MCP: サーバー名 → ツール名」の形で、AIが今MCPを呼び出そうとしていることが分かるように表示されます）。サーバーごとの「確認なしで許可」を有効にすると、そのサーバーのツール呼び出しは承認なしで実行されます。
 
 3方式すべてを手元で試せる最小のテスト用MCPサーバーを `TEST-MCP-Server/` に用意しています。セットアップと、ClineHub-for-web側への具体的な登録内容は [TEST-MCP-Server/README.md](TEST-MCP-Server/README.md) を参照してください。
 
 ## Session管理
 
 Session一覧の `⋯` から、状態、Provider、Model、working directory、開始・更新日時、token usage、messages fileを確認できます。Session名の変更と個別削除に対応しています。サイドバーの `Clear` では確認後に全Sessionを削除します。
+
+ターン実行中に送信すると、そのメッセージは自動でキューに入り、現在のターンが終わり次第送信されます（送信欄から内容の修正・取消も可能）。応答が止まって進まなくなった場合は送信ボタンが「強制送信」に変わり、押すと現在のターンを中断してから、キューにあるメッセージ（今送ったものを含む）を後継セッションへ引き継いで実行します。会話履歴は保持されます。
 
 ## 構成
 
@@ -128,7 +142,7 @@ src/                        サーバー（Node / Hono）
   server.ts                 HTTP API と SSE エンドポイント
   runtime.ts                ClineCore の local runtime、セッション操作、イベント購読、Tool Approval 待ち
   providers.ts              プロバイダー別のURL正規化、モデル自動取得、接続設定
-  mcp-extension.ts          MCPサーバーをClineツールとして登録
+  mcp-extension.ts          MCP設定ファイルの生成と接続テスト
   stores/                   .cline-data/ への永続化
     agent-settings.ts       テンプレート、権限、圧縮設定
     connection-store.ts     接続先とモデルの復元
@@ -147,16 +161,16 @@ client/                     フロントエンド（React / Vite）
   styles/                   SCSS（後述）
 
 tests/                      *.test.ts（pnpm test で一括実行）
-scripts/                    dev.mjs（開発用watch）、run-tests.mjs、clear-sessions.ts
+scripts/                    dev.mjs（開発用watch）、build-client.mjs、run-tests.mjs、clear-sessions.ts
 setting/language/           UIの言語ファイル（再ビルド不要で編集・追加可能）
-public/                     ビルド成果物。index.html 以外は生成物
+dist/                       ビルド成果物（app.js、styles.css、index.html）。Git対象外
 ```
 
 セッションデータはプロジェクト内の `.cline-data/` に保存します。Cline SDK の標準保存機構を利用しつつ、ユーザーのホームディレクトリへ書き込まない構成です。
 
 ## スタイル（SCSS）
 
-見た目は `client/styles/` のSCSSから `public/styles.css` へビルドします。`public/styles.css` は生成物なので直接編集しません。
+見た目は `client/styles/` のSCSSから `dist/styles.css` へビルドします。`dist/` は生成物なので直接編集しません。
 
 ```
 client/styles/
@@ -192,11 +206,16 @@ client/styles/
 - SDK 標準のセッション永続化・組み込みツール・設定探索の利用
 - モデル／ローカル／SSHワークスペースプロファイルの保存と即時切替
 - パスワードまたは秘密鍵によるSSH接続、リモートコマンド・読取・検索・書込
+- System prompt・権限プリセットをセットにしたテンプレート（モード）切替
+- 実行中メッセージの自動キュー、キューの修正・取消、強制送信
+- stdio / SSE / Streamable HTTP対応のMCPサーバー登録、接続テストとツール一覧表示、サーバー単位・ツール単位の有効/無効、サーバー単位の確認なし許可、MCP全体のクイックオン/オフ
+- MCPツール呼び出しの承認要求・実行状況を「MCP: サーバー名 → ツール名」として会話ログ・Approvalに明示
+- ワークスペースの絶対パス指定（既定では起動フォルダー配下に限定しない）
 
 ## 既知の制限
 
 - ChatGPT OAuthのコールバックは `localhost:1455` を使用します。他のプロセスがこのポートを使用している場合はログインできません。
 - Claude Code連携はClaude Code CLIとコミュニティ提供のAI SDKアダプターを経由します。Claude Code CLIの仕様変更時にはアダプターの更新が必要になる場合があります。
 - ChatGPT Pro / CodexのOAuth資格情報は永続化していません。永続化する場合はハッシュではなく、Windows資格情報マネージャーなどOSの安全な資格情報ストアへの対応が必要です。
-- 認証・複数ユーザー向けの公開アクセス制御は未実装です。外部公開せず localhost で利用してください。
+- 認証・複数ユーザー向けの公開アクセス制御は未実装です。`pnpm dev` は既定でLAN上の他端末からアクセスできる構成のため、信頼できないネットワークでは公開しないか、`HOST=127.0.0.1` に限定してください。
 - セッション作成ボタンは空の interactive session を開始します。最初のメッセージ送信時に prompt を渡すこともできます。
