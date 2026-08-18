@@ -63,9 +63,9 @@ export function Header(props: Props) {
         </label>
       </div>
       <div className="header-actions">
-        <button id="general-settings-button" type="button" onClick={onOpenGeneralSettings}><HeaderIcon name="settings" /><span className="btn-label">{t("generalSettings")}</span></button>
-        <button id="ai-settings-button" type="button" onClick={onOpenAiSettings}><HeaderIcon name="smartToy" /><span className="btn-label">{t("aiSettings")}</span></button>
-        {onLogout && <button type="button" className="secondary" onClick={onLogout}><HeaderIcon name="logout" /><span className="btn-label">{t("logout")}</span></button>}
+        <button id="general-settings-button" type="button" title={t("generalSettings")} aria-label={t("generalSettings")} onClick={onOpenGeneralSettings}><HeaderIcon name="settings" /></button>
+        <button id="ai-settings-button" type="button" title={t("aiSettings")} aria-label={t("aiSettings")} onClick={onOpenAiSettings}><HeaderIcon name="smartToy" /></button>
+        {onLogout && <button type="button" className="secondary" title={t("logout")} aria-label={t("logout")} onClick={onLogout}><HeaderIcon name="logout" /></button>}
       </div>
     </header>
   )

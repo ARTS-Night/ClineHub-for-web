@@ -18,6 +18,16 @@ header {
 
 .app-logo { flex: 0 0 auto; border-radius: 5px; }
 
+// Never let the app name itself wrap onto a second line — it can shrink/ellipsize
+// instead as the header narrows.
+header > strong {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .sidebar-toggle {
   flex: 0 0 auto;
   width: 34px;
