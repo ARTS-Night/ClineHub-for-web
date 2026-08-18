@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 // src/server.ts
 import { serve } from "@hono/node-server";
 import { serveStatic } from "@hono/node-server/serve-static";
@@ -5,8 +7,8 @@ import { getCookie, setCookie, deleteCookie } from "hono/cookie";
 import { Hono } from "hono";
 import { readdir, realpath as realpath2 } from "fs/promises";
 import { networkInterfaces } from "os";
-import { resolve as resolve3 } from "path";
-import { pathToFileURL } from "url";
+import { dirname as dirname5, resolve as resolve3 } from "path";
+import { fileURLToPath, pathToFileURL } from "url";
 
 // src/auth.ts
 import { createHash, randomBytes, timingSafeEqual } from "crypto";
@@ -2565,6 +2567,7 @@ try {
   process.loadEnvFile();
 } catch {
 }
+var packageRoot = resolve3(dirname5(fileURLToPath(import.meta.url)), "..");
 process.env.CLINE_DATA_DIR ??= resolve3(process.cwd(), ".cline-data");
 var app = new Hono();
 var SESSION_COOKIE = "clinehub_session";
@@ -2601,10 +2604,10 @@ app.use("/api/*", async (c, next) => {
   return next();
 });
 app.get("/api/languages", async (c) => {
-  const files = await readdir(resolve3(process.cwd(), "setting", "language")).catch(() => []);
+  const files = await readdir(resolve3(packageRoot, "setting", "language")).catch(() => []);
   return c.json({ locales: files.filter((file) => file.endsWith(".json")).map((file) => file.slice(0, -5)) });
 });
-app.use("/setting/language/*", serveStatic({ root: "./" }));
+app.use("/setting/language/*", serveStatic({ root: packageRoot }));
 app.get("/api/sessions", async (c) => c.json(await runtime.list()));
 app.delete("/api/sessions", async (c) => c.json(await runtime.deleteAll()));
 app.get("/api/agent-settings", (c) => c.json(runtime.agentSettingsInfo()));
@@ -2730,8 +2733,8 @@ app.use("/*", async (c, next) => {
   c.header("Cache-Control", "no-store");
   await next();
 });
-app.use("/*", serveStatic({ root: "./dist" }));
-var isMainModule = process.argv[1] !== void 0 && import.meta.url === pathToFileURL(resolve3(process.argv[1])).href;
+app.use("/*", serveStatic({ root: resolve3(packageRoot, "dist") }));
+var isMainModule = process.argv[1] !== void 0 && import.meta.url === pathToFileURL(await realpath2(resolve3(process.argv[1]))).href;
 if (isMainModule) {
   const port = Number(process.env.PORT ?? 3e3);
   const hostname2 = process.env.HOST ?? "127.0.0.1";

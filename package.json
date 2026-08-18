@@ -1,8 +1,11 @@
 {
   "name": "clinehub-for-web",
   "version": "1.0.0",
-  "private": true,
+  "private": false,
   "type": "module",
+  "bin": {
+    "clinehub-for-web": "dist/server.js"
+  },
   "scripts": {
     "start": "node dist/server.js"
   },
