@@ -21,7 +21,7 @@ export function GeneralSettingsDialog(props: Props) {
   useEffect(() => { if (open) dialog.current?.showModal(); else dialog.current?.close() }, [open])
 
   return <dialog ref={dialog} className="react-agent-dialog" onClose={onClose}><div className="settings-form">
-    <div className="setup-heading"><div><h1>{t("generalSettings")}</h1><p>{t("generalSettingsDescription")}</p></div><button className="secondary icon-button" type="button" onClick={() => dialog.current?.close()} aria-label="Close">×</button></div>
+    <div className="setup-heading"><div><h1>{t("generalSettings")}</h1><p>{t("generalSettingsDescription")}</p></div><button className="secondary icon-button" type="button" onClick={() => dialog.current?.close()} aria-label={t("close")}>×</button></div>
     <label><span>{t("language")}</span>
       <select value={locale} onChange={(event) => onChangeLocale(event.target.value)}>
         {availableLocales.map((option) => <option key={option.code} value={option.code}>{option.label}</option>)}

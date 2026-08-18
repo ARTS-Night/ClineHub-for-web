@@ -19,7 +19,7 @@ export function Sidebar({ t, sessions, activeSession, onSelect, onOpenDetails, o
         <span>{t("sessions")}</span>
         <div>
           <button id="clear-sessions" type="button" onClick={onClearSessions}>{t("clear")}</button>
-          <button id="new-session" type="button" title="New session" onClick={onNewSession}>＋</button>
+          <button id="new-session" type="button" title={t("newSession")} onClick={onNewSession}>＋</button>
         </div>
       </div>
       <div id="sessions">

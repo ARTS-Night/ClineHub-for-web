@@ -52,7 +52,7 @@ export function SessionDialog({ t, locale, sessionId, onClose, onRenamed, onDele
       <form className="settings-form" onSubmit={(event) => { event.preventDefault(); void rename() }}>
         <div className="setup-heading">
           <div><h1>{t("sessionDetails")}</h1><p>{sessionId}</p></div>
-          <button className="secondary icon-button" type="button" aria-label="Close" onClick={() => dialog.current?.close()}>×</button>
+          <button className="secondary icon-button" type="button" aria-label={t("close")} onClick={() => dialog.current?.close()}>×</button>
         </div>
         <label><span>{t("title")}</span><input type="text" maxLength={120} required value={title} onChange={(event) => setTitle(event.target.value)} /></label>
         {item && details && (

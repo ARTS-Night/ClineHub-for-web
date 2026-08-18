@@ -164,7 +164,7 @@ export function SetupDialog({ t, request, onClose, profilesData, onConnected }: 
       <form id="setup-form" onSubmit={(event) => { event.preventDefault(); void connect() }}>
         <div className="setup-heading">
           <div><h1>{t("connectAi")}</h1><p>{t("connectAiDescription")}</p></div>
-          <button className="secondary icon-button" type="button" aria-label="Close" onClick={() => dialog.current?.close()}>×</button>
+          <button className="secondary icon-button" type="button" aria-label={t("close")} onClick={() => dialog.current?.close()}>×</button>
         </div>
         <label><span>{t("provider")}</span>
           <select value={provider} onChange={(event) => onProviderChange(event.target.value as ProviderKind)}>

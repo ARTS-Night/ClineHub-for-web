@@ -48,7 +48,7 @@ export function Composer(props: Props) {
   return (
     <form id="composer" onSubmit={(event) => { event.preventDefault(); onSubmit() }}>
       <div className="composer-toolbar">
-        <TemplateSwitcher templates={agentSettings?.templates ?? []} activeTemplateId={agentSettings?.activeTemplateId} disabled={!agentSettings || templateBusy} onSelect={onSelectTemplate} />
+        <TemplateSwitcher t={t} templates={agentSettings?.templates ?? []} activeTemplateId={agentSettings?.activeTemplateId} disabled={!agentSettings || templateBusy} onSelect={onSelectTemplate} />
         <QuickPermissions t={t} permissions={effectivePermissions} onCycle={onCyclePermission} mcpEnabled={mcpEnabled} onToggleMcp={onToggleMcp} />
       </div>
       <div className="composer-input-wrap">

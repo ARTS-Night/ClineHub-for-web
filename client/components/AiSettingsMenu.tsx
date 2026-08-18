@@ -18,7 +18,7 @@ export function AiSettingsMenu({ t, open, onClose, onOpenConnection, onOpenProfi
   const go = (action: () => void) => { dialog.current?.close(); action() }
 
   return <dialog ref={dialog} className="react-agent-dialog" onClose={onClose}><div className="settings-form">
-    <div className="setup-heading"><div><h1>{t("aiSettings")}</h1><p>{t("aiSettingsMenuDescription")}</p></div><button className="secondary icon-button" type="button" onClick={() => dialog.current?.close()} aria-label="Close">×</button></div>
+    <div className="setup-heading"><div><h1>{t("aiSettings")}</h1><p>{t("aiSettingsMenuDescription")}</p></div><button className="secondary icon-button" type="button" onClick={() => dialog.current?.close()} aria-label={t("close")}>×</button></div>
     <div className="profile-list">
       <div className="profile-list-row"><span className="profile-description"><strong>{t("aiConnection")}</strong><br />{t("aiConnectionDescription")}</span><button type="button" onClick={() => go(onOpenConnection)}>{t("aiConnection")}</button></div>
       <div className="profile-list-row"><span className="profile-description"><strong>{t("profiles")}</strong><br />{t("profilesMenuDescription")}</span><button type="button" onClick={() => go(onOpenProfiles)}>{t("profiles")}</button></div>

@@ -166,9 +166,9 @@ export function ProfilesDialog({ t, open, onClose, profilesData, onProfilesChang
       <form className="settings-form" onSubmit={(event) => { event.preventDefault(); void submitWorkspace() }}>
         <div className="setup-heading">
           <div><h1>{t("profiles")}</h1><p>{t("profilesDescription")}</p></div>
-          <button className="secondary icon-button" type="button" aria-label="Close" onClick={() => dialog.current?.close()}>×</button>
+          <button className="secondary icon-button" type="button" aria-label={t("close")} onClick={() => dialog.current?.close()}>×</button>
         </div>
-        <div className="profile-tabs" role="tablist" aria-label="Profile type">
+        <div className="profile-tabs" role="tablist" aria-label={t("profileType")}>
           <button className={`profile-tab${tab === "model" ? " active" : ""}`} type="button" role="tab" aria-selected={tab === "model"} onClick={() => setTab("model")}><span className="tab-icon">◆</span><span>{t("modelProfiles")}</span></button>
           <button className={`profile-tab${tab === "workspace" ? " active" : ""}`} type="button" role="tab" aria-selected={tab === "workspace"} onClick={() => setTab("workspace")}><span className="tab-icon">▣</span><span>{t("workspaceProfiles")}</span></button>
         </div>

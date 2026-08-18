@@ -151,7 +151,7 @@ export function AgentSettingsDialog({ t, open, onClose, onSaved }: Props) {
   const tabs: Array<[Tab, string]> = [["templates", "template"], ["mcp", "MCP"], ["automation", "shellIdleTab"]]
 
   return <dialog ref={dialog} className="wide-dialog react-agent-dialog" onClose={onClose}><div className="settings-form">
-    <div className="setup-heading"><div><h1>{t("agentSettings")}</h1><p>{t("agentSettingsIntro")}</p></div><button className="secondary icon-button" type="button" onClick={() => dialog.current?.close()} aria-label="Close">×</button></div>
+    <div className="setup-heading"><div><h1>{t("agentSettings")}</h1><p>{t("agentSettingsIntro")}</p></div><button className="secondary icon-button" type="button" onClick={() => dialog.current?.close()} aria-label={t("close")}>×</button></div>
     <div className="agent-settings-tabs" role="tablist">{tabs.map(([id, key]) => <button key={id} className={tab === id ? "active" : ""} type="button" role="tab" aria-selected={tab === id} onClick={() => setTab(id)}>{key === "MCP" ? "MCP" : t(key)}</button>)}</div>
     {!settings ? <p>{t("loading")}</p> : <>
       {tab === "templates" && <>
