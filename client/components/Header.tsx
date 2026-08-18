@@ -27,7 +27,7 @@ export function Header(props: Props) {
   return (
     <header>
       <button id="sidebar-toggle" className="sidebar-toggle" type="button" aria-expanded={!sidebarCollapsed} title={t(sidebarCollapsed ? "openSessions" : "closeSessions")} onClick={onToggleSidebar}>☰</button>
-      <img src={logoUrl} alt="" className="app-logo" width={24} height={24} />
+      <img src={logoUrl} alt="" className="app-logo" width={34} height={34} />
       <strong>ClineHub-for-web</strong>
       <span id="connection" style={{ color: connectionColor }}>{connectionText}</span>
       <span id="workspace-display" title={workspaceDisplay}>{workspaceDisplay}</span>
