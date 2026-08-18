@@ -1,0 +1,55 @@
+name: Deploy release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  pack-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.1.1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build (vite + tsup)
+        run: pnpm run build:pack
+
+      - name: Pack distributable
+        run: node scripts/pack-release.mjs
+
+      - name: Push pack/ to release branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git worktree add -B release .release-worktree origin/release 2>/dev/null || {
+            git worktree add --detach .release-worktree
+            git -C .release-worktree checkout --orphan release
+            git -C .release-worktree rm -rf . >/dev/null 2>&1 || true
+          }
+
+          rsync -a --delete --exclude .git pack/ .release-worktree/
+
+          cd .release-worktree
+          git add -A
+          if git diff --cached --quiet; then
+            echo "no changes, skipping push"
+            exit 0
+          fi
+          git commit -m "Release build from ${GITHUB_SHA}"
+          git push origin release

@@ -8,6 +8,8 @@
     "start": "tsx src/server.ts",
     "build:css": "sass client/styles/main.scss dist/styles.css --no-source-map --style=compressed",
     "build:client": "node scripts/build-client.mjs",
+    "build:server": "tsup",
+    "build:pack": "pnpm run build:client && pnpm run build:server",
     "build": "pnpm run build:client && tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "sessions:clear": "tsx scripts/clear-sessions.ts",
@@ -44,6 +46,7 @@
     "@types/ssh2": "^1.15.5",
     "@vitejs/plugin-react": "^6.0.5",
     "sass": "^1.102.0",
+    "tsup": "^8.5.1",
     "tsx": "^4.23.12",
     "typescript": "^7.0.2",
     "vite": "^8.2.1"
