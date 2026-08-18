@@ -1,4 +1,4 @@
-# cline-for-web
+# ClineHub-for-web
 
 Cline SDK の `ClineCore` をローカル実行基盤として利用し、ブラウザからセッションを操作する最小 Web UI です。
 
@@ -69,7 +69,7 @@ claude auth status
 4. `sonnet`、`opus`、`haiku`のいずれかを選ぶ
 5. `Connect`を押す
 
-Claude Code選択時はサーバーURLとAPIキーは不要です。このモードはClaude CodeをClineCoreのモデルバックエンドとして利用する構成で、ブラウザーUI、Clineのセッション履歴、working directory、Tool Approval、権限設定は引き続きcline-for-webが担当します。Claude Codeを直接ターミナルで使うだけなら本アプリは不要ですが、Web UIや他プロバイダーとの切り替えが必要な場合にこの構成を利用します。
+Claude Code選択時はサーバーURLとAPIキーは不要です。このモードはClaude CodeをClineCoreのモデルバックエンドとして利用する構成で、ブラウザーUI、Clineのセッション履歴、working directory、Tool Approval、権限設定は引き続きClineHub-for-webが担当します。Claude Codeを直接ターミナルで使うだけなら本アプリは不要ですが、Web UIや他プロバイダーとの切り替えが必要な場合にこの構成を利用します。
 
 内部ではCline SDKの`claude-code`プロバイダーと、公式Claude Agent SDKを橋渡しする`ai-sdk-provider-claude-code`を使用します。後者はコミュニティ提供のアダプターです。
 
@@ -115,7 +115,7 @@ pnpm dev
 
 各カードの「接続テスト」ボタンは、保存前のフォーム内容のまま実際に接続します（stdioなら実際にコマンドを起動、SSE/HTTPなら実際にURLへ接続してツール一覧を取得）。stdioサーバーのテスト中に該当カードを削除すると、その場でプロセスを終了させてからカードを削除します。
 
-3方式すべてを手元で試せる最小のテスト用MCPサーバーを `TEST-MCP-Server/` に用意しています。セットアップと、cline-for-web側への具体的な登録内容は [TEST-MCP-Server/README.md](TEST-MCP-Server/README.md) を参照してください。
+3方式すべてを手元で試せる最小のテスト用MCPサーバーを `TEST-MCP-Server/` に用意しています。セットアップと、ClineHub-for-web側への具体的な登録内容は [TEST-MCP-Server/README.md](TEST-MCP-Server/README.md) を参照してください。
 
 ## Session管理
 

@@ -24,7 +24,7 @@ export function Header(props: Props) {
   return (
     <header>
       <button id="sidebar-toggle" className="sidebar-toggle" type="button" aria-expanded={!sidebarCollapsed} title={t(sidebarCollapsed ? "openSessions" : "closeSessions")} onClick={onToggleSidebar}>☰</button>
-      <strong>cline-for-web</strong>
+      <strong>ClineHub-for-web</strong>
       <span id="connection" style={{ color: connectionColor }}>{connectionText}</span>
       <span id="workspace-display" title={workspaceDisplay}>{workspaceDisplay}</span>
       <div className="header-profile-switchers">

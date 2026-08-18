@@ -135,7 +135,7 @@ if (isMainModule) {
   const port = Number(process.env.PORT ?? 3000)
   const hostname = process.env.HOST ?? "127.0.0.1"
   serve({ fetch: app.fetch, port, hostname }, (info) => {
-    console.log(`cline-for-web listening on http://${hostname}:${info.port}`)
+    console.log(`ClineHub-for-web listening on http://${hostname}:${info.port}`)
     // "0.0.0.0" isn't itself browsable — print the LAN addresses it's
     // actually reachable at, e.g. for opening from a phone on the same network.
     if (hostname === "0.0.0.0" || hostname === "::") {
