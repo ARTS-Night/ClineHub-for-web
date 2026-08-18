@@ -15,10 +15,12 @@ type Props = {
   onToggleSidebar: () => void
   onOpenGeneralSettings: () => void
   onOpenAiSettings: () => void
+  /** Present only when login is actually required — Header stays login-agnostic otherwise. */
+  onLogout?: () => void
 }
 
 export function Header(props: Props) {
-  const { t, connectionText, connectionColor, workspaceDisplay, profilesData, onModelProfileChange, onWorkspaceProfileChange, modelProfileBusy, workspaceProfileBusy, sidebarCollapsed, onToggleSidebar, onOpenGeneralSettings, onOpenAiSettings } = props
+  const { t, connectionText, connectionColor, workspaceDisplay, profilesData, onModelProfileChange, onWorkspaceProfileChange, modelProfileBusy, workspaceProfileBusy, sidebarCollapsed, onToggleSidebar, onOpenGeneralSettings, onOpenAiSettings, onLogout } = props
   const activeModel = profilesData.models.find((profile) => profile.id === profilesData.activeModelProfileId)
   const activeWorkspace = profilesData.workspaces.find((profile) => profile.id === profilesData.activeWorkspaceProfileId)
   return (
@@ -42,6 +44,7 @@ export function Header(props: Props) {
       <div className="header-actions">
         <button id="general-settings-button" type="button" onClick={onOpenGeneralSettings}>{t("generalSettings")}</button>
         <button id="ai-settings-button" type="button" onClick={onOpenAiSettings}>{t("aiSettings")}</button>
+        {onLogout && <button type="button" className="secondary" onClick={onLogout}>{t("logout")}</button>}
       </div>
     </header>
   )

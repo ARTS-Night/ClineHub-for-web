@@ -1,5 +1,5 @@
 import { createRoot } from "react-dom/client"
-import { App } from "./App.js"
+import { AuthGate } from "./components/AuthGate.js"
 
 const root = document.querySelector("#root")
-if (root) createRoot(root).render(<App />)
+if (root) createRoot(root).render(<AuthGate />)

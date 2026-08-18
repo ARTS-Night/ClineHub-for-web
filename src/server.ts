@@ -1,16 +1,21 @@
 import { serve } from "@hono/node-server"
 import { serveStatic } from "@hono/node-server/serve-static"
+import { getCookie, setCookie, deleteCookie } from "hono/cookie"
 import { Hono } from "hono"
 import { readdir, realpath } from "node:fs/promises"
 import { networkInterfaces } from "node:os"
 import { resolve } from "node:path"
 import { pathToFileURL } from "node:url"
+import { authRequired, createSession, destroySession, isValidSession, verifyCredentials } from "./auth.js"
 import { ClineRuntime, SessionNotFoundError, validateUserImages, type RuntimeEvent } from "./runtime.js"
 import type { ConnectionRequest } from "./providers.js"
+
+try { process.loadEnvFile() } catch { /* no .env file — nothing to load */ }
 
 process.env.CLINE_DATA_DIR ??= resolve(process.cwd(), ".cline-data")
 
 const app = new Hono()
+const SESSION_COOKIE = "clinehub_session"
 const initialWorkspace = await realpath(resolve(process.env.CLINE_WORKSPACE_ROOT ?? process.cwd()))
 // Unset by default: any existing absolute path can be picked as a workspace,
 // same as SSH workspaces already allow any remote directory. Set
@@ -24,6 +29,32 @@ app.onError((error, c) => {
   if (error instanceof SessionNotFoundError) return c.json({ error: error.message }, 404)
   console.error("HTTP API error", error)
   return c.json({ error: error instanceof Error ? error.message : String(error) }, 500)
+})
+// Login is opt-in: only enforced when both CLINEHUB_USER and
+// CLINEHUB_PASSWORD are set (typically via .env). With neither set, the app
+// stays open exactly like before this feature existed.
+app.get("/api/auth/status", (c) => c.json({ required: authRequired(), authenticated: !authRequired() || isValidSession(getCookie(c, SESSION_COOKIE)) }))
+app.post("/api/auth/login", async (c) => {
+  if (!authRequired()) return c.json({ ok: true })
+  const body = await c.req.json<{ username?: unknown; password?: unknown }>().catch(() => ({}) as Record<string, unknown>)
+  if (typeof body.username !== "string" || typeof body.password !== "string" || !verifyCredentials(body.username, body.password)) {
+    return c.json({ error: "Invalid username or password" }, 401)
+  }
+  setCookie(c, SESSION_COOKIE, createSession(), { httpOnly: true, sameSite: "Lax", path: "/", maxAge: 60 * 60 * 24 * 30 })
+  return c.json({ ok: true })
+})
+app.post("/api/auth/logout", (c) => {
+  destroySession(getCookie(c, SESSION_COOKIE))
+  deleteCookie(c, SESSION_COOKIE, { path: "/" })
+  return c.json({ ok: true })
+})
+// Gates every other /api/* route behind the session cookie once login is
+// required. Static assets (dist/, language files) stay reachable so the SPA
+// can boot far enough to show the login screen in the first place.
+app.use("/api/*", async (c, next) => {
+  if (!authRequired() || c.req.path.startsWith("/api/auth/") || c.req.path === "/api/languages") return next()
+  if (!isValidSession(getCookie(c, SESSION_COOKIE))) return c.json({ error: "Authentication required" }, 401)
+  return next()
 })
 // Language files live in ./setting/language/*.json (outside the client bundle)
 // so users can edit or add one — e.g. zh.json — without a rebuild.

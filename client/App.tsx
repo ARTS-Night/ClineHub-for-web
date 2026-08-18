@@ -19,7 +19,7 @@ import { AiSettingsMenu } from "./components/AiSettingsMenu.js"
 
 const emptyProfiles: ProfilesData = { models: [], workspaces: [] }
 
-export function App() {
+export function App({ onLogout }: { onLogout?: () => void } = {}) {
   // Translations live in ./setting/language/<code>.json (see src/server.ts),
   // not in the bundle, so they're fetched once per locale and cached.
   const [locale, setLocaleState] = useState<Locale>(detectInitialLocale)
@@ -544,7 +544,7 @@ export function App() {
         connectionText={connectionText} connectionColor={connectionColor} workspaceDisplay={workspaceDisplay} profilesData={profilesData}
         onModelProfileChange={onModelProfileChange} onWorkspaceProfileChange={onWorkspaceProfileChange} modelProfileBusy={modelProfileBusy} workspaceProfileBusy={workspaceProfileBusy}
         sidebarCollapsed={sidebarCollapsed} onToggleSidebar={() => setSidebarCollapsed((current) => { const next = !current; localStorage.setItem("cline-sidebar-collapsed", String(next)); return next })}
-        onOpenGeneralSettings={() => setGeneralSettingsOpen(true)} onOpenAiSettings={() => setAiSettingsMenuOpen(true)} />
+        onOpenGeneralSettings={() => setGeneralSettingsOpen(true)} onOpenAiSettings={() => setAiSettingsMenuOpen(true)} onLogout={onLogout} />
       <main>
         <Sidebar t={t} sessions={sessions} activeSession={activeSession} onSelect={selectSession} onOpenDetails={setSessionDialogId} onNewSession={newSession} onClearSessions={clearSessions} />
         <section className="conversation">
