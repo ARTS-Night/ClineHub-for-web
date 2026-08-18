@@ -1,0 +1,16 @@
+{
+  "name": "clinehub-for-web",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node dist/server.js"
+  },
+  "dependencies": {
+    "@cline/sdk": "^0.0.75",
+    "@hono/node-server": "^2.1.1",
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "hono": "^4.13.2",
+    "ssh2": "^1.17.0"
+  }
+}
