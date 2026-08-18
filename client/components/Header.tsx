@@ -1,5 +1,6 @@
 import type { TFunction } from "../lib/i18n.js"
 import type { ProfilesData } from "../lib/types.js"
+import logoUrl from "../assets/clinehub-for-web.svg"
 
 type Props = {
   t: TFunction
@@ -26,6 +27,7 @@ export function Header(props: Props) {
   return (
     <header>
       <button id="sidebar-toggle" className="sidebar-toggle" type="button" aria-expanded={!sidebarCollapsed} title={t(sidebarCollapsed ? "openSessions" : "closeSessions")} onClick={onToggleSidebar}>☰</button>
+      <img src={logoUrl} alt="" className="app-logo" width={24} height={24} />
       <strong>ClineHub-for-web</strong>
       <span id="connection" style={{ color: connectionColor }}>{connectionText}</span>
       <span id="workspace-display" title={workspaceDisplay}>{workspaceDisplay}</span>

@@ -16,6 +16,8 @@ header {
   span { color: var(--ui-text-muted); font-size: 13px; }
 }
 
+.app-logo { flex: 0 0 auto; border-radius: 5px; }
+
 .sidebar-toggle {
   flex: 0 0 auto;
   width: 34px;

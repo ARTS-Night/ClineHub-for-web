@@ -1,3 +1,5 @@
+![ClineHub-for-web](./clinehub-for-web-header.svg)
+
 # ClineHub-for-web
 
 Cline SDK の `ClineCore` をローカル実行基盤として利用し、ブラウザからセッションを操作する最小 Web UI です。
