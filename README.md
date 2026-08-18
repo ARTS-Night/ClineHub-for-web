@@ -13,7 +13,7 @@ pnpm install
 pnpm dev
 ```
 
-ブラウザで http://localhost:3000 を開きます。
+ブラウザで <http://localhost:3000> を開きます。
 
 `pnpm dev` は既定で `0.0.0.0` にバインドするため、スマートフォンなど同じLAN上の他端末からも `http://<このPCのIP>:3000` でアクセスできます。認証機能はないため、信頼できないネットワークでは公開しないでください。localhostのみに限定する場合は起動前に指定します。
 
@@ -95,7 +95,7 @@ Claude Code選択時はサーバーURLとAPIキーは不要です。このモー
 
 ヘッダーの言語選択で日本語と英語を切り替えられます。選択した言語だけはブラウザーに保存されます。
 
-ヘッダーの☀/☾ボタンでライトモードとダークモードを切り替えられます。選択はブラウザーに保存され、未選択時はOSのカラーテーマに従います。コンテキストバーは通常時が青〜紫、使用率75%以上が黄、自動圧縮ライン到達後が赤になります。
+`一般設定`のチェックボックスでライトモードとダークモードを切り替えられます。選択はブラウザーに保存され、未選択時はOSのカラーテーマに従います。コンテキストバーは通常時が青〜紫、使用率75%以上が黄、自動圧縮ライン到達後が赤になります。
 
 ## Agent設定
 
@@ -150,7 +150,7 @@ Session一覧の `⋯` から、状態、Provider、Model、working directory、
 
 ## 構成
 
-```
+```text
 src/                        サーバー（Node / Hono）
   server.ts                 HTTP API と SSE エンドポイント
   runtime.ts                ClineCore の local runtime、セッション操作、イベント購読、Tool Approval 待ち
@@ -185,7 +185,7 @@ dist/                       ビルド成果物（app.js、styles.css、index.htm
 
 見た目は `client/styles/` のSCSSから `dist/styles.css` へビルドします。`dist/` は生成物なので直接編集しません。
 
-```
+```text
 client/styles/
   main.scss          エントリ（読み込み順を定義）
   _tokens.scss       テーマの3色とそこから導出する全変数

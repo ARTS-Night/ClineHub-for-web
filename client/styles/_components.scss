@@ -245,8 +245,7 @@ legend { padding: 0 6px; color: var(--ui-text); font-size: 13px; }
 
 // --- Tool activity cards -------------------------------------------------
 
-.tool-activity,
-.tool-history {
+.tool-activity {
   border: 1px solid var(--ui-border);
   background: var(--ui-surface-raised);
   color: var(--ui-text) !important;
@@ -254,11 +253,8 @@ legend { padding: 0 6px; color: var(--ui-text); font-size: 13px; }
   transition: border-color var(--motion) var(--ease), background var(--motion) var(--ease);
 }
 
-.tool-history summary,
 .tool-details summary,
 .message.reasoning summary { cursor: pointer; user-select: none; }
-
-.tool-history pre { max-height: 24rem; overflow: auto; margin: 8px 0 0; white-space: pre-wrap; }
 
 .tool-activity {
   &.running { border-color: var(--ui-accent-line); }
@@ -437,8 +433,7 @@ legend { padding: 0 6px; color: var(--ui-text); font-size: 13px; }
 .session-agent-snapshot { margin-top: 7px; }
 
 .session-agent-snapshot > summary,
-.session-system-prompt > summary,
-.session-environment-details summary { color: var(--ui-text-muted); cursor: pointer; }
+.session-system-prompt > summary { color: var(--ui-text-muted); cursor: pointer; }
 
 .session-settings-grid {
   display: grid;
@@ -450,7 +445,6 @@ legend { padding: 0 6px; color: var(--ui-text); font-size: 13px; }
 }
 
 .session-permissions-title { display: block; margin: 8px 0 5px; color: var(--ui-text); }
-.session-environment-permissions strong { color: var(--ui-text); }
 .session-permission-badges { display: flex; flex-wrap: wrap; gap: 5px; }
 
 .session-permission {

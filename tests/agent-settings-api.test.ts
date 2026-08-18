@@ -1,5 +1,12 @@
 import assert from "node:assert/strict"
-import app from "../src/server.js"
+
+// This suite assumes no login is required. Force that regardless of a real
+// .env someone may have set up in this checkout — server.ts's own
+// process.loadEnvFile() call (triggered by the import below) never
+// overwrites an already-set env var, so setting these to "" here wins.
+process.env.CLINEHUB_USER = ""
+process.env.CLINEHUB_PASSWORD = ""
+const { default: app } = await import("../src/server.js")
 
 const pageResponse = await app.request("/")
 assert.equal(pageResponse.status, 200)
