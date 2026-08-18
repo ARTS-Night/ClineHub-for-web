@@ -30,6 +30,16 @@ export function GeneralSettingsDialog(props: Props) {
     <label className="check-row"><input type="checkbox" checked={theme === "light"} onChange={onToggleTheme} /><span>{t(theme === "dark" ? "switchLight" : "switchDark")}</span></label>
     <label className="check-row"><input type="checkbox" checked={!hidePlanBanner} onChange={(event) => onChangeHidePlanBanner(!event.target.checked)} /><span>{t("planBannerSetting")}</span></label>
     <small>{t("planBannerSettingHelp")}</small>
-    <div>https://github.com/ARTS-Night</div>
+    <a
+  href="https://www.buymeacoffee.com/artspg01l"
+  target="_blank"
+  rel="noopener noreferrer"
+>
+  <img
+    src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png"
+    alt="Buy Me a Coffee"
+    style={{ height: '60px', width: '217px' }}
+  />
+</a>
   </div></dialog>
 }

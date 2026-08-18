@@ -1,4 +1,4 @@
-import { readFile, writeFile } from "node:fs/promises"
+import { chmod, open, readFile } from "node:fs/promises"
 import { resolve } from "node:path"
 
 export type ParsedArgs = { flags: Map<string, string | true>; positional: string[] }
@@ -56,9 +56,16 @@ function removeLine(lines: string[], key: string): string[] {
   return lines.filter((entry) => !entry.startsWith(`${key}=`))
 }
 
-function writeLines(envPath: string, lines: string[]): Promise<void> {
+// .env holds plaintext login credentials, so it's written owner-only (0o600) —
+// both on create (mode passed to open()) and on an existing file that may have
+// been sitting there with looser permissions from before this mattered.
+async function writeLines(envPath: string, lines: string[]): Promise<void> {
   const content = lines.filter((line) => line.trim() !== "")
-  return writeFile(envPath, content.length ? content.join("\n") + "\n" : "")
+  const data = content.length ? content.join("\n") + "\n" : ""
+  const handle = await open(envPath, "w", 0o600)
+  try { await handle.writeFile(data) } finally { await handle.close() }
+  // Windows has no POSIX permission bits; chmod there is a no-op, not an error.
+  await chmod(envPath, 0o600).catch(() => {})
 }
 
 /** Sets CLINEHUB_USER/CLINEHUB_PASSWORD in .env (creating it if missing),
