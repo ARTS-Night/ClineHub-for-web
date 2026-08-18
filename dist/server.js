@@ -7,8 +7,8 @@ import { getCookie, setCookie, deleteCookie } from "hono/cookie";
 import { Hono } from "hono";
 import { readdir, realpath as realpath2 } from "fs/promises";
 import { networkInterfaces } from "os";
-import { dirname as dirname5, resolve as resolve3 } from "path";
-import { fileURLToPath, pathToFileURL } from "url";
+import { dirname as dirname5, resolve as resolve4 } from "path";
+import { fileURLToPath } from "url";
 
 // src/auth.ts
 import { createHash, randomBytes, timingSafeEqual } from "crypto";
@@ -37,11 +37,73 @@ function destroySession(token) {
   if (token) sessions.delete(token);
 }
 
+// src/cli.ts
+import { readFile, writeFile } from "fs/promises";
+import { resolve } from "path";
+function parseArgs(argv) {
+  const flags = /* @__PURE__ */ new Map();
+  const positional = [];
+  for (const arg of argv) {
+    if (arg.startsWith("--")) {
+      const eq = arg.indexOf("=");
+      if (eq === -1) flags.set(arg.slice(2), true);
+      else flags.set(arg.slice(2, eq), arg.slice(eq + 1));
+    } else {
+      positional.push(arg);
+    }
+  }
+  return { flags, positional };
+}
+function flagString(flags, name) {
+  const value = flags.get(name);
+  return typeof value === "string" ? value : void 0;
+}
+var ENV_KEYS = { user: "CLINEHUB_USER", password: "CLINEHUB_PASSWORD" };
+async function readEnvLines(envPath) {
+  try {
+    return (await readFile(envPath, "utf8")).split("\n");
+  } catch {
+    return [];
+  }
+}
+function quote(value) {
+  if (!value.includes("'")) return `'${value}'`;
+  if (!value.includes('"')) return `"${value}"`;
+  throw new Error(`Username/password can't contain both ' and " characters \u2014 pick one or the other`);
+}
+function setLine(lines, key, value) {
+  const line = `${key}=${quote(value)}`;
+  const index = lines.findIndex((entry) => entry.startsWith(`${key}=`));
+  if (index === -1) return [...lines, line];
+  const next = [...lines];
+  next[index] = line;
+  return next;
+}
+function removeLine(lines, key) {
+  return lines.filter((entry) => !entry.startsWith(`${key}=`));
+}
+function writeLines(envPath, lines) {
+  const content = lines.filter((line) => line.trim() !== "");
+  return writeFile(envPath, content.length ? content.join("\n") + "\n" : "");
+}
+async function addUser(username, password, envPath = resolve(process.cwd(), ".env")) {
+  let lines = await readEnvLines(envPath);
+  lines = setLine(lines, ENV_KEYS.user, username);
+  lines = setLine(lines, ENV_KEYS.password, password);
+  await writeLines(envPath, lines);
+}
+async function removeUser(envPath = resolve(process.cwd(), ".env")) {
+  let lines = await readEnvLines(envPath);
+  lines = removeLine(lines, ENV_KEYS.user);
+  lines = removeLine(lines, ENV_KEYS.password);
+  await writeLines(envPath, lines);
+}
+
 // src/runtime.ts
 import { ClineCore, getValidOpenAICodexCredentials, loginOpenAICodex, updateMcpSettingsFile } from "@cline/sdk";
 import { execFile } from "child_process";
 import { truncate } from "fs/promises";
-import { resolve as resolve2 } from "path";
+import { resolve as resolve3 } from "path";
 
 // src/providers.ts
 import { Llms } from "@cline/sdk";
@@ -283,8 +345,8 @@ function parseProvider(value) {
 }
 
 // src/stores/agent-settings.ts
-import { mkdir, readFile, realpath, stat, writeFile } from "fs/promises";
-import { dirname, isAbsolute, relative, resolve } from "path";
+import { mkdir, readFile as readFile2, realpath, stat, writeFile as writeFile2 } from "fs/promises";
+import { dirname, isAbsolute, relative, resolve as resolve2 } from "path";
 var managedTools = ["read_files", "search_codebase", "fetch_web_content", "skills", "run_commands", "editor", "apply_patch"];
 var presetPermissions = {
   readonly: {
@@ -357,8 +419,8 @@ function defaultTemplates() {
 var AgentSettingsStore = class {
   constructor(initialWorkspace2, allowedRoot2, storagePath) {
     this.storagePath = storagePath;
-    const workspacePath = resolve(initialWorkspace2);
-    const root = allowedRoot2 === "" ? "" : resolve(allowedRoot2);
+    const workspacePath = resolve2(initialWorkspace2);
+    const root = allowedRoot2 === "" ? "" : resolve2(allowedRoot2);
     if (!isWithin(root, workspacePath)) throw new Error("Initial workspace must be inside CLINE_ALLOWED_ROOT");
     this.settings = {
       workspacePath,
@@ -382,7 +444,7 @@ var AgentSettingsStore = class {
   async load() {
     if (!this.storagePath) return;
     try {
-      const value = JSON.parse(await readFile(this.storagePath, "utf8"));
+      const value = JSON.parse(await readFile2(this.storagePath, "utf8"));
       if (!isRecord2(value)) throw new Error("Saved agent settings are invalid");
       if (Array.isArray(value.templates) && value.templates.length > 0) {
         const saved = value.templates.map(parseStoredTemplate);
@@ -428,7 +490,7 @@ var AgentSettingsStore = class {
     const next = this.get();
     if (input.workspacePath !== void 0) {
       if (typeof input.workspacePath !== "string" || !input.workspacePath.trim()) throw new Error("Workspace path is required");
-      const requestedPath = resolve(input.workspacePath.trim());
+      const requestedPath = resolve2(input.workspacePath.trim());
       if (!isWithin(next.allowedRoot, requestedPath)) throw new Error(`Workspace must be inside: ${next.allowedRoot}`);
       const workspacePath = await realpath(requestedPath).catch(() => null);
       if (!workspacePath || !isWithin(next.allowedRoot, workspacePath)) throw new Error(`Workspace must be inside: ${next.allowedRoot}`);
@@ -548,7 +610,7 @@ var AgentSettingsStore = class {
     if (!this.storagePath) return;
     await mkdir(dirname(this.storagePath), { recursive: true });
     const { allowedRoot: _allowedRoot, ...stored } = this.settings;
-    await writeFile(this.storagePath, `${JSON.stringify({ version: 2, ...stored }, null, 2)}
+    await writeFile2(this.storagePath, `${JSON.stringify({ version: 2, ...stored }, null, 2)}
 `, { encoding: "utf8", mode: 384 });
   }
 };
@@ -642,7 +704,7 @@ function isNodeError(value) {
 }
 
 // src/stores/connection-store.ts
-import { mkdir as mkdir2, readFile as readFile2, rm, writeFile as writeFile2 } from "fs/promises";
+import { mkdir as mkdir2, readFile as readFile3, rm, writeFile as writeFile3 } from "fs/promises";
 import { dirname as dirname2 } from "path";
 var providerIds = {
   lmstudio: "lmstudio",
@@ -679,13 +741,13 @@ var ConnectionStore = class {
       imagesEnabled: settings.imagesEnabled
     };
     await mkdir2(dirname2(this.filePath), { recursive: true });
-    await writeFile2(this.filePath, `${JSON.stringify(stored, null, 2)}
+    await writeFile3(this.filePath, `${JSON.stringify(stored, null, 2)}
 `, { encoding: "utf8", mode: 384 });
   }
   async load() {
     let value;
     try {
-      value = JSON.parse(await readFile2(this.filePath, "utf8"));
+      value = JSON.parse(await readFile3(this.filePath, "utf8"));
     } catch (error) {
       if (isNodeError2(error) && error.code === "ENOENT") return void 0;
       throw error;
@@ -739,7 +801,7 @@ function isNodeError2(value) {
 
 // src/stores/profile-store.ts
 import { createCipheriv, createDecipheriv, randomBytes as randomBytes2 } from "crypto";
-import { mkdir as mkdir3, readFile as readFile3, writeFile as writeFile3 } from "fs/promises";
+import { mkdir as mkdir3, readFile as readFile4, writeFile as writeFile4 } from "fs/promises";
 import { dirname as dirname3 } from "path";
 var ProfileStore = class {
   constructor(filePath, keyPath) {
@@ -752,7 +814,7 @@ var ProfileStore = class {
   key;
   async load() {
     try {
-      const value = JSON.parse(await readFile3(this.filePath, "utf8"));
+      const value = JSON.parse(await readFile4(this.filePath, "utf8"));
       if (!isRecord4(value) || value.version !== 1 || !Array.isArray(value.models) || !Array.isArray(value.workspaces)) {
         throw new Error("Unsupported profile storage format");
       }
@@ -971,12 +1033,12 @@ var ProfileStore = class {
   async encryptionKey() {
     if (this.key) return this.key;
     try {
-      this.key = Buffer.from(await readFile3(this.keyPath, "utf8"), "base64");
+      this.key = Buffer.from(await readFile4(this.keyPath, "utf8"), "base64");
     } catch (error) {
       if (!isNodeError3(error) || error.code !== "ENOENT") throw error;
       this.key = randomBytes2(32);
       await mkdir3(dirname3(this.keyPath), { recursive: true });
-      await writeFile3(this.keyPath, this.key.toString("base64"), { encoding: "utf8", mode: 384 });
+      await writeFile4(this.keyPath, this.key.toString("base64"), { encoding: "utf8", mode: 384 });
     }
     if (this.key.length !== 32) throw new Error("Profile encryption key is invalid");
     return this.key;
@@ -996,7 +1058,7 @@ var ProfileStore = class {
   }
   async persist() {
     await mkdir3(dirname3(this.filePath), { recursive: true });
-    await writeFile3(this.filePath, `${JSON.stringify(this.document, null, 2)}
+    await writeFile4(this.filePath, `${JSON.stringify(this.document, null, 2)}
 `, { encoding: "utf8", mode: 384 });
   }
 };
@@ -1056,7 +1118,7 @@ function isNodeError3(value) {
 
 // src/workspace/ssh-workspace.ts
 import { createHash as createHash2, timingSafeEqual as timingSafeEqual2 } from "crypto";
-import { readFile as readFile4 } from "fs/promises";
+import { readFile as readFile5 } from "fs/promises";
 import { posix as posix2 } from "path";
 import { Client } from "ssh2";
 import { createTool } from "@cline/sdk";
@@ -1314,7 +1376,7 @@ function createSshTools(profile) {
       }
     }
   });
-  const writeFile5 = createTool({
+  const writeFile6 = createTool({
     name: "ssh_write_file",
     description: `Create or replace one UTF-8 file in the remote SSH workspace ${profile.remoteDirectory}. Parent directories are created automatically.`,
     inputSchema: {
@@ -1392,7 +1454,7 @@ function createSshTools(profile) {
       }
     }
   });
-  return profile.operatingSystem === "linux" && profile.sudoPermission !== "disabled" ? [runCommands, readFiles, writeFile5, searchFiles, sudoCommands] : [runCommands, readFiles, writeFile5, searchFiles];
+  return profile.operatingSystem === "linux" && profile.sudoPermission !== "disabled" ? [runCommands, readFiles, writeFile6, searchFiles, sudoCommands] : [runCommands, readFiles, writeFile6, searchFiles];
 }
 async function connectConfig(profile) {
   const config = {
@@ -1406,7 +1468,7 @@ async function connectConfig(profile) {
   if (profile.authType === "password") config.password = profile.password;
   else {
     if (!profile.keyPath) throw new Error("SSH private key path is missing");
-    config.privateKey = await readFile4(profile.keyPath);
+    config.privateKey = await readFile5(profile.keyPath);
     config.passphrase = profile.passphrase;
   }
   if (profile.hostFingerprint) {
@@ -1423,8 +1485,8 @@ async function withClient(profile, signal, action) {
   const abort = () => client.end();
   signal?.addEventListener("abort", abort, { once: true });
   try {
-    await new Promise(async (resolve4, reject) => {
-      client.once("ready", resolve4).once("error", reject);
+    await new Promise(async (resolve5, reject) => {
+      client.once("ready", resolve5).once("error", reject);
       try {
         client.connect(await connectConfig(profile));
       } catch (error) {
@@ -1439,7 +1501,7 @@ async function withClient(profile, signal, action) {
   }
 }
 async function execCommand(client, command, signal, stdin) {
-  return await new Promise((resolve4, reject) => {
+  return await new Promise((resolve5, reject) => {
     client.exec(command, (error, channel) => {
       if (error) {
         reject(error);
@@ -1459,23 +1521,23 @@ async function execCommand(client, command, signal, stdin) {
       channel.once("error", reject);
       channel.once("close", (code, closeSignal) => {
         signal?.removeEventListener("abort", abort);
-        resolve4({ stdout: stdout.toString("utf8"), stderr: stderr.toString("utf8"), code, signal: closeSignal });
+        resolve5({ stdout: stdout.toString("utf8"), stderr: stderr.toString("utf8"), code, signal: closeSignal });
       });
       if (stdin !== void 0) channel.end(stdin);
     });
   });
 }
 async function getSftp(client) {
-  return await new Promise((resolve4, reject) => client.sftp((error, sftp) => error ? reject(error) : resolve4(sftp)));
+  return await new Promise((resolve5, reject) => client.sftp((error, sftp) => error ? reject(error) : resolve5(sftp)));
 }
 async function sftpStat(sftp, path) {
-  return await new Promise((resolve4, reject) => sftp.stat(path, (error, stats) => error ? reject(error) : resolve4({ size: stats.size })));
+  return await new Promise((resolve5, reject) => sftp.stat(path, (error, stats) => error ? reject(error) : resolve5({ size: stats.size })));
 }
 async function sftpReadFile(sftp, path) {
-  return await new Promise((resolve4, reject) => sftp.readFile(path, (error, data) => error ? reject(error) : resolve4(Buffer.from(data))));
+  return await new Promise((resolve5, reject) => sftp.readFile(path, (error, data) => error ? reject(error) : resolve5(Buffer.from(data))));
 }
 async function sftpWriteFile(sftp, path, data) {
-  await new Promise((resolve4, reject) => sftp.writeFile(path, data, { mode: 384 }, (error) => error ? reject(error) : resolve4()));
+  await new Promise((resolve5, reject) => sftp.writeFile(path, data, { mode: 384 }, (error) => error ? reject(error) : resolve5()));
 }
 function remotePath(root, requested) {
   const target = posix2.resolve(root, requested);
@@ -1509,7 +1571,7 @@ function errorMessage(error) {
 }
 
 // src/stores/compaction-store.ts
-import { mkdir as mkdir4, readFile as readFile5, writeFile as writeFile4 } from "fs/promises";
+import { mkdir as mkdir4, readFile as readFile6, writeFile as writeFile5 } from "fs/promises";
 import { dirname as dirname4 } from "path";
 var CompactionStore = class {
   constructor(filePath) {
@@ -1519,7 +1581,7 @@ var CompactionStore = class {
   document = { version: 1, sessions: {} };
   async load() {
     try {
-      const value = JSON.parse(await readFile5(this.filePath, "utf8"));
+      const value = JSON.parse(await readFile6(this.filePath, "utf8"));
       if (!isRecord6(value) || value.version !== 1 || !isRecord6(value.sessions)) throw new Error("Unsupported compaction history format");
       this.document = value;
     } catch (error) {
@@ -1555,7 +1617,7 @@ var CompactionStore = class {
   }
   async persist() {
     await mkdir4(dirname4(this.filePath), { recursive: true });
-    await writeFile4(this.filePath, `${JSON.stringify(this.document, null, 2)}
+    await writeFile5(this.filePath, `${JSON.stringify(this.document, null, 2)}
 `, { encoding: "utf8", mode: 384 });
   }
 };
@@ -1675,13 +1737,13 @@ var ClineRuntime = class _ClineRuntime {
   sessionSettingsGeneration = /* @__PURE__ */ new Map();
   constructor(cline, initialWorkspace2, allowedRoot2) {
     this.cline = cline;
-    const dataDirectory = process.env.CLINE_DATA_DIR ?? resolve2(process.cwd(), ".cline-data");
+    const dataDirectory = process.env.CLINE_DATA_DIR ?? resolve3(process.cwd(), ".cline-data");
     this.dataDirectory = dataDirectory;
-    this.agentSettings = new AgentSettingsStore(initialWorkspace2, allowedRoot2, resolve2(dataDirectory, "agent-settings.json"));
-    this.connectionStore = new ConnectionStore(resolve2(dataDirectory, "connection.json"));
-    this.profileStore = new ProfileStore(resolve2(dataDirectory, "profiles.json"), resolve2(dataDirectory, "profiles.key"));
-    this.compactionStore = new CompactionStore(resolve2(dataDirectory, "compactions.json"));
-    this.mcpSettingsPath = resolve2(dataDirectory, "mcp-settings.json");
+    this.agentSettings = new AgentSettingsStore(initialWorkspace2, allowedRoot2, resolve3(dataDirectory, "agent-settings.json"));
+    this.connectionStore = new ConnectionStore(resolve3(dataDirectory, "connection.json"));
+    this.profileStore = new ProfileStore(resolve3(dataDirectory, "profiles.json"), resolve3(dataDirectory, "profiles.key"));
+    this.compactionStore = new CompactionStore(resolve3(dataDirectory, "compactions.json"));
+    this.mcpSettingsPath = resolve3(dataDirectory, "mcp-settings.json");
     process.env.CLINE_MCP_SETTINGS_PATH = this.mcpSettingsPath;
     this.cline.subscribe((event) => this.handleEvent(event));
   }
@@ -1701,8 +1763,8 @@ var ClineRuntime = class _ClineRuntime {
             toolName: request.toolName,
             input: request.input
           };
-          return await new Promise((resolve4) => {
-            runtime2?.addApproval({ approval, resolve: resolve4 });
+          return await new Promise((resolve5) => {
+            runtime2?.addApproval({ approval, resolve: resolve5 });
           });
         }
       }
@@ -1793,7 +1855,7 @@ var ClineRuntime = class _ClineRuntime {
         failed.push(session.sessionId);
       }
     }
-    await truncate(resolve2(this.dataDirectory, "logs", "hooks.jsonl"), 0).catch(() => {
+    await truncate(resolve3(this.dataDirectory, "logs", "hooks.jsonl"), 0).catch(() => {
     });
     return { deleted, failed };
   }
@@ -1867,24 +1929,24 @@ var ClineRuntime = class _ClineRuntime {
     return { ...this.codexAuth, url: this.codexAuth.status === "waiting" ? this.codexAuth.url : void 0 };
   }
   async claudeCodeAuthInfo() {
-    return await new Promise((resolve4) => {
+    return await new Promise((resolve5) => {
       execFile("claude", ["auth", "status"], { timeout: 1e4, windowsHide: true }, (error, stdout, stderr) => {
         const output = stdout.trim();
         if (output) {
           try {
             const status = JSON.parse(output);
             if (status.loggedIn === true) {
-              resolve4({ status: "authenticated", message: "Claude Code is signed in.", authMethod: typeof status.authMethod === "string" ? status.authMethod : void 0 });
+              resolve5({ status: "authenticated", message: "Claude Code is signed in.", authMethod: typeof status.authMethod === "string" ? status.authMethod : void 0 });
               return;
             }
-            resolve4({ status: "not_authenticated", message: "Claude Code is not signed in. Run: claude auth login" });
+            resolve5({ status: "not_authenticated", message: "Claude Code is not signed in. Run: claude auth login" });
             return;
           } catch {
           }
         }
         const code = isRecord8(error) ? error.code : void 0;
-        if (code === "ENOENT") resolve4({ status: "unavailable", message: "Claude Code CLI was not found. Install it, then run: claude auth login" });
-        else resolve4({ status: "error", message: stderr.trim() || output || (error instanceof Error ? error.message : "Claude Code status check failed") });
+        if (code === "ENOENT") resolve5({ status: "unavailable", message: "Claude Code CLI was not found. Install it, then run: claude auth login" });
+        else resolve5({ status: "error", message: stderr.trim() || output || (error instanceof Error ? error.message : "Claude Code status check failed") });
       });
     });
   }
@@ -2053,8 +2115,8 @@ var ClineRuntime = class _ClineRuntime {
     this.codexAuth = { status: "starting", message: "Starting ChatGPT sign-in..." };
     let markReady = () => {
     };
-    const ready = new Promise((resolve4) => {
-      markReady = resolve4;
+    const ready = new Promise((resolve5) => {
+      markReady = resolve5;
     });
     this.codexLogin = loginOpenAICodex({
       originator: "cline-for-web",
@@ -2567,12 +2629,32 @@ try {
   process.loadEnvFile();
 } catch {
 }
-var packageRoot = resolve3(dirname5(fileURLToPath(import.meta.url)), "..");
-process.env.CLINE_DATA_DIR ??= resolve3(process.cwd(), ".cline-data");
+var packageRoot = resolve4(dirname5(fileURLToPath(import.meta.url)), "..");
+var thisFile = await realpath2(fileURLToPath(import.meta.url));
+var isMainModule = process.argv[1] !== void 0 && thisFile === await realpath2(resolve4(process.argv[1])).catch(() => null);
+var cli = isMainModule ? parseArgs(process.argv.slice(2)) : { flags: /* @__PURE__ */ new Map(), positional: [] };
+if (isMainModule) {
+  if (cli.flags.has("add-user")) {
+    const [username, password] = cli.positional;
+    if (!username || !password) {
+      console.error("Usage: clinehub-for-web --add-user <username> <password>");
+      process.exit(1);
+    }
+    await addUser(username, password);
+    console.log(`Saved CLINEHUB_USER/CLINEHUB_PASSWORD to .env. Restart the server for login to take effect.`);
+    process.exit(0);
+  }
+  if (cli.flags.has("remove-user")) {
+    await removeUser();
+    console.log("Removed CLINEHUB_USER/CLINEHUB_PASSWORD from .env. Restart the server for the login gate to turn off.");
+    process.exit(0);
+  }
+}
+process.env.CLINE_DATA_DIR ??= resolve4(process.cwd(), ".cline-data");
 var app = new Hono();
 var SESSION_COOKIE = "clinehub_session";
-var initialWorkspace = await realpath2(resolve3(process.env.CLINE_WORKSPACE_ROOT ?? process.cwd()));
-var allowedRoot = process.env.CLINE_ALLOWED_ROOT ? await realpath2(resolve3(process.env.CLINE_ALLOWED_ROOT)) : "";
+var initialWorkspace = await realpath2(resolve4(process.env.CLINE_WORKSPACE_ROOT ?? process.cwd()));
+var allowedRoot = process.env.CLINE_ALLOWED_ROOT ? await realpath2(resolve4(process.env.CLINE_ALLOWED_ROOT)) : "";
 var runtime = await ClineRuntime.create(initialWorkspace, allowedRoot);
 var clients = /* @__PURE__ */ new Set();
 runtime.subscribe((event) => {
@@ -2604,7 +2686,7 @@ app.use("/api/*", async (c, next) => {
   return next();
 });
 app.get("/api/languages", async (c) => {
-  const files = await readdir(resolve3(packageRoot, "setting", "language")).catch(() => []);
+  const files = await readdir(resolve4(packageRoot, "setting", "language")).catch(() => []);
   return c.json({ locales: files.filter((file) => file.endsWith(".json")).map((file) => file.slice(0, -5)) });
 });
 app.use("/setting/language/*", serveStatic({ root: packageRoot }));
@@ -2612,6 +2694,19 @@ app.get("/api/sessions", async (c) => c.json(await runtime.list()));
 app.delete("/api/sessions", async (c) => c.json(await runtime.deleteAll()));
 app.get("/api/agent-settings", (c) => c.json(runtime.agentSettingsInfo()));
 app.patch("/api/agent-settings", async (c) => c.json(await runtime.updateAgentSettings(await c.req.json())));
+app.get("/api/browse-directory", async (c) => {
+  const requested = c.req.query("path");
+  const target = requested && requested.trim() ? resolve4(requested.trim()) : initialWorkspace;
+  const real = await realpath2(target).catch(() => null);
+  if (!real) return c.json({ error: "Path not found" }, 404);
+  if (!isWithin(allowedRoot, real)) return c.json({ error: `Must be inside: ${allowedRoot}` }, 400);
+  const entries = await readdir(real, { withFileTypes: true }).catch(() => null);
+  if (!entries) return c.json({ error: "Cannot read this directory" }, 400);
+  const directories = entries.filter((entry) => entry.isDirectory()).map((entry) => entry.name).sort((a, b) => a.localeCompare(b));
+  const parentPath = dirname5(real);
+  const parent = parentPath !== real && isWithin(allowedRoot, parentPath) ? parentPath : null;
+  return c.json({ path: real, parent, directories });
+});
 app.post("/api/agent-settings/preview", async (c) => {
   const body = await c.req.json();
   return c.json(await runtime.previewSystemPrompt(body.template));
@@ -2733,11 +2828,10 @@ app.use("/*", async (c, next) => {
   c.header("Cache-Control", "no-store");
   await next();
 });
-app.use("/*", serveStatic({ root: resolve3(packageRoot, "dist") }));
-var isMainModule = process.argv[1] !== void 0 && import.meta.url === pathToFileURL(await realpath2(resolve3(process.argv[1]))).href;
+app.use("/*", serveStatic({ root: resolve4(packageRoot, "dist") }));
 if (isMainModule) {
-  const port = Number(process.env.PORT ?? 3e3);
-  const hostname2 = process.env.HOST ?? "127.0.0.1";
+  const port = Number(flagString(cli.flags, "port") ?? process.env.PORT ?? 3e3);
+  const hostname2 = flagString(cli.flags, "ip") ?? process.env.HOST ?? "127.0.0.1";
   serve({ fetch: app.fetch, port, hostname: hostname2 }, (info) => {
     console.log(`ClineHub-for-web listening on http://${hostname2}:${info.port}`);
     if (hostname2 === "0.0.0.0" || hostname2 === "::") {
