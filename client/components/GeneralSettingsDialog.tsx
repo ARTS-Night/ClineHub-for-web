@@ -1,6 +1,9 @@
 import { useEffect, useRef } from "react"
 import type { Locale, LocaleOption, TFunction } from "../lib/i18n.js"
 
+import { GitHubUserProfile } from './GitHubUserProfile.js';
+import { BuyMeACoffeeButton } from './BuyMeACoffeeButton.js';
+
 type Props = {
   t: TFunction
   open: boolean
@@ -30,16 +33,11 @@ export function GeneralSettingsDialog(props: Props) {
     <label className="check-row"><input type="checkbox" checked={theme === "light"} onChange={onToggleTheme} /><span>{t(theme === "dark" ? "switchLight" : "switchDark")}</span></label>
     <label className="check-row"><input type="checkbox" checked={!hidePlanBanner} onChange={(event) => onChangeHidePlanBanner(!event.target.checked)} /><span>{t("planBannerSetting")}</span></label>
     <small>{t("planBannerSettingHelp")}</small>
-    <a
-  href="https://www.buymeacoffee.com/artspg01l"
-  target="_blank"
-  rel="noopener noreferrer"
->
-  <img
-    src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png"
-    alt="Buy Me a Coffee"
-    style={{ height: '60px', width: '217px' }}
-  />
-</a>
+    
+    <div style={{ display: 'flex', flexDirection: 'row-reverse', alignItems: 'center', gap: '10px', marginTop: '20px' }}>
+      <GitHubUserProfile />
+      <BuyMeACoffeeButton />
+    </div>
+
   </div></dialog>
 }
