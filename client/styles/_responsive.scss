@@ -50,14 +50,14 @@
     font-size: 10px;
   }
 
+  // Icons stay, the text label collapses — clearer than the old font-size:0 trick,
+  // which also silently left the logout button blank (it has no ::after rule).
   .header-actions {
     margin-left: auto;
 
-    button { padding: 7px; font-size: 0; }
+    button { padding: 7px; }
+    .btn-label { display: none; }
   }
-
-  #general-settings-button::after { content: "General"; font-size: 12px; }
-  #ai-settings-button::after { content: "AI"; font-size: 12px; }
 
   .header-profile-switchers {
     order: 5;
