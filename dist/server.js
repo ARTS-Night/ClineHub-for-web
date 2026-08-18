@@ -38,7 +38,7 @@ function destroySession(token) {
 }
 
 // src/cli.ts
-import { readFile, writeFile } from "fs/promises";
+import { chmod, open, readFile } from "fs/promises";
 import { resolve } from "path";
 function parseArgs(argv) {
   const flags = /* @__PURE__ */ new Map();
@@ -82,9 +82,17 @@ function setLine(lines, key, value) {
 function removeLine(lines, key) {
   return lines.filter((entry) => !entry.startsWith(`${key}=`));
 }
-function writeLines(envPath, lines) {
+async function writeLines(envPath, lines) {
   const content = lines.filter((line) => line.trim() !== "");
-  return writeFile(envPath, content.length ? content.join("\n") + "\n" : "");
+  const data = content.length ? content.join("\n") + "\n" : "";
+  const handle = await open(envPath, "w", 384);
+  try {
+    await handle.writeFile(data);
+  } finally {
+    await handle.close();
+  }
+  await chmod(envPath, 384).catch(() => {
+  });
 }
 async function addUser(username, password, envPath = resolve(process.cwd(), ".env")) {
   let lines = await readEnvLines(envPath);
@@ -345,7 +353,7 @@ function parseProvider(value) {
 }
 
 // src/stores/agent-settings.ts
-import { mkdir, readFile as readFile2, realpath, stat, writeFile as writeFile2 } from "fs/promises";
+import { mkdir, readFile as readFile2, realpath, stat, writeFile } from "fs/promises";
 import { dirname, isAbsolute, relative, resolve as resolve2 } from "path";
 var managedTools = ["read_files", "search_codebase", "fetch_web_content", "skills", "run_commands", "editor", "apply_patch"];
 var presetPermissions = {
@@ -610,7 +618,7 @@ var AgentSettingsStore = class {
     if (!this.storagePath) return;
     await mkdir(dirname(this.storagePath), { recursive: true });
     const { allowedRoot: _allowedRoot, ...stored } = this.settings;
-    await writeFile2(this.storagePath, `${JSON.stringify({ version: 2, ...stored }, null, 2)}
+    await writeFile(this.storagePath, `${JSON.stringify({ version: 2, ...stored }, null, 2)}
 `, { encoding: "utf8", mode: 384 });
   }
 };
@@ -704,7 +712,7 @@ function isNodeError(value) {
 }
 
 // src/stores/connection-store.ts
-import { mkdir as mkdir2, readFile as readFile3, rm, writeFile as writeFile3 } from "fs/promises";
+import { mkdir as mkdir2, readFile as readFile3, rm, writeFile as writeFile2 } from "fs/promises";
 import { dirname as dirname2 } from "path";
 var providerIds = {
   lmstudio: "lmstudio",
@@ -741,7 +749,7 @@ var ConnectionStore = class {
       imagesEnabled: settings.imagesEnabled
     };
     await mkdir2(dirname2(this.filePath), { recursive: true });
-    await writeFile3(this.filePath, `${JSON.stringify(stored, null, 2)}
+    await writeFile2(this.filePath, `${JSON.stringify(stored, null, 2)}
 `, { encoding: "utf8", mode: 384 });
   }
   async load() {
@@ -801,7 +809,7 @@ function isNodeError2(value) {
 
 // src/stores/profile-store.ts
 import { createCipheriv, createDecipheriv, randomBytes as randomBytes2 } from "crypto";
-import { mkdir as mkdir3, readFile as readFile4, writeFile as writeFile4 } from "fs/promises";
+import { mkdir as mkdir3, readFile as readFile4, writeFile as writeFile3 } from "fs/promises";
 import { dirname as dirname3 } from "path";
 var ProfileStore = class {
   constructor(filePath, keyPath) {
@@ -1038,7 +1046,7 @@ var ProfileStore = class {
       if (!isNodeError3(error) || error.code !== "ENOENT") throw error;
       this.key = randomBytes2(32);
       await mkdir3(dirname3(this.keyPath), { recursive: true });
-      await writeFile4(this.keyPath, this.key.toString("base64"), { encoding: "utf8", mode: 384 });
+      await writeFile3(this.keyPath, this.key.toString("base64"), { encoding: "utf8", mode: 384 });
     }
     if (this.key.length !== 32) throw new Error("Profile encryption key is invalid");
     return this.key;
@@ -1058,7 +1066,7 @@ var ProfileStore = class {
   }
   async persist() {
     await mkdir3(dirname3(this.filePath), { recursive: true });
-    await writeFile4(this.filePath, `${JSON.stringify(this.document, null, 2)}
+    await writeFile3(this.filePath, `${JSON.stringify(this.document, null, 2)}
 `, { encoding: "utf8", mode: 384 });
   }
 };
@@ -1376,7 +1384,7 @@ function createSshTools(profile) {
       }
     }
   });
-  const writeFile6 = createTool({
+  const writeFile5 = createTool({
     name: "ssh_write_file",
     description: `Create or replace one UTF-8 file in the remote SSH workspace ${profile.remoteDirectory}. Parent directories are created automatically.`,
     inputSchema: {
@@ -1454,7 +1462,7 @@ function createSshTools(profile) {
       }
     }
   });
-  return profile.operatingSystem === "linux" && profile.sudoPermission !== "disabled" ? [runCommands, readFiles, writeFile6, searchFiles, sudoCommands] : [runCommands, readFiles, writeFile6, searchFiles];
+  return profile.operatingSystem === "linux" && profile.sudoPermission !== "disabled" ? [runCommands, readFiles, writeFile5, searchFiles, sudoCommands] : [runCommands, readFiles, writeFile5, searchFiles];
 }
 async function connectConfig(profile) {
   const config = {
@@ -1571,7 +1579,7 @@ function errorMessage(error) {
 }
 
 // src/stores/compaction-store.ts
-import { mkdir as mkdir4, readFile as readFile6, writeFile as writeFile5 } from "fs/promises";
+import { mkdir as mkdir4, readFile as readFile6, writeFile as writeFile4 } from "fs/promises";
 import { dirname as dirname4 } from "path";
 var CompactionStore = class {
   constructor(filePath) {
@@ -1617,7 +1625,7 @@ var CompactionStore = class {
   }
   async persist() {
     await mkdir4(dirname4(this.filePath), { recursive: true });
-    await writeFile5(this.filePath, `${JSON.stringify(this.document, null, 2)}
+    await writeFile4(this.filePath, `${JSON.stringify(this.document, null, 2)}
 `, { encoding: "utf8", mode: 384 });
   }
 };

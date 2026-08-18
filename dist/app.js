@@ -12384,7 +12384,19 @@ function yn(e) {
 					}), /* @__PURE__ */ (0, z.jsx)("span", { children: t("planBannerSetting") })]
 				}),
 				/* @__PURE__ */ (0, z.jsx)("small", { children: t("planBannerSettingHelp") }),
-				/* @__PURE__ */ (0, z.jsx)("div", { children: "https://github.com/ARTS-Night" })
+				/* @__PURE__ */ (0, z.jsx)("a", {
+					href: "https://www.buymeacoffee.com/artspg01l",
+					target: "_blank",
+					rel: "noopener noreferrer",
+					children: /* @__PURE__ */ (0, z.jsx)("img", {
+						src: "https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png",
+						alt: "Buy Me a Coffee",
+						style: {
+							height: "60px",
+							width: "217px"
+						}
+					})
+				})
 			]
 		})
 	});
