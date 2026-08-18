@@ -16,6 +16,10 @@ const serverDependencies = Object.fromEntries(SERVER_DEPS.map((name) => [name, p
 rmSync(pack, { recursive: true, force: true })
 mkdirSync(pack, { recursive: true })
 cpSync(resolve(root, "dist"), resolve(pack, "dist"), { recursive: true })
+// setting/language/*.json is served straight from disk at runtime (src/server.ts's
+// serveStatic for /setting/language/*), not bundled into dist/ — without this copy
+// the packed server would 404 on every locale, including en/ja.
+cpSync(resolve(root, "setting"), resolve(pack, "setting"), { recursive: true })
 cpSync(resolve(root, ".env.example"), resolve(pack, ".env.example"))
 // ssh2's native crypto binding needs its postinstall to run — carry over the same
 // allow-list a fresh `pnpm install` in this standalone package would otherwise skip.

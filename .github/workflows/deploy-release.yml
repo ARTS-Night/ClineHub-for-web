@@ -37,6 +37,13 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
+          # checkout@v4 only fetches the triggering ref (main) by default, so
+          # origin/release doesn't exist locally yet even once the branch exists on
+          # the remote. Without this fetch every run falls through to the orphan
+          # branch below, and the second push ever made would be rejected as a
+          # non-fast-forward (new orphan history vs. the real remote branch).
+          git fetch origin release 2>/dev/null || true
+
           git worktree add -B release .release-worktree origin/release 2>/dev/null || {
             git worktree add --detach .release-worktree
             git -C .release-worktree checkout --orphan release
