@@ -2,7 +2,7 @@ import assert from "node:assert/strict"
 import { mkdtemp, rm } from "node:fs/promises"
 import { join } from "node:path"
 import { tmpdir } from "node:os"
-import { CompactionStore } from "../src/compaction-store.js"
+import { CompactionStore } from "../src/stores/compaction-store.js"
 
 const directory = await mkdtemp(join(tmpdir(), "cline-web-compactions-"))
 try {

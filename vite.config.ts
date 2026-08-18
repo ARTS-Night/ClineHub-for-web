@@ -11,7 +11,9 @@ export default defineConfig({
   // on load ("process is not defined") and nothing ever mounts.
   define: { "process.env.NODE_ENV": JSON.stringify("production") },
   build: {
-    outDir: "public",
+    // dist/ is assembled by scripts/build-client.mjs, which cleans it first and
+    // then adds styles.css and index.html alongside vite's output.
+    outDir: "dist",
     emptyOutDir: false,
     lib: {
       entry: resolve(process.cwd(), "client/main.tsx"),

@@ -2,7 +2,7 @@ import assert from "node:assert/strict"
 import { mkdtemp, readFile, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { ConnectionStore } from "../src/connection-store.js"
+import { ConnectionStore } from "../src/stores/connection-store.js"
 
 const directory = await mkdtemp(join(tmpdir(), "cline-connection-store-"))
 const file = join(directory, "connection.json")

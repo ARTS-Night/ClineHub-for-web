@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
-import { containsSudoCommand, createSshTools } from "../src/ssh-workspace.js"
-import type { ResolvedSshWorkspaceProfile } from "../src/profile-store.js"
+import { containsSudoCommand, createSshTools } from "../src/workspace/ssh-workspace.js"
+import type { ResolvedSshWorkspaceProfile } from "../src/stores/profile-store.js"
 
 assert.equal(containsSudoCommand("sudo apt update"), true)
 assert.equal(containsSudoCommand("cd /tmp && /usr/bin/sudo rm -f file"), true)

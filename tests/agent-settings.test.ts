@@ -2,7 +2,7 @@ import assert from "node:assert/strict"
 import { resolve } from "node:path"
 import { mkdtemp, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
-import { AgentSettingsStore } from "../src/agent-settings.js"
+import { AgentSettingsStore } from "../src/stores/agent-settings.js"
 
 const workspace = resolve(process.cwd())
 const store = new AgentSettingsStore(workspace, workspace)
@@ -48,6 +48,12 @@ await assert.rejects(
   /Workspace must be inside/,
 )
 
+// An empty allowedRoot (the default when CLINE_ALLOWED_ROOT isn't set) means
+// no restriction — any existing absolute directory is a valid workspace.
+const unrestricted = new AgentSettingsStore(workspace, "")
+await unrestricted.update({ workspacePath: resolve(workspace, "..") })
+assert.equal(unrestricted.get().workspacePath, resolve(workspace, ".."))
+
 await assert.rejects(store.update({ maxIterations: 0 }), /Max iterations/)
 await store.update({ compactionEnabled: false, compactionStrategy: "basic", preserveRecentTokens: 12_000, contextWindowOverride: 65_536 })
 assert.equal(store.get().compactionEnabled, false)
@@ -56,10 +62,19 @@ await assert.rejects(store.update({ preserveRecentTokens: 10 }), /Preserved rece
 await store.update({
   shellIdleTimeoutSeconds: 45,
   shellIdleAction: "wait",
-  mcpServers: [{ id: "docs", name: "docs", enabled: true, transport: "streamableHttp", command: "", args: [], url: "http://127.0.0.1:8080/mcp" }],
+  mcpServers: [{ id: "docs", name: "docs", enabled: true, transport: "streamableHttp", command: "", args: [], url: "http://127.0.0.1:8080/mcp", disabledTools: ["echo"] }],
 })
 assert.equal(store.get().shellIdleTimeoutSeconds, 45)
 assert.equal(store.get().mcpServers[0]?.transport, "streamableHttp")
+assert.deepEqual(store.get().mcpServers[0]?.disabledTools, ["echo"], "per-tool disable list round-trips")
+await store.update({ mcpServers: [{ id: "docs", name: "docs", enabled: true, transport: "streamableHttp", command: "", args: [], url: "http://127.0.0.1:8080/mcp" }] })
+assert.deepEqual(store.get().mcpServers[0]?.disabledTools, [], "disabledTools defaults to empty when omitted")
+
+assert.equal(store.get().mcpEnabled, true, "mcpEnabled defaults to true")
+await store.update({ mcpEnabled: false })
+assert.equal(store.get().mcpEnabled, false)
+await assert.rejects(store.update({ mcpEnabled: "nope" }), /MCP enabled must be a boolean/)
+await store.update({ mcpEnabled: true })
 
 assert.equal(store.get().shellIdleCarryContext, true)
 await store.update({ shellIdleAction: "auto", shellIdleCarryContext: false })

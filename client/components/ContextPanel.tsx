@@ -1,7 +1,8 @@
-import type { TFunction, Locale } from "../i18n.js"
-import type { CompactionRecord, ContextUsage, SessionSummary } from "../types.js"
-import { formatTokens } from "../format.js"
-import { localDateTime } from "../messageLog.js"
+import { useState } from "react"
+import type { TFunction, Locale } from "../lib/i18n.js"
+import type { CompactionRecord, ContextUsage, SessionSummary } from "../lib/types.js"
+import { formatTokens } from "../lib/format.js"
+import { localDateTime } from "../lib/messageLog.js"
 import { SessionEnvironment } from "./SessionEnvironment.js"
 
 type Props = {
@@ -15,6 +16,8 @@ type Props = {
 }
 
 export function ContextPanel({ t, locale, context, compactions, showToolDetails, onToggleShowToolDetails, session }: Props) {
+  const [collapsed, setCollapsed] = useState(() => typeof window !== "undefined" && window.matchMedia("(max-width: 760px)").matches)
+
   const percent = context?.utilizationPercent ?? 0
   const trigger = context?.compactionTriggerPercent ?? 90
   const summary = !context
@@ -31,9 +34,11 @@ export function ContextPanel({ t, locale, context, compactions, showToolDetails,
   const last = compactions.at(-1)
 
   return (
-    <div id="context-panel" className="context-panel">
+    <div id="context-panel" className={`context-panel${collapsed ? " is-collapsed" : ""}`}>
       <div className="context-title-row">
-        <span>{t("context")}</span>
+        <button className="context-toggle" type="button" aria-expanded={!collapsed} onClick={() => setCollapsed((value) => !value)}>
+          <span aria-hidden="true">{collapsed ? "▶" : "▼"}</span><span>{t("context")}</span>
+        </button>
         <div className="context-title-actions">
           <SessionEnvironment key={session?.sessionId ?? "none"} t={t} session={session} />
           <strong id="context-summary">{summary}</strong>
@@ -43,14 +48,16 @@ export function ContextPanel({ t, locale, context, compactions, showToolDetails,
         <span id="context-fill" className={context ? (percent >= trigger ? "critical" : percent >= 75 ? "warning" : "") : ""} style={{ width: `${context ? Math.min(100, Math.max(0, percent)) : 0}%` }} />
         <span id="context-trigger" style={{ left: `${context ? trigger : 90}%` }} />
       </div>
-      <div className="context-footer">
-        <small id="context-detail">{detail}</small>
-        <label><input id="show-tool-details" type="checkbox" checked={showToolDetails} onChange={(event) => onToggleShowToolDetails(event.target.checked)} /><span>{t("showToolDetails")}</span></label>
-      </div>
-      <div id="compaction-summary" className="compaction-summary" data-state={last ? "recorded" : "none"} title={last?.message ?? ""}>
-        <span className="compaction-icon">↻</span>
-        <span>{last ? t("lastCompaction", { time: localDateTime(last.at, locale), count: compactions.length }) : t("noCompactions")}</span>
-      </div>
+      {!collapsed && <>
+        <div className="context-footer">
+          <small id="context-detail">{detail}</small>
+          <label><input id="show-tool-details" type="checkbox" checked={showToolDetails} onChange={(event) => onToggleShowToolDetails(event.target.checked)} /><span>{t("showToolDetails")}</span></label>
+        </div>
+        <div id="compaction-summary" className="compaction-summary" data-state={last ? "recorded" : "none"} title={last?.message ?? ""}>
+          <span className="compaction-icon">↻</span>
+          <span>{last ? t("lastCompaction", { time: localDateTime(last.at, locale), count: compactions.length }) : t("noCompactions")}</span>
+        </div>
+      </>}
     </div>
   )
 }

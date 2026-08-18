@@ -22,7 +22,17 @@ export function cleanDisplayText(value: unknown): string {
 }
 
 const visibleTools = new Set(["read_files", "search_codebase", "run_commands", "editor", "apply_patch", "fetch_web_content", "ssh_read_files", "ssh_search_files", "ssh_run_commands", "ssh_write_file", "ssh_run_sudo_commands"])
-export function isVisibleTool(name: string): boolean { return visibleTools.has(name) }
+// ClineCore names every MCP-provided tool "<serverName>__<toolName>" (confirmed
+// by inspecting the actual request sent to the model) — so a call to one is
+// always visible, the same as the built-in tools, instead of needing
+// "show tool details" turned on to notice the AI reached outside its normal
+// tool set at all.
+export function mcpToolParts(name: string): { server: string; tool: string } | null {
+  const separator = name.indexOf("__")
+  if (separator <= 0) return null
+  return { server: name.slice(0, separator), tool: name.slice(separator + 2) }
+}
+export function isVisibleTool(name: string): boolean { return visibleTools.has(name) || mcpToolParts(name) !== null }
 
 function toolSummary(name: string, input: unknown): string {
   if (!input || typeof input !== "object") return ""
@@ -173,7 +183,10 @@ export class MessageLog {
     const header = document.createElement("div")
     header.className = "tool-activity-header"
     const title = document.createElement("strong")
-    title.textContent = `${toolName.includes("run_commands") ? ">" : toolName.includes("read_files") ? "▤" : "◆"} ${this.t(toolName)}`
+    const mcp = mcpToolParts(toolName)
+    title.textContent = mcp
+      ? `⛁ ${this.t("mcpToolActivity", mcp)}`
+      : `${toolName.includes("run_commands") ? ">" : toolName.includes("read_files") ? "▤" : "◆"} ${this.t(toolName)}`
     const status = document.createElement("span")
     status.className = "tool-status"
     status.textContent = this.t("toolRunning")

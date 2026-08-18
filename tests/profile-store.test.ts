@@ -2,7 +2,7 @@ import assert from "node:assert/strict"
 import { mkdtemp, readFile, rm } from "node:fs/promises"
 import { join } from "node:path"
 import { tmpdir } from "node:os"
-import { ProfileStore } from "../src/profile-store.js"
+import { ProfileStore } from "../src/stores/profile-store.js"
 
 const directory = await mkdtemp(join(tmpdir(), "cline-web-profiles-"))
 try {

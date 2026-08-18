@@ -1,15 +1,15 @@
-import { ClineCore, getValidOpenAICodexCredentials, loginOpenAICodex, type CoreSessionEvent, type ToolApprovalRequest, type ToolApprovalResult } from "@cline/sdk"
+import { ClineCore, getValidOpenAICodexCredentials, loginOpenAICodex, updateMcpSettingsFile, type CoreSessionEvent, type ToolApprovalRequest, type ToolApprovalResult } from "@cline/sdk"
 import { execFile } from "node:child_process"
 import { truncate } from "node:fs/promises"
 import { resolve } from "node:path"
 import { createConnection, discoverModels, publicConnection, type CodexCredentials, type ConnectionRequest, type ConnectionSettings } from "./providers.js"
-import { AgentSettingsStore, type AgentSettingsUpdate, type TemplateInput } from "./agent-settings.js"
-import { ConnectionStore } from "./connection-store.js"
-import { ProfileStore, type ModelProfile, type SshWorkspaceInput } from "./profile-store.js"
-import { createSshTools, testSshWorkspace } from "./ssh-workspace.js"
-import { CompactionStore } from "./compaction-store.js"
-import { buildWorkspaceSystemPrompt, createWorkspaceGuardHooks, localPromptVariables, type WorkspacePromptVariables } from "./workspace-security.js"
-import { createMcpExtension } from "./mcp-extension.js"
+import { AgentSettingsStore, parseMcpServerConnectionFields, type AgentSettingsUpdate, type McpServerSettings, type TemplateInput, type ToolPolicy } from "./stores/agent-settings.js"
+import { ConnectionStore } from "./stores/connection-store.js"
+import { ProfileStore, type ModelProfile, type SshWorkspaceInput } from "./stores/profile-store.js"
+import { createSshTools, testSshWorkspace } from "./workspace/ssh-workspace.js"
+import { CompactionStore } from "./stores/compaction-store.js"
+import { buildWorkspaceSystemPrompt, createWorkspaceGuardHooks, localPromptVariables, type WorkspacePromptVariables } from "./workspace/workspace-security.js"
+import { buildMcpSettingsServers, mcpServerNameForTool, testMcpConnection, type McpTestInput, type McpTestResult } from "./mcp-extension.js"
 
 export type Approval = { id: string; sessionId: string; toolName: string; input: unknown }
 export type RuntimeEvent = { type: "text" | "reasoning" | "tool" | "tool_result" | "iteration" | "status" | "usage" | "turn_finished" | "ended" | "approval" | "queue" | "prompt_started" | "session_replaced" | "cline_error"; sessionId: string; data: unknown }
@@ -60,6 +60,8 @@ export class ClineRuntime {
   private readonly profileStore: ProfileStore
   private readonly compactionStore: CompactionStore
   private readonly dataDirectory: string
+  private readonly mcpSettingsPath: string
+  private readonly mcpToolCache = new Map<string, { signature: string; toolNames: string[] }>()
   private readonly promptQueues = new Map<string, QueuedPrompt[]>()
   private readonly runningSessions = new Set<string>()
   private readonly queueWorkers = new Set<string>()
@@ -74,6 +76,12 @@ export class ClineRuntime {
     this.connectionStore = new ConnectionStore(resolve(dataDirectory, "connection.json"))
     this.profileStore = new ProfileStore(resolve(dataDirectory, "profiles.json"), resolve(dataDirectory, "profiles.key"))
     this.compactionStore = new CompactionStore(resolve(dataDirectory, "compactions.json"))
+    // ClineCore only ever loads MCP tools from this settings file (see the
+    // note atop mcp-extension.ts) — kept inside our own data dir instead of
+    // ClineCore's global default (~/.cline/data/settings/) so it travels with
+    // the rest of this app's state and doesn't leak into other CLI usage.
+    this.mcpSettingsPath = resolve(dataDirectory, "mcp-settings.json")
+    process.env.CLINE_MCP_SETTINGS_PATH = this.mcpSettingsPath
     this.cline.subscribe((event: CoreSessionEvent) => this.handleEvent(event))
   }
 
@@ -206,6 +214,14 @@ export class ClineRuntime {
     this.settingsGeneration++
     return template
   }
+  /** Actually connects (spawns the stdio process, or hits the SSE/HTTP URL) using
+   * whatever is currently in the form, before it's ever saved — the same
+   * "test before you trust it" pattern as the SSH workspace test button. */
+  async testMcpServer(input: unknown, signal?: AbortSignal): Promise<McpTestResult> {
+    if (!isRecord(input)) throw new Error("MCP server config must be an object")
+    const fields: McpTestInput = parseMcpServerConnectionFields(input, "This MCP server")
+    return await testMcpConnection(fields, 10_000, signal)
+  }
   async previewSystemPrompt(template: unknown) {
     const settings = this.agentSettings.get()
     const source = typeof template === "string" && template.trim() ? template : this.agentSettings.effectiveSystemPrompt()
@@ -292,8 +308,40 @@ export class ClineRuntime {
     return { connection: this.connectionInfo(), profiles: this.profilesInfo() }
   }
 
-  async updateModelProfile(id: string, patch: { name?: unknown; timeoutMs?: unknown; imagesEnabled?: unknown }) {
-    const profile = await this.profileStore.updateModel(id, patch)
+  async updateModelProfile(id: string, patch: { name?: unknown; timeoutMs?: unknown; imagesEnabled?: unknown; baseUrl?: unknown; modelId?: unknown }) {
+    const current = this.profileStore.model(id)
+    if (!current) throw new Error("Model profile not found")
+    const changingConnection = patch.baseUrl !== undefined || patch.modelId !== undefined
+    let profile: ModelProfile
+    if (changingConnection) {
+      // The URL/model are the profile's whole reason for existing, so an edit
+      // to either one is re-verified the same way the initial connect is —
+      // via createConnection() — instead of trusting arbitrary saved text.
+      if (current.provider === "claude-code") {
+        const auth = await this.claudeCodeAuthInfo()
+        if (auth.status !== "authenticated") throw new Error(auth.message)
+      }
+      const timeoutMs = patch.timeoutMs !== undefined ? patch.timeoutMs : current.timeoutMs
+      const imagesEnabled = patch.imagesEnabled !== undefined ? patch.imagesEnabled : current.imagesEnabled
+      const request: ConnectionRequest = {
+        provider: current.provider,
+        baseUrl: typeof patch.baseUrl === "string" && patch.baseUrl.trim() ? patch.baseUrl : current.baseUrl,
+        modelId: typeof patch.modelId === "string" && patch.modelId.trim() ? patch.modelId : current.modelId,
+        timeoutMs,
+        imagesEnabled,
+      }
+      const connection = await createConnection(request, this.codexCredentials)
+      profile = await this.profileStore.updateModel(id, {
+        name: patch.name,
+        timeoutMs: connection.timeoutMs,
+        imagesEnabled: connection.imagesEnabled,
+        baseUrl: connection.baseUrl,
+        modelId: connection.modelId,
+        modelInfo: connection.modelInfo,
+      })
+    } else {
+      profile = await this.profileStore.updateModel(id, patch)
+    }
     if (this.profileStore.list().activeModelProfileId === id) {
       const connection = this.connectionFromProfile(profile)
       await this.connectionStore.save(connection)
@@ -442,7 +490,9 @@ export class ClineRuntime {
     return sessionId
   }
   async abort(sessionId: string): Promise<void> {
-    this.clearPromptQueue(sessionId)
+    // Only stop the turn in flight — queued prompts (including a force-sent
+    // message someone just queued to escape a stall) must survive and still
+    // get drained once the running turn actually finishes aborting.
     await this.cline.abort(sessionId, "Stopped from web UI")
   }
   async dispose(): Promise<void> { await this.cline.dispose("Server shutting down") }
@@ -471,6 +521,11 @@ export class ClineRuntime {
       const workspace = this.profileStore.activeWorkspace()
       if (workspace?.type !== "ssh" || workspace.sudoPermission === "disabled") return false
       if (workspace.sudoPermission === "allow") return true
+    }
+    const mcpServerName = mcpServerNameForTool(toolName)
+    if (mcpServerName) {
+      const server = this.agentSettings.get().mcpServers.find((item) => item.name === mcpServerName && item.enabled)
+      if (server?.autoApprove) return true
     }
     return undefined
   }
@@ -551,11 +606,61 @@ export class ClineRuntime {
       sessionMetadata: this.sessionMetadata(sessionId, config.systemPrompt),
     })
     this.sessionSettingsGeneration.set(result.sessionId, this.settingsGeneration)
+    // cline.start() fires its own transient "running" status event for the
+    // freshly (re)started session even though it's just idly holding replayed
+    // history and hasn't been given a prompt yet — our status handler adds
+    // any "running" id to runningSessions, which would otherwise make the
+    // queue-drainer's very next re-entry guard think a real turn is already
+    // in flight and skip draining forever. Nothing is actually running here.
+    this.runningSessions.delete(result.sessionId)
     const title = previous.metadata?.title ?? previous.title
     if (typeof title === "string" && title) await this.cline.update(result.sessionId, { title }).catch(() => {})
     await this.compactionStore.copy(sessionId, result.sessionId)
     this.emit({ type: "session_replaced", sessionId, data: { sessionId: result.sessionId } })
     return result.sessionId
+  }
+
+  /** Keeps cline_mcp_settings.json in step with the saved MCP server list right
+   * before every session start/send — see the note atop mcp-extension.ts for
+   * why this file, not AgentPlugin.registerMcpServer(), is what actually wires
+   * MCP tools into the model. Failure here degrades to "no MCP tools this
+   * turn" rather than blocking the turn outright. */
+  private async syncMcpSettingsFile(servers: McpServerSettings[]): Promise<void> {
+    try {
+      await updateMcpSettingsFile(this.mcpSettingsPath, (raw: Record<string, unknown>) => {
+        const current = isRecord(raw.mcpServers) ? raw.mcpServers as Record<string, unknown> : {}
+        raw.mcpServers = buildMcpSettingsServers(servers, current)
+        return raw
+      })
+    } catch (error: unknown) {
+      console.error(`Failed to sync MCP settings file: ${errorMessage(error)}`)
+    }
+  }
+
+  /** MCP tool names not present in `toolPolicies` bypass approval entirely by
+   * default (verified: a real tool call went through with no approval event,
+   * even with autoApprove off) — ClineCore's approval gate only ever engages
+   * for tools it has an explicit policy for. Since the exact `<server>__<tool>`
+   * names aren't known until a server is actually connected, this discovers
+   * them the same way the "test connection" button does and caches the result
+   * per server config, so a normal turn only pays the connect cost once. */
+  private async resolveMcpToolPolicies(servers: McpServerSettings[]): Promise<Record<string, ToolPolicy>> {
+    const policies: Record<string, ToolPolicy> = {}
+    const seen = new Set<string>()
+    for (const server of servers) {
+      if (!server.enabled) continue
+      seen.add(server.id)
+      const signature = JSON.stringify({ transport: server.transport, command: server.command, args: server.args, url: server.url })
+      let cached = this.mcpToolCache.get(server.id)
+      if (!cached || cached.signature !== signature) {
+        const result = await testMcpConnection({ transport: server.transport, command: server.command, args: server.args, url: server.url }, 8_000)
+        cached = { signature, toolNames: result.ok ? result.tools.map((tool) => tool.name) : [] }
+        this.mcpToolCache.set(server.id, cached)
+      }
+      for (const toolName of cached.toolNames) policies[`${server.name}__${toolName}`] = { enabled: !server.disabledTools.includes(toolName), autoApprove: server.autoApprove }
+    }
+    for (const id of [...this.mcpToolCache.keys()]) if (!seen.has(id)) this.mcpToolCache.delete(id)
+    return policies
   }
 
   private async config() {
@@ -588,6 +693,7 @@ export class ClineRuntime {
       toolPolicies.ssh_write_file = permissionPolicy(effectivePermissions.editor)
       toolPolicies.ssh_run_sudo_commands = permissionPolicy(sshWorkspace.sudoPermission)
     }
+    if (settings.mcpEnabled) Object.assign(toolPolicies, await this.resolveMcpToolPolicies(settings.mcpServers))
     const modelInfo = this.effectiveModelInfo()
     const sshPrompt = sshWorkspace ? [
       "",
@@ -611,7 +717,7 @@ export class ClineRuntime {
     } : localPromptVariables(settings.workspacePath, activeWorkspace?.name)
     const guardedWorkspace = sshWorkspace?.remoteDirectory ?? settings.workspacePath
     const systemPrompt = buildWorkspaceSystemPrompt(`${this.agentSettings.effectiveSystemPrompt()}${shellIdlePrompt(settings)}${sshPrompt}`, promptVariables)
-    const mcpExtension = createMcpExtension(settings.mcpServers)
+    await this.syncMcpSettingsFile(settings.mcpServers)
     return {
       providerId: this.connection.providerId,
       modelId: this.connection.modelId,
@@ -638,7 +744,7 @@ export class ClineRuntime {
       toolPolicies,
       extraTools: sshWorkspace ? createSshTools(sshWorkspace) : undefined,
       hooks: createWorkspaceGuardHooks(guardedWorkspace, sshWorkspace ? "posix" : undefined),
-      extensions: mcpExtension ? [mcpExtension] : undefined,
+      disableMcpSettingsTools: !settings.mcpEnabled,
       compaction: {
         enabled: settings.compactionEnabled,
         strategy: settings.compactionStrategy,
@@ -717,6 +823,7 @@ export class ClineRuntime {
           shellIdleTimeoutSeconds: settings.shellIdleTimeoutSeconds,
           shellIdleAction: settings.shellIdleAction,
           shellIdleCarryContext: settings.shellIdleCarryContext,
+          mcpEnabled: settings.mcpEnabled,
           mcpServers: settings.mcpServers.map(({ name, enabled, transport }) => ({ name, enabled, transport })),
         },
       },

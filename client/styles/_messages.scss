@@ -1,0 +1,177 @@
+// Conversation bubbles, markdown rendering and mermaid diagrams.
+
+.message {
+  display: flex;
+  flex-direction: column;
+  max-width: 850px;
+  margin: 10px 0;
+  padding: 12px 15px;
+  border-radius: 9px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  animation: rise-in var(--motion-slow) var(--ease-out);
+
+  &.user {
+    margin-left: auto;
+    background: var(--ui-accent);
+    color: var(--ui-on-accent);
+  }
+
+  &.assistant {
+    border: 1px solid var(--ui-border);
+    background: var(--ui-surface);
+    color: var(--ui-text);
+    box-shadow: 0 2px 8px var(--ui-shadow);
+
+    &.plan {
+      border-left: 3px solid var(--ui-alt);
+      background: var(--ui-alt-soft);
+    }
+  }
+
+  &.reasoning {
+    padding: 8px 12px;
+    border-left: 3px solid var(--ui-border-strong);
+    color: var(--ui-text-muted);
+    font-size: 13px;
+
+    summary { color: var(--ui-text-muted); font-weight: 600; user-select: none; cursor: pointer; }
+
+    .reasoning-content {
+      margin-top: 8px;
+      overflow: visible;
+      font-family: ui-monospace, monospace;
+      white-space: pre-wrap;
+    }
+  }
+
+  &.tool {
+    color: var(--ui-warning);
+    font-family: ui-monospace, monospace;
+    font-size: 13px;
+    white-space: pre-wrap;
+  }
+}
+
+.message-images {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 220px));
+  gap: 8px;
+  margin-bottom: 9px;
+
+  img {
+    display: block;
+    width: 100%;
+    max-height: 260px;
+    object-fit: contain;
+    border: 1px solid var(--ui-border);
+    border-radius: 7px;
+    background: var(--ui-surface-soft);
+  }
+}
+
+// --- Markdown ------------------------------------------------------------
+
+.message-content {
+  white-space: normal;
+
+  > :first-child { margin-top: 0; }
+  > :last-child { margin-bottom: 0; }
+
+  p { margin: 0 0 10px; }
+  ul, ol { margin: 0 0 10px; padding-left: 22px; }
+  li { margin: 3px 0; }
+  li > p { margin: 0 0 4px; }
+
+  h1, h2, h3, h4, h5, h6 { margin: 14px 0 8px; line-height: 1.3; }
+  h1 { font-size: 1.3em; }
+  h2 { font-size: 1.18em; }
+  h3 { font-size: 1.08em; }
+  h4, h5, h6 { font-size: 1em; }
+
+  hr { margin: 12px 0; border: 0; border-top: 1px solid var(--ui-border); }
+
+  a {
+    color: var(--ui-accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    transition: color var(--motion) var(--ease);
+
+    &:hover { color: var(--ui-accent-hover); }
+  }
+
+  blockquote {
+    margin: 0 0 10px;
+    padding: 4px 12px;
+    border-left: 3px solid var(--ui-border-strong);
+    color: var(--ui-text-muted);
+  }
+
+  code {
+    padding: 1px 5px;
+    border-radius: 4px;
+    background: var(--ui-surface-soft);
+    font-family: ui-monospace, monospace;
+    font-size: .92em;
+  }
+
+  pre {
+    margin: 0 0 10px;
+    padding: 10px 12px;
+    overflow-x: auto;
+    border: 1px solid var(--ui-border);
+    border-radius: 8px;
+    background: var(--ui-surface-soft);
+
+    code { padding: 0; background: none; font-size: .88em; line-height: 1.5; }
+  }
+
+  table {
+    display: block;
+    width: 100%;
+    margin: 0 0 10px;
+    overflow-x: auto;
+    border-collapse: collapse;
+    font-size: .93em;
+  }
+
+  th, td { padding: 5px 9px; border: 1px solid var(--ui-border); text-align: left; }
+  th { background: var(--ui-surface-soft); }
+
+  img { max-width: 100%; border-radius: 6px; }
+}
+
+// The user bubble is a solid accent block, so its inline surfaces need to sit
+// on top of that instead of the page background.
+.message.user .message-content {
+  code, pre, th { background: rgba(255, 255, 255, .16); }
+  pre { border-color: rgba(255, 255, 255, .22); }
+  a { color: inherit; }
+  blockquote { border-left-color: rgba(255, 255, 255, .4); color: inherit; }
+}
+
+// --- Mermaid -------------------------------------------------------------
+
+.mermaid-diagram {
+  margin: 0 0 10px;
+  padding: 10px;
+  overflow-x: auto;
+  border: 1px solid var(--ui-border);
+  border-radius: 8px;
+  background: var(--ui-surface-soft);
+  text-align: center;
+
+  svg { max-width: 100%; height: auto; }
+}
+
+.mermaid-error-note {
+  margin: 0 0 6px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: var(--ui-danger-soft);
+  color: var(--ui-danger);
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+}
+
+pre.mermaid-error { border-color: var(--ui-danger); }

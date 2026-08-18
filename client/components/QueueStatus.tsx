@@ -1,6 +1,6 @@
 import { useState } from "react"
-import type { TFunction } from "../i18n.js"
-import type { QueuedPrompt } from "../types.js"
+import type { TFunction } from "../lib/i18n.js"
+import type { QueuedPrompt } from "../lib/types.js"
 
 export type QueueEntry = QueuedPrompt & { source: "startup" | "server" }
 
@@ -49,8 +49,8 @@ function QueueItemRow({ t, entry, index, total, onUpdate, onCancel }: { t: TFunc
       <textarea className="queue-message-input" rows={2} value={value} aria-label={`${t("queueCount", { count: total })} ${index + 1}`} onChange={(event) => setValue(event.target.value)} />
       <div className="queue-item-actions">
         {imageCount > 0 && <small className="queue-image-count">{t("queuedImages", { count: imageCount })}</small>}
-        <button type="button" className="secondary" disabled={busy} onClick={runUpdate}>{t("queueUpdate")}</button>
-        <button type="button" className="danger" disabled={busy} onClick={runCancel}>{t("queueCancel")}</button>
+        <button type="button" className="secondary queue-force-send" disabled={busy} onClick={runUpdate}>{t("forceSend")}</button>
+        <button type="button" className="danger queue-close" disabled={busy} onClick={runCancel} aria-label={t("queueCancel")} title={t("queueCancel")}>×</button>
       </div>
       {error && <small className="queue-item-error">{error}</small>}
     </div>

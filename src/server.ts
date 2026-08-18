@@ -12,7 +12,11 @@ process.env.CLINE_DATA_DIR ??= resolve(process.cwd(), ".cline-data")
 
 const app = new Hono()
 const initialWorkspace = await realpath(resolve(process.env.CLINE_WORKSPACE_ROOT ?? process.cwd()))
-const allowedRoot = await realpath(resolve(process.env.CLINE_ALLOWED_ROOT ?? initialWorkspace))
+// Unset by default: any existing absolute path can be picked as a workspace,
+// same as SSH workspaces already allow any remote directory. Set
+// CLINE_ALLOWED_ROOT to restrict workspace selection to one subtree — useful
+// when the server is reachable from other devices on the LAN.
+const allowedRoot = process.env.CLINE_ALLOWED_ROOT ? await realpath(resolve(process.env.CLINE_ALLOWED_ROOT)) : ""
 const runtime = await ClineRuntime.create(initialWorkspace, allowedRoot)
 const clients = new Set<(event: RuntimeEvent) => void>()
 runtime.subscribe((event) => { for (const send of clients) send(event) })
@@ -36,6 +40,7 @@ app.post("/api/agent-settings/preview", async (c) => {
   const body = await c.req.json<{ template?: unknown }>()
   return c.json(await runtime.previewSystemPrompt(body.template))
 })
+app.post("/api/agent-settings/mcp/test", async (c) => c.json(await runtime.testMcpServer(await c.req.json(), c.req.raw.signal)))
 app.post("/api/agent-settings/templates", async (c) => c.json(await runtime.createPromptTemplate(await c.req.json())))
 app.patch("/api/agent-settings/templates/:id", async (c) => c.json(await runtime.updatePromptTemplate(c.req.param("id"), await c.req.json())))
 app.delete("/api/agent-settings/templates/:id", async (c) => { await runtime.deletePromptTemplate(c.req.param("id")); return c.json({ ok: true }) })
@@ -122,7 +127,7 @@ app.use("/*", async (c, next) => {
   c.header("Cache-Control", "no-store")
   await next()
 })
-app.use("/*", serveStatic({ root: "./public" }))
+app.use("/*", serveStatic({ root: "./dist" }))
 const isMainModule = process.argv[1] !== undefined
   && import.meta.url === pathToFileURL(resolve(process.argv[1])).href
 

@@ -1,7 +1,7 @@
 import { Fragment, useState } from "react"
-import type { TFunction } from "../i18n.js"
-import type { SessionSummary } from "../types.js"
-import { useDismissiblePopover } from "../useDismissiblePopover.js"
+import type { TFunction } from "../lib/i18n.js"
+import type { SessionSummary } from "../lib/types.js"
+import { useDismissiblePopover } from "../hooks/useDismissiblePopover.js"
 
 type Snapshot = {
   model?: { profileName?: string }

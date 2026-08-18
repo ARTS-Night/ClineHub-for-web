@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises"
 import { posix } from "node:path"
 import { Client, type ConnectConfig, type SFTPWrapper } from "ssh2"
 import { createTool } from "@cline/sdk"
-import type { ResolvedSshWorkspaceProfile } from "./profile-store.js"
+import type { ResolvedSshWorkspaceProfile } from "../stores/profile-store.js"
 import { workspaceViolation } from "./workspace-security.js"
 
 const MAX_OUTPUT = 96 * 1024

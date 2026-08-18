@@ -1,0 +1,11 @@
+// Entry point — compiled to public/styles.css by `pnpm run build:css`.
+// Edit the SCSS here, never public/styles.css (that file is generated).
+//
+// Order matters: tokens define the variables everything else consumes, and
+// _responsive comes last so narrow-screen rules win.
+@use "tokens";
+@use "base";
+@use "layout";
+@use "components";
+@use "messages";
+@use "responsive";

@@ -1,4 +1,7 @@
 allowBuilds:
+  # sass pulls this in for fast file watching; it falls back to polling
+  # without the native build, which is fine for our one stylesheet.
+  '@parcel/watcher': false
   cpu-features: true
   esbuild: true
   protobufjs: true

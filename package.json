@@ -6,11 +6,12 @@
   "scripts": {
     "dev": "pnpm run build:client && node scripts/dev.mjs",
     "start": "tsx src/server.ts",
-    "build:client": "vite build",
+    "build:css": "sass client/styles/main.scss dist/styles.css --no-source-map --style=compressed",
+    "build:client": "node scripts/build-client.mjs",
     "build": "pnpm run build:client && tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "sessions:clear": "tsx scripts/clear-sessions.ts",
-    "test": "pnpm run build:client && node --check public/app.js && tsc --noEmit && tsx scripts/test-providers.ts && tsx scripts/test-agent-settings.ts && tsx scripts/test-mcp-extension.ts && tsx scripts/test-agent-settings-api.ts && tsx scripts/test-connection-store.ts && tsx scripts/test-profile-store.ts && tsx scripts/test-ssh-workspace.ts && tsx scripts/test-workspace-security.ts && tsx scripts/test-image-input.ts && tsx scripts/test-compaction-store.ts"
+    "test": "pnpm run build:client && node --check dist/app.js && tsc --noEmit && node scripts/run-tests.mjs"
   },
   "keywords": [],
   "author": "",
@@ -26,6 +27,7 @@
   "dependencies": {
     "@cline/sdk": "^0.0.75",
     "@hono/node-server": "^2.1.1",
+    "@modelcontextprotocol/sdk": "^1.30.0",
     "ai-sdk-provider-claude-code": "^4.1.1",
     "dompurify": "^3.4.13",
     "hono": "^4.13.2",
@@ -41,6 +43,7 @@
     "@types/react-dom": "^19.2.4",
     "@types/ssh2": "^1.15.5",
     "@vitejs/plugin-react": "^6.0.5",
+    "sass": "^1.102.0",
     "tsx": "^4.23.12",
     "typescript": "^7.0.2",
     "vite": "^8.2.1"

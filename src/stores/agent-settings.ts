@@ -15,6 +15,15 @@ export type McpServerSettings = {
   command: string
   args: string[]
   url: string
+  /** When true, calls to this server's tools skip the approval prompt — the
+   * same "allow" concept as the built-in tool permissions, scoped per server
+   * since individual MCP tool names aren't known ahead of time. */
+  autoApprove: boolean
+  /** Tool names (as reported by the server itself, not the "server__tool"
+   * form the model sees) that are hidden from the model entirely — the
+   * per-tool counterpart to the server-level `enabled` flag. Populated by
+   * ticking tools off in the discovered list after a connection test. */
+  disabledTools: string[]
 }
 export type ShellIdleAction = "ask" | "enter" | "wait" | "close" | "auto"
 
@@ -40,6 +49,10 @@ export type AgentSettings = {
   preserveRecentTokens: number
   contextWindowOverride: number | null
   mcpServers: McpServerSettings[]
+  /** Quick on/off switch for whether MCP tools are exposed to the AI at all —
+   * independent of each server's own `enabled` flag, so the user can shut off
+   * MCP entirely for one message without touching the server list. */
+  mcpEnabled: boolean
   shellIdleTimeoutSeconds: number
   shellIdleAction: ShellIdleAction
   /** Only meaningful when shellIdleAction is "auto": whether the shell log and
@@ -57,6 +70,7 @@ export type AgentSettingsUpdate = {
   preserveRecentTokens?: unknown
   contextWindowOverride?: unknown
   mcpServers?: unknown
+  mcpEnabled?: unknown
   shellIdleTimeoutSeconds?: unknown
   shellIdleAction?: unknown
   shellIdleCarryContext?: unknown
@@ -132,7 +146,7 @@ export class AgentSettingsStore {
 
   constructor(initialWorkspace: string, allowedRoot: string, private readonly storagePath?: string) {
     const workspacePath = resolve(initialWorkspace)
-    const root = resolve(allowedRoot)
+    const root = allowedRoot === "" ? "" : resolve(allowedRoot)
     if (!isWithin(root, workspacePath)) throw new Error("Initial workspace must be inside CLINE_ALLOWED_ROOT")
     this.settings = {
       workspacePath,
@@ -145,6 +159,7 @@ export class AgentSettingsStore {
       preserveRecentTokens: 20_000,
       contextWindowOverride: null,
       mcpServers: [],
+      mcpEnabled: true,
       shellIdleTimeoutSeconds: 60,
       shellIdleAction: "ask",
       shellIdleCarryContext: true,
@@ -270,6 +285,10 @@ export class AgentSettingsStore {
     }
 
     if (input.mcpServers !== undefined) next.mcpServers = parseMcpServers(input.mcpServers)
+    if (input.mcpEnabled !== undefined) {
+      if (typeof input.mcpEnabled !== "boolean") throw new Error("MCP enabled must be a boolean")
+      next.mcpEnabled = input.mcpEnabled
+    }
 
     this.settings = next
     await this.persist()
@@ -387,6 +406,25 @@ function parseShellIdleAction(value: unknown): ShellIdleAction {
   throw new Error("Invalid shell idle action")
 }
 
+/** Validates the transport/command/args/url quartet shared by every MCP server —
+ * factored out so the "test connection" endpoint validates unsaved form input the
+ * exact same way a saved server's fields are validated, instead of duplicating it. */
+export function parseMcpServerConnectionFields(raw: Record<string, unknown>, label: string): Pick<McpServerSettings, "transport" | "command" | "args" | "url"> {
+  const transport = raw.transport
+  if (transport !== "stdio" && transport !== "sse" && transport !== "streamableHttp") throw new Error(`${label} has an invalid transport`)
+  const command = typeof raw.command === "string" ? raw.command.trim() : ""
+  const url = typeof raw.url === "string" ? raw.url.trim() : ""
+  if (transport === "stdio" && !command) throw new Error(`${label} needs a command`)
+  if (transport !== "stdio") {
+    try {
+      const parsed = new URL(url)
+      if (parsed.protocol !== "http:" && parsed.protocol !== "https:") throw new Error()
+    } catch { throw new Error(`${label} needs an http(s) URL`) }
+  }
+  if (!Array.isArray(raw.args) || raw.args.some((arg) => typeof arg !== "string" || arg.length > 2_000)) throw new Error(`${label} has invalid arguments`)
+  return { transport, command, args: raw.args.map((arg) => arg.trim()).filter(Boolean), url }
+}
+
 function parseMcpServers(value: unknown): McpServerSettings[] {
   if (!Array.isArray(value)) throw new Error("MCP servers must be an array")
   if (value.length > 20) throw new Error("Configure no more than 20 MCP servers")
@@ -397,31 +435,26 @@ function parseMcpServers(value: unknown): McpServerSettings[] {
     if (!/^[a-zA-Z0-9_-]{1,64}$/.test(name)) throw new Error(`MCP server ${index + 1} needs a name using letters, numbers, _ or -`)
     if (names.has(name.toLowerCase())) throw new Error(`MCP server name '${name}' is duplicated`)
     names.add(name.toLowerCase())
-    const transport = raw.transport
-    if (transport !== "stdio" && transport !== "sse" && transport !== "streamableHttp") throw new Error(`MCP server '${name}' has an invalid transport`)
-    const command = typeof raw.command === "string" ? raw.command.trim() : ""
-    const url = typeof raw.url === "string" ? raw.url.trim() : ""
-    if (transport === "stdio" && !command) throw new Error(`MCP server '${name}' needs a command`)
-    if (transport !== "stdio") {
-      try {
-        const parsed = new URL(url)
-        if (parsed.protocol !== "http:" && parsed.protocol !== "https:") throw new Error()
-      } catch { throw new Error(`MCP server '${name}' needs an http(s) URL`) }
-    }
-    if (!Array.isArray(raw.args) || raw.args.some((arg) => typeof arg !== "string" || arg.length > 2_000)) throw new Error(`MCP server '${name}' has invalid arguments`)
+    const fields = parseMcpServerConnectionFields(raw, `MCP server '${name}'`)
+    const disabledTools = Array.isArray(raw.disabledTools) ? raw.disabledTools.filter((tool): tool is string => typeof tool === "string") : []
     return {
       id: typeof raw.id === "string" && raw.id ? raw.id.slice(0, 80) : `mcp-${Date.now()}-${index}`,
       name,
       enabled: raw.enabled !== false,
-      transport,
-      command,
-      args: raw.args.map((arg) => arg.trim()).filter(Boolean),
-      url,
+      autoApprove: raw.autoApprove === true,
+      disabledTools,
+      ...fields,
     }
   })
 }
 
+// An empty root means "no restriction" — CLINE_ALLOWED_ROOT wasn't set at
+// startup, so any existing absolute path is a valid workspace (the AI's
+// actual file/command tools are still boxed in per-session to whichever
+// workspace is active, via workspace-security.ts's own guard; this check is
+// only an extra opt-in gate for shared/LAN deployments).
 function isWithin(root: string, target: string): boolean {
+  if (root === "") return true
   const path = relative(root, target)
   return path === "" || (!path.startsWith("..") && !isAbsolute(path))
 }

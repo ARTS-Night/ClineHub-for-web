@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react"
-import type { Locale, LocaleOption, TFunction } from "../i18n.js"
+import type { Locale, LocaleOption, TFunction } from "../lib/i18n.js"
 
 type Props = {
   t: TFunction

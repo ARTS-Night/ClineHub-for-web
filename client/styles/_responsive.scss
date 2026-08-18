@@ -1,0 +1,272 @@
+// Breakpoints, narrowest-last so the phone layout always wins.
+
+@media (max-width: 1250px) {
+  #workspace-display,
+  #connection { display: none; }
+
+  .quick-switch {
+    grid-template-columns: minmax(150px, 210px);
+    padding: 4px;
+
+    > span { display: none; }
+  }
+}
+
+@media (max-width: 1000px) {
+  .quick-switch { grid-template-columns: minmax(125px, 170px); }
+}
+
+@media (max-width: 760px) {
+  header {
+    height: auto;
+    min-height: 60px;
+    flex-wrap: wrap;
+    align-content: center;
+    row-gap: 7px;
+    gap: 8px;
+    padding: 8px 10px;
+
+    > strong { font-size: 13px; }
+  }
+
+  #connection {
+    order: 3;
+    flex: 1 1 0;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 11px;
+  }
+
+  #workspace-display {
+    display: block;
+    order: 4;
+    flex: 1 1 100%;
+    max-width: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 10px;
+  }
+
+  .header-actions {
+    margin-left: auto;
+
+    button { padding: 7px; font-size: 0; }
+  }
+
+  #general-settings-button::after { content: "General"; font-size: 12px; }
+  #ai-settings-button::after { content: "AI"; font-size: 12px; }
+  #theme-toggle { font-size: 16px; }
+
+  .header-profile-switchers {
+    order: 5;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    flex: 1 1 100%;
+    width: 100%;
+    gap: 6px;
+    margin-left: 0;
+  }
+
+  .quick-switch {
+    grid-template-columns: auto minmax(0, 1fr);
+    min-width: 0;
+    padding: 3px 5px;
+
+    > span { display: inline; font-size: 8px; }
+    select { height: 27px; padding: 4px 20px 4px 6px; font-size: 11px; }
+  }
+
+  main,
+  body.sidebar-collapsed main {
+    position: relative;
+    display: block;
+    height: calc(100vh - 126px);
+  }
+
+  aside {
+    position: absolute;
+    inset: 0 auto 0 0;
+    z-index: 60;
+    width: min(82vw, 300px);
+    box-shadow: 12px 0 35px var(--ui-shadow-strong);
+  }
+
+  body.sidebar-collapsed aside { transform: translateX(-100%); }
+
+  .conversation { height: 100%; }
+  .context-panel { z-index: 10; }
+
+  .model-row,
+  .two-columns,
+  .tool-permissions { grid-template-columns: 1fr; }
+  .model-row button { width: 100%; }
+
+  .queue-item { grid-template-columns: 24px minmax(0, 1fr); }
+  .queue-item-actions { grid-column: 2; justify-content: flex-end; }
+  .queue-status { min-height: 116px; max-height: 34vh; }
+
+  .session-environment-toggle > span:last-child { display: none; }
+
+  .session-environment {
+    position: fixed;
+    top: 86px;
+    right: 12px;
+    left: 12px;
+    width: auto;
+    max-height: 68vh;
+  }
+
+  #composer {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 38px;
+    grid-template-areas:
+      "toolbar toolbar"
+      "input actions";
+    align-items: stretch;
+    column-gap: 6px;
+    row-gap: 7px;
+    padding: 9px 10px;
+
+    .composer-toolbar {
+      grid-area: toolbar;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      min-width: 0;
+      gap: 8px;
+
+      > .quick-permissions-wrap { width: 121px; min-width: 121px; flex: 0 0 121px; }
+    }
+
+    .template-switcher-wrap { position: static; flex: 1 1 auto; min-width: 0; }
+    .template-options { display: none; }
+
+    .composer-input-wrap {
+      grid-area: input;
+
+      textarea { min-height: 88px; }
+    }
+
+    .composer-actions {
+      grid-area: actions;
+      display: flex;
+      flex-direction: column;
+      flex-wrap: nowrap;
+      justify-content: stretch;
+      width: 38px;
+      min-width: 38px;
+      gap: 5px;
+
+      button {
+        width: 38px;
+        min-width: 38px;
+        padding: 5px 3px;
+        font-size: 11px;
+
+        &:not(.attach-image) { flex: 1 1 0; }
+      }
+    }
+  }
+
+  .mobile-mode-toggle {
+    display: inline-flex;
+    width: fit-content;
+    max-width: 100%;
+    min-height: 32px;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    padding: 3px 6px;
+    font-size: 10px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .mobile-mode-panel {
+    position: absolute;
+    z-index: 50;
+    left: 10px;
+    right: auto;
+    bottom: calc(100% + 8px);
+    display: grid;
+    gap: 5px;
+    width: min(190px, calc(100vw - 24px));
+    padding: 8px;
+    border: 1px solid var(--ui-border-strong);
+    border-radius: 9px;
+    background: var(--ui-surface);
+    box-shadow: 0 16px 45px var(--ui-shadow-strong);
+    animation: pop-in var(--motion) var(--ease-out);
+
+    button {
+      background: var(--ui-surface-raised);
+      color: var(--ui-text);
+      text-align: left;
+
+      &:hover:not(:disabled):not(.active) { background: var(--ui-accent-soft); color: var(--ui-accent); }
+
+      &.active {
+        border-color: var(--ui-accent-line);
+        background: var(--ui-accent-soft);
+        color: var(--ui-accent);
+      }
+    }
+  }
+
+  .quick-permissions-toggle {
+    width: 121px;
+    min-width: 121px;
+    min-height: 32px;
+    padding: 2px 5px;
+  }
+
+  .quick-permissions-indicator { grid-template-columns: repeat(4, 15px); gap: 1px; }
+  .permission-tool-icon { width: 15px; height: 15px; border-radius: 4px; font-size: 8px; }
+  .quick-permissions-panel { left: auto; right: 0; width: min(330px, calc(100vw - 20px)); }
+  .quick-permissions-list { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 620px) {
+  .agent-settings-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 600px) {
+  .messages { padding: 14px 12px; }
+  .message { max-width: 100%; margin: 8px 0; padding: 10px 12px; font-size: 14px; }
+  .context-panel { padding: 8px 12px; }
+  #composer { padding: 10px 12px; }
+  #approval { padding: 0 12px; }
+  .mode-banner { margin: 0 12px; flex-wrap: wrap; }
+
+  .two-columns,
+  .model-row,
+  .tool-permissions { grid-template-columns: 1fr !important; }
+
+  dialog,
+  .wide-dialog,
+  .react-agent-dialog {
+    width: calc(100vw - 16px);
+    max-height: calc(100vh - 16px);
+    border-radius: 10px;
+  }
+
+  .settings-form,
+  #setup-form { padding: 16px; gap: 13px; }
+
+  .setup-actions,
+  .split-actions { flex-wrap: wrap; }
+
+  .profile-list-row { flex-direction: column; align-items: stretch; }
+
+  .profile-actions {
+    justify-content: stretch;
+    flex-wrap: wrap;
+
+    button { flex: 1 1 auto; }
+  }
+}

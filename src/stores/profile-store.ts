@@ -1,7 +1,7 @@
 import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto"
 import { mkdir, readFile, writeFile } from "node:fs/promises"
 import { dirname } from "node:path"
-import { parseOptionalTimeout, type ConnectionSettings, type ModelInfo, type ProviderKind } from "./providers.js"
+import { parseOptionalTimeout, type ConnectionSettings, type ModelInfo, type ProviderKind } from "../providers.js"
 
 export type ModelProfile = {
   id: string
@@ -171,16 +171,21 @@ export class ProfileStore {
     return { ...profile }
   }
 
-  /** Edits an existing model profile's own fields (name, timeout, image input) without
-   * touching which profile is active — unlike saveModel(), which is also the
-   * connect flow's upsert-and-activate path. */
-  async updateModel(id: string, patch: { name?: unknown; timeoutMs?: unknown; imagesEnabled?: unknown }): Promise<ModelProfile> {
+  /** Edits an existing model profile's own fields (name, timeout, image input, and —
+   * once the caller has re-resolved them via createConnection() — URL/model/modelInfo)
+   * without touching which profile is active — unlike saveModel(), which is also the
+   * connect flow's upsert-and-activate path. This method trusts baseUrl/modelId/modelInfo
+   * as already-validated; callers must resolve them through createConnection() first. */
+  async updateModel(id: string, patch: { name?: unknown; timeoutMs?: unknown; imagesEnabled?: unknown; baseUrl?: unknown; modelId?: unknown; modelInfo?: ModelProfile["modelInfo"] }): Promise<ModelProfile> {
     const index = this.document.models.findIndex((item) => item.id === id)
     const current = this.document.models[index]
     if (index === -1 || !current) throw new Error("Model profile not found")
     const profile: ModelProfile = {
       ...current,
       name: patch.name !== undefined ? requiredString(patch.name, "Model profile name", 100) : current.name,
+      baseUrl: patch.baseUrl !== undefined ? requiredString(patch.baseUrl, "Server URL", 2_000) : current.baseUrl,
+      modelId: patch.modelId !== undefined ? requiredString(patch.modelId, "Model", 300) : current.modelId,
+      modelInfo: patch.modelInfo !== undefined ? patch.modelInfo : current.modelInfo,
       timeoutMs: patch.timeoutMs !== undefined ? parseOptionalTimeout(patch.timeoutMs) : current.timeoutMs,
       imagesEnabled: patch.imagesEnabled !== undefined ? Boolean(patch.imagesEnabled) : current.imagesEnabled,
       updatedAt: new Date().toISOString(),

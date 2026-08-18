@@ -1,5 +1,5 @@
 import assert from "node:assert/strict"
-import { buildWorkspaceSystemPrompt, renderSystemPromptTemplate, workspaceViolation } from "../src/workspace-security.js"
+import { buildWorkspaceSystemPrompt, renderSystemPromptTemplate, workspaceViolation } from "../src/workspace/workspace-security.js"
 
 const variables = {
   user: "alice",

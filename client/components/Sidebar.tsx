@@ -1,6 +1,6 @@
-import type { TFunction } from "../i18n.js"
-import type { SessionSummary } from "../types.js"
-import { providerDisplayName, shortModelName } from "../format.js"
+import type { TFunction } from "../lib/i18n.js"
+import type { SessionSummary } from "../lib/types.js"
+import { providerDisplayName, shortModelName } from "../lib/format.js"
 
 type Props = {
   t: TFunction

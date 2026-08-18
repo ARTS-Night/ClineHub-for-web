@@ -93,15 +93,13 @@ Claude Code選択時はサーバーURLとAPIキーは不要です。このモー
 
 エージェント設定を保存した後は、現在の会話履歴を保持した内部セッションへ切り替え、次に送信するメッセージからシステムプロンプト、権限、最大iteration数、圧縮設定、作業場所をまとめて反映します。設定は`.cline-data/agent-settings.json`へ保存され、サーバー再起動後も維持されます。
 
-別のプロジェクトフォルダーを選択可能にする場合は、起動前に許可範囲を明示します。
+作業フォルダーは絶対パスで指定でき、既定では起動した場所以外も自由に選べます（存在するディレクトリであることのみ検証し、シンボリックリンクやジャンクションは実体パスに解決されます）。LAN上の他端末からもこのサーバーへアクセスできる構成など、選択できる範囲を1つのサブツリーに制限したい場合だけ、起動前に許可範囲を明示します。
 
 ```powershell
 $env:CLINE_ALLOWED_ROOT = "E:\projects"
 $env:CLINE_WORKSPACE_ROOT = "E:\projects\my-app"
 pnpm dev
 ```
-
-入力パスは存在するディレクトリに限り、シンボリックリンクやジャンクションの実体パスも含めてallowed root内か検証します。
 
 ## コンテキスト表示と自動圧縮
 
@@ -111,20 +109,67 @@ pnpm dev
 
 自動圧縮が実行されると、会話内に時刻付きイベントカードを表示し、コンテキストメーター下にも最終実行時刻と累計回数を表示します。履歴はセッションごとに`.cline-data/compactions.json`へ最大100件保存されるため、画面やサーバーを再起動した後も確認できます。セッション削除時には対応する圧縮履歴も削除します。
 
+## MCPサーバー
+
+`Agent settings` の `MCP` タブで、stdio・SSE・Streamable HTTPのMCPサーバーを登録できます。サーバーごとに有効/無効を切り替えられ、無効なサーバーは次のメッセージからClineのツール一覧に含まれません。
+
+各カードの「接続テスト」ボタンは、保存前のフォーム内容のまま実際に接続します（stdioなら実際にコマンドを起動、SSE/HTTPなら実際にURLへ接続してツール一覧を取得）。stdioサーバーのテスト中に該当カードを削除すると、その場でプロセスを終了させてからカードを削除します。
+
+3方式すべてを手元で試せる最小のテスト用MCPサーバーを `TEST-MCP-Server/` に用意しています。セットアップと、cline-for-web側への具体的な登録内容は [TEST-MCP-Server/README.md](TEST-MCP-Server/README.md) を参照してください。
+
 ## Session管理
 
 Session一覧の `⋯` から、状態、Provider、Model、working directory、開始・更新日時、token usage、messages fileを確認できます。Session名の変更と個別削除に対応しています。サイドバーの `Clear` では確認後に全Sessionを削除します。
 
 ## 構成
 
-- `src/runtime.ts`: `ClineCore` の local runtime、セッション操作、イベント購読、Tool Approval 待ち
-- `src/providers.ts`: プロバイダー別のURL正規化、モデル自動取得、接続設定
-- `src/profile-store.ts`: モデル／ワークスペースプロファイルとSSH秘密情報の暗号化保存
-- `src/ssh-workspace.ts`: SSH接続検査とリモートLinux用Clineツール
-- `src/server.ts`: Hono の HTTP API と SSE エンドポイント
-- `public/`: セッション一覧、会話、承認 UI
+```
+src/                        サーバー（Node / Hono）
+  server.ts                 HTTP API と SSE エンドポイント
+  runtime.ts                ClineCore の local runtime、セッション操作、イベント購読、Tool Approval 待ち
+  providers.ts              プロバイダー別のURL正規化、モデル自動取得、接続設定
+  mcp-extension.ts          MCPサーバーをClineツールとして登録
+  stores/                   .cline-data/ への永続化
+    agent-settings.ts       テンプレート、権限、圧縮設定
+    connection-store.ts     接続先とモデルの復元
+    profile-store.ts        モデル／ワークスペースプロファイルとSSH秘密情報の暗号化保存
+    compaction-store.ts     自動圧縮の履歴
+  workspace/                作業範囲の安全性
+    workspace-security.ts   workspace root外への書き込み防止
+    ssh-workspace.ts        SSH接続検査とリモートLinux用Clineツール
+
+client/                     フロントエンド（React / Vite）
+  main.tsx                  エントリ
+  App.tsx                   画面全体の状態とSSE購読
+  components/               画面部品
+  hooks/                    再利用するReactフック
+  lib/                      API、i18n、Markdown描画、メッセージログ、型
+  styles/                   SCSS（後述）
+
+tests/                      *.test.ts（pnpm test で一括実行）
+scripts/                    dev.mjs（開発用watch）、run-tests.mjs、clear-sessions.ts
+setting/language/           UIの言語ファイル（再ビルド不要で編集・追加可能）
+public/                     ビルド成果物。index.html 以外は生成物
+```
 
 セッションデータはプロジェクト内の `.cline-data/` に保存します。Cline SDK の標準保存機構を利用しつつ、ユーザーのホームディレクトリへ書き込まない構成です。
+
+## スタイル（SCSS）
+
+見た目は `client/styles/` のSCSSから `public/styles.css` へビルドします。`public/styles.css` は生成物なので直接編集しません。
+
+```
+client/styles/
+  main.scss          エントリ（読み込み順を定義）
+  _tokens.scss       テーマの3色とそこから導出する全変数
+  _base.scss         リセット、ボタン、フォーム、アニメーション定義
+  _layout.scss       ヘッダー、サイドバー、コンポーザー
+  _components.scss   セッション、ダイアログ、キュー、権限
+  _messages.scss     会話バブルとMarkdown
+  _responsive.scss   画面幅ごとの調整
+```
+
+配色はテーマごとに **main（操作色）／main-sub（情報色）／sub（中間色）** の3色だけを起点にし、背景・境界・文字色はすべてそこから導出します。`_tokens.scss` 冒頭の6つの値を変えるだけでテーマ全体が一貫して切り替わります。
 
 ## 実装済み
 

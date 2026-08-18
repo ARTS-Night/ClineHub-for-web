@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react"
-import { api } from "../api.js"
-import type { Locale, TFunction } from "../i18n.js"
-import type { SessionDetails } from "../types.js"
-import { localDateTime } from "../messageLog.js"
-import { formatTokens, providerDisplayName } from "../format.js"
+import { api } from "../lib/api.js"
+import type { Locale, TFunction } from "../lib/i18n.js"
+import type { SessionDetails } from "../lib/types.js"
+import { localDateTime } from "../lib/messageLog.js"
+import { formatTokens, providerDisplayName } from "../lib/format.js"
 
 function permissionSummary(t: TFunction, permissions: Record<string, string> | undefined): string {
   if (!permissions) return "—"

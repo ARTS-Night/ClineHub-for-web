@@ -1,6 +1,7 @@
 import { spawn } from "node:child_process"
 
 const commands = [
+  ["styles", "pnpm exec sass --watch client/styles/main.scss dist/styles.css --no-source-map"],
   ["client", "pnpm exec vite build --watch"],
   ["server", "pnpm exec tsx watch src/server.ts"],
 ]

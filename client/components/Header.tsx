@@ -1,5 +1,5 @@
-import type { TFunction } from "../i18n.js"
-import type { ProfilesData } from "../types.js"
+import type { TFunction } from "../lib/i18n.js"
+import type { ProfilesData } from "../lib/types.js"
 
 type Props = {
   t: TFunction

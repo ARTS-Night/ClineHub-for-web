@@ -1,7 +1,7 @@
 import { useState } from "react"
-import type { TFunction } from "../i18n.js"
-import type { ManagedTool, ToolPermission } from "../types.js"
-import { useDismissiblePopover } from "../useDismissiblePopover.js"
+import type { TFunction } from "../lib/i18n.js"
+import type { ManagedTool, ToolPermission } from "../lib/types.js"
+import { useDismissiblePopover } from "../hooks/useDismissiblePopover.js"
 
 // Kept as a local literal (not imported from src/agent-settings.ts) so the
 // client bundle never pulls in the server's fs-backed settings store.
@@ -12,15 +12,28 @@ const toolIcons: Record<ManagedTool, string> = {
   run_commands: ">_", editor: "✎", apply_patch: "±",
 }
 
-export function QuickPermissions({ t, permissions, onCycle }: { t: TFunction; permissions: Record<ManagedTool, ToolPermission> | null; onCycle: (tool: ManagedTool) => Promise<void> }) {
+type Props = {
+  t: TFunction
+  permissions: Record<ManagedTool, ToolPermission> | null
+  onCycle: (tool: ManagedTool) => Promise<void>
+  mcpEnabled: boolean | null
+  onToggleMcp: () => Promise<void>
+}
+
+export function QuickPermissions({ t, permissions, onCycle, mcpEnabled, onToggleMcp }: Props) {
   const [open, setOpen] = useState(false)
   const close = () => setOpen(false)
   const { panelRef, toggleRef } = useDismissiblePopover(open, close)
 
   const counts = permissionOrder.map((state) => [state, Object.values(permissions ?? {}).filter((value) => value === state).length] as const)
   const toggleTitle = permissions
-    ? `${t("quickPermissions")} · ${t("allow")} ${counts.find(([s]) => s === "allow")?.[1]} / ${t("ask")} ${counts.find(([s]) => s === "ask")?.[1]} / ${t("disabled")} ${counts.find(([s]) => s === "disabled")?.[1]}`
+    ? `${t("quickPermissions")} · ${t("allow")} ${counts.find(([s]) => s === "allow")?.[1]} / ${t("ask")} ${counts.find(([s]) => s === "ask")?.[1]} / ${t("disabled")} ${counts.find(([s]) => s === "disabled")?.[1]} / MCP ${mcpEnabled ? t("allow") : t("disabled")}`
     : t("quickPermissions")
+  // MCP is a plain on/off switch, not a 3-state permission — there's no per-call
+  // approval step for it (unlike the built-in tools), it just decides whether
+  // the AI sees the MCP tools at all — so it reuses the allow/disabled visuals
+  // without the "ask" state.
+  const mcpState = mcpEnabled ? "allow" : "disabled"
 
   return (
     <div className="quick-permissions-wrap">
@@ -31,6 +44,7 @@ export function QuickPermissions({ t, permissions, onCycle }: { t: TFunction; pe
             const state = permissions?.[tool] ?? "ask"
             return <span key={tool} className={`permission-tool-icon state-${state}`} title={`${t(tool)}: ${t(state)}`}>{toolIcons[tool]}</span>
           })}
+          <span className={`permission-tool-icon state-${mcpState}`} title={`MCP: ${t(mcpState)}`}>⛁</span>
         </span>
       </button>
       {open && permissions && (
@@ -47,6 +61,11 @@ export function QuickPermissions({ t, permissions, onCycle }: { t: TFunction; pe
                 </button>
               )
             })}
+            <button type="button" className={`quick-permission-row state-${mcpState}`} title={`MCP: ${t(mcpState)}`} onClick={() => void onToggleMcp()}>
+              <span className="quick-tool-icon">⛁</span>
+              <span className="quick-tool-name">MCP</span>
+              <span className="quick-tool-state">{t(mcpState)}</span>
+            </button>
           </div>
         </section>
       )}

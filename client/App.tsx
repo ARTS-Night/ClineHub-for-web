@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react"
-import { api, ApiError } from "./api.js"
-import { detectInitialLocale, listLocales, loadDictionary, translate, type Dictionary, type Locale, type LocaleOption } from "./i18n.js"
-import { MessageLog } from "./messageLog.js"
-import { useSyncedState } from "./useSyncedState.js"
-import type { AgentSettings, ApprovalItem, CompactionRecord, ConnectionInfo, ContextUsage, ManagedTool, PendingImage, ProfilesData, QueuedPrompt, SessionDetails, SessionSummary } from "./types.js"
+import { api, ApiError } from "./lib/api.js"
+import { detectInitialLocale, listLocales, loadDictionary, translate, type Dictionary, type Locale, type LocaleOption } from "./lib/i18n.js"
+import { MessageLog } from "./lib/messageLog.js"
+import { useSyncedState } from "./hooks/useSyncedState.js"
+import type { AgentSettings, ApprovalItem, CompactionRecord, ConnectionInfo, ContextUsage, ManagedTool, PendingImage, ProfilesData, QueuedPrompt, SessionDetails, SessionSummary } from "./lib/types.js"
 import { Header } from "./components/Header.js"
 import { Sidebar } from "./components/Sidebar.js"
 import { ContextPanel } from "./components/ContextPanel.js"
@@ -44,6 +44,8 @@ export function App() {
   const [activeSession, setActiveSession, activeSessionRef] = useSyncedState<string | null>(null)
   const [activeSessionDetails, setActiveSessionDetails] = useState<SessionDetails | null>(null)
   const [activeSessionRunning, setActiveSessionRunning] = useState(false)
+  const [streamStalled, setStreamStalled] = useState(false)
+  const lastAgentActivityRef = useRef(0)
   const [selectedModel, setSelectedModel] = useState<string | null>(null)
   const [activeConnectionInfo, setActiveConnectionInfo] = useState<ConnectionInfo | null>(null)
   const [profilesData, setProfilesData] = useState<ProfilesData>(emptyProfiles)
@@ -71,6 +73,19 @@ export function App() {
   const messagesRef = useRef<HTMLDivElement>(null)
   const logRef = useRef<MessageLog | null>(null)
   const getLog = () => logRef.current!
+
+  useEffect(() => {
+    const checkStale = () => {
+      const stale = activeSessionRunning && lastAgentActivityRef.current > 0 && Date.now() - lastAgentActivityRef.current >= 10000
+      setStreamStalled(stale)
+    }
+    const timer = window.setInterval(checkStale, 1000)
+    // Backgrounded tabs throttle/pause setInterval, so a stall that happened
+    // while the tab was hidden wouldn't show up until the browser resumed
+    // ticking on its own. Recheck immediately when the tab regains focus.
+    document.addEventListener("visibilitychange", checkStale)
+    return () => { window.clearInterval(timer); document.removeEventListener("visibilitychange", checkStale) }
+  }, [activeSessionRunning])
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme
@@ -145,6 +160,10 @@ export function App() {
     getLog().clear()
     setActiveCompactions([])
     setApprovals([])
+    // Don't let an unsent draft (text or attached images) silently follow
+    // the user into an unrelated session and get sent there by mistake.
+    setPrompt("")
+    setPendingImages([])
   }
 
   const selectSession = async (id: string) => {
@@ -163,6 +182,8 @@ export function App() {
       setActiveCompactions(details.compactions ?? [])
       for (const record of details.compactions ?? []) getLog().addCompactionEvent(record)
       setActiveSessionRunning(details.session?.status === "running")
+      lastAgentActivityRef.current = details.session?.status === "running" ? Date.now() : 0
+      setStreamStalled(false)
       setActiveContext(details.context)
       await refreshQueue()
       await loadSessions()
@@ -187,6 +208,8 @@ export function App() {
     setActiveSessionDetails(null)
     setSessionStarting(false)
     setActiveSessionRunning(false)
+    lastAgentActivityRef.current = 0
+    setStreamStalled(false)
     setStartupQueue([])
     setServerQueuePrompts([])
     resetConversation()
@@ -249,6 +272,13 @@ export function App() {
     }
 
     if (!activeSessionRunning) getLog().resetStreamNodes()
+    // Mark running immediately (optimistically), not just once the first SSE
+    // event arrives — otherwise a session that hangs before ever emitting an
+    // event (server stuck starting up, provider unreachable, etc.) never
+    // trips the stall watchdog below and just sits there silently "queued".
+    setActiveSessionRunning(true)
+    lastAgentActivityRef.current = Date.now()
+    setStreamStalled(false)
     try {
       if (!activeSession) {
         setSessionStarting(true)
@@ -263,6 +293,9 @@ export function App() {
       }
     } catch (error) {
       if (!activeSession) setSessionStarting(false)
+      setActiveSessionRunning(false)
+      lastAgentActivityRef.current = 0
+      setStreamStalled(false)
       if (pendingImages.length === 0) setPendingImages(imageItems)
       getLog().showError(error, "Send failed")
     }
@@ -310,6 +343,21 @@ export function App() {
     } catch (error) {
       setAgentSettings(previous)
       getLog().showError(error, "Permission update failed")
+    }
+  }
+
+  // Quick MCP on/off toggle — same optimistic-update-with-rollback shape as
+  // cyclePermission above, just for the single `mcpEnabled` flag.
+  const toggleMcp = async () => {
+    if (!agentSettings) return
+    const previous = agentSettings
+    const next = !agentSettings.mcpEnabled
+    setAgentSettings({ ...previous, mcpEnabled: next })
+    try {
+      setAgentSettings(await api<AgentSettings>("/api/agent-settings", { method: "PATCH", body: JSON.stringify({ mcpEnabled: next }) }))
+    } catch (error) {
+      setAgentSettings(previous)
+      getLog().showError(error, "MCP toggle failed")
     }
   }
 
@@ -439,6 +487,10 @@ export function App() {
           flushStartupQueue().catch((error) => log.showError(error, "Queue flush failed"))
         }
         if (item.sessionId !== activeSessionRef.current) return
+        if (["prompt_started", "text", "reasoning", "tool", "tool_result", "iteration", "usage", "status"].includes(name)) {
+          lastAgentActivityRef.current = Date.now()
+          setStreamStalled(false)
+        }
         if (name === "queue") setServerQueuePrompts(Array.isArray(item.data?.prompts) ? item.data.prompts : [])
         if (name === "prompt_started") {
           log.finishStreamNodes()
@@ -465,6 +517,8 @@ export function App() {
         }
         if (name === "turn_finished" || name === "ended") {
           setActiveSessionRunning(false)
+          lastAgentActivityRef.current = 0
+          setStreamStalled(false)
           if (name === "turn_finished") refreshQueue().catch(() => {})
           if (name === "ended") { log.finishStreamNodes(); log.resetStreamNodes() }
           else log.resetStreamNodes()
@@ -498,7 +552,7 @@ export function App() {
             onToggleShowToolDetails={(value) => { setShowToolDetails(value); localStorage.setItem("cline-show-tool-details", String(value)); if (activeSession) selectSession(activeSession) }}
             session={activeSessionDetails?.session ?? null} />
           <div id="messages" className="messages" ref={messagesRef} />
-          <ApprovalList approvals={approvals} onResolve={resolveApproval} />
+          <ApprovalList t={t} approvals={approvals} onResolve={resolveApproval} />
           <QueueStatus t={t} entries={queueEntries} onUpdate={onQueueUpdate} onCancel={onQueueCancel} />
           {agentSettings?.activeTemplateId === "plan" && !hidePlanBanner && !planBannerDismissed && (
             <div className="mode-banner">
@@ -509,11 +563,13 @@ export function App() {
               </div>
             </div>
           )}
-          <Composer t={t} prompt={prompt} onPromptChange={setPrompt} onSubmit={() => void submitPrompt()} onAbort={() => void abortSession()} running={activeSessionRunning}
+          <Composer t={t} prompt={prompt} onPromptChange={setPrompt} onSubmit={() => void submitPrompt()} onAbort={() => void abortSession()} running={activeSessionRunning} stalled={streamStalled}
             pendingImages={pendingImages} onAddImages={(files) => void addImageFiles(files).catch((error) => getLog().showError(error, "Image attachment failed"))}
             onRemoveImage={(index) => setPendingImages((current) => current.filter((_, i) => i !== index))}
             imagesEnabled={Boolean(activeConnectionInfo && "imagesEnabled" in activeConnectionInfo && activeConnectionInfo.imagesEnabled)}
-            agentSettings={agentSettings} effectivePermissions={effectivePermissions} onCyclePermission={cyclePermission} onSelectTemplate={(id) => void selectTemplate(id)} templateBusy={templateBusy} />
+            agentSettings={agentSettings} effectivePermissions={effectivePermissions} onCyclePermission={cyclePermission}
+            mcpEnabled={agentSettings?.mcpEnabled ?? null} onToggleMcp={toggleMcp}
+            onSelectTemplate={(id) => void selectTemplate(id)} templateBusy={templateBusy} />
         </section>
       </main>
       <GeneralSettingsDialog t={t} open={generalSettingsOpen} onClose={() => setGeneralSettingsOpen(false)}

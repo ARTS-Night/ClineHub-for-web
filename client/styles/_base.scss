@@ -1,0 +1,150 @@
+// Reset, shared element styling and the motion vocabulary.
+
+* {
+  box-sizing: border-box;
+  scrollbar-color: var(--ui-border-strong) transparent;
+}
+
+[hidden] { display: none !important; }
+
+:root {
+  font-family: system-ui, sans-serif;
+  background: var(--ui-bg);
+  color: var(--ui-text);
+}
+
+body {
+  margin: 0;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--ui-bg);
+  color: var(--ui-text);
+  transition: background var(--motion-slow) var(--ease), color var(--motion-slow) var(--ease);
+}
+
+// --- Buttons -------------------------------------------------------------
+
+button {
+  border: 0;
+  border-radius: 6px;
+  padding: 8px 13px;
+  background: var(--ui-accent);
+  color: var(--ui-on-accent);
+  cursor: pointer;
+  transition:
+    background var(--motion) var(--ease),
+    border-color var(--motion) var(--ease),
+    color var(--motion) var(--ease),
+    box-shadow var(--motion) var(--ease),
+    transform var(--motion-fast) var(--ease);
+
+  &:hover:not(:disabled) {
+    filter: none;
+    background: var(--ui-accent-hover);
+  }
+
+  // A tiny press response makes every control feel connected to the click.
+  &:active:not(:disabled) { transform: translateY(1px); }
+
+  &:disabled { cursor: wait; opacity: .65; }
+}
+
+button.secondary,
+#new-session,
+#clear-sessions,
+.header-actions button,
+#language,
+.sidebar-toggle,
+.theme-toggle {
+  background: var(--ui-surface-soft);
+  color: var(--ui-text);
+  border: 1px solid var(--ui-border);
+
+  &:hover:not(:disabled) {
+    background: var(--ui-accent-soft);
+    border-color: var(--ui-accent-line);
+    color: var(--ui-text-strong);
+  }
+}
+
+button.danger,
+#abort {
+  background: var(--ui-danger-solid);
+  color: var(--ui-on-accent);
+}
+
+.icon-button {
+  align-self: start;
+  padding: 6px 10px;
+  font-size: 20px;
+  line-height: 1;
+}
+
+// --- Forms ---------------------------------------------------------------
+
+textarea {
+  flex: 1;
+  resize: vertical;
+  border: 1px solid var(--ui-border-strong);
+  border-radius: 7px;
+  padding: 10px;
+  background: var(--ui-input);
+  color: var(--ui-text);
+  font: inherit;
+  transition: border-color var(--motion) var(--ease), box-shadow var(--motion) var(--ease);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--ui-text-subtle);
+  opacity: 1;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible {
+  outline: 2px solid var(--ui-focus);
+  outline-offset: 2px;
+}
+
+// --- Motion vocabulary ---------------------------------------------------
+
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes pop-in {
+  from { opacity: 0; transform: translateY(6px) scale(.985); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes dialog-in {
+  from { opacity: 0; transform: translateY(10px) scale(.98); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .55; }
+}
+
+// Animation is decoration — never let it get in the way of someone who has
+// asked their OS to keep things still.
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

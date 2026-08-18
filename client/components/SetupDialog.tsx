@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react"
-import { api } from "../api.js"
-import type { TFunction } from "../i18n.js"
-import type { ConnectionInfo, ModelInfo, ProfilesData, ProviderKind } from "../types.js"
+import { api } from "../lib/api.js"
+import type { TFunction } from "../lib/i18n.js"
+import type { ConnectionInfo, ModelInfo, ProfilesData, ProviderKind } from "../lib/types.js"
 
 const providerDefaults: Record<ProviderKind, string> = {
   lmstudio: "http://192.168.8.223:1234",

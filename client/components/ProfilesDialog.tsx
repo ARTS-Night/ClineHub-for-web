@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react"
-import { api } from "../api.js"
-import type { TFunction } from "../i18n.js"
-import type { ModelProfile, ProfilesData, RemoteOperatingSystem, SudoPermission, WorkspaceProfile } from "../types.js"
+import { api } from "../lib/api.js"
+import type { TFunction } from "../lib/i18n.js"
+import type { ModelProfile, ProfilesData, RemoteOperatingSystem, SudoPermission, WorkspaceProfile } from "../lib/types.js"
 
 type WorkspaceForm = {
   editorId: string
@@ -48,6 +48,9 @@ export function ProfilesDialog({ t, open, onClose, profilesData, onProfilesChang
   const [modelEditName, setModelEditName] = useState("")
   const [modelEditTimeout, setModelEditTimeout] = useState("")
   const [modelEditImages, setModelEditImages] = useState(false)
+  const [modelEditBaseUrl, setModelEditBaseUrl] = useState("")
+  const [modelEditModelId, setModelEditModelId] = useState("")
+  const [modelSaving, setModelSaving] = useState(false)
 
   useEffect(() => {
     if (!open) { dialog.current?.close(); return }
@@ -73,19 +76,30 @@ export function ProfilesDialog({ t, open, onClose, profilesData, onProfilesChang
     setModelEditName(profile.name)
     setModelEditTimeout(profile.timeoutMs ? String(profile.timeoutMs / 1000) : "")
     setModelEditImages(profile.imagesEnabled)
+    setModelEditBaseUrl(profile.baseUrl)
+    setModelEditModelId(profile.modelId)
     setStatus("")
     setStatusError(false)
   }
+  const editingModel = profilesData.models.find((profile) => profile.id === modelEditId)
+  const editingModelHasUrl = editingModel ? editingModel.provider !== "codex" && editingModel.provider !== "claude-code" : true
   const saveModelEdit = async () => {
-    if (!modelEditId) return
+    if (!modelEditId || !editingModel) return
+    setModelSaving(true)
+    setStatus("")
+    setStatusError(false)
     try {
-      const result = await api<{ profile: ModelProfile; profiles: ProfilesData }>(`/api/profiles/models/${encodeURIComponent(modelEditId)}`, {
-        method: "PATCH",
-        body: JSON.stringify({ name: modelEditName, timeoutMs: modelEditTimeout.trim() ? Number(modelEditTimeout) * 1000 : null, imagesEnabled: modelEditImages }),
-      })
+      // Only send baseUrl/modelId when they actually changed — the server
+      // re-verifies the connection whenever either is present, so leaving
+      // them out for an unchanged edit (e.g. just the name) skips that.
+      const body: Record<string, unknown> = { name: modelEditName, timeoutMs: modelEditTimeout.trim() ? Number(modelEditTimeout) * 1000 : null, imagesEnabled: modelEditImages }
+      if (editingModelHasUrl && modelEditBaseUrl !== editingModel.baseUrl) body.baseUrl = modelEditBaseUrl
+      if (modelEditModelId !== editingModel.modelId) body.modelId = modelEditModelId
+      const result = await api<{ profile: ModelProfile; profiles: ProfilesData }>(`/api/profiles/models/${encodeURIComponent(modelEditId)}`, { method: "PATCH", body: JSON.stringify(body) })
       onProfilesChanged(result.profiles)
       setModelEditId(null)
     } catch (error) { setStatus(error instanceof Error ? error.message : String(error)); setStatusError(true) }
+    finally { setModelSaving(false) }
   }
 
   const workspacePayload = () => {
@@ -170,10 +184,16 @@ export function ProfilesDialog({ t, open, onClose, profilesData, onProfilesChang
                       <label><span>{t("name")}</span><input type="text" maxLength={100} value={modelEditName} onChange={(event) => setModelEditName(event.target.value)} /></label>
                       <label><span>{t("requestTimeout")}</span><input type="number" min="1" max="3600" placeholder={t("requestTimeoutHelp")} value={modelEditTimeout} onChange={(event) => setModelEditTimeout(event.target.value)} /></label>
                     </div>
+                    <div className="two-columns">
+                      {editingModelHasUrl
+                        ? <label><span>{t("serverUrl")}</span><input type="url" spellCheck={false} value={modelEditBaseUrl} onChange={(event) => setModelEditBaseUrl(event.target.value)} /></label>
+                        : <label><span>{t("serverUrl")}</span><input type="text" disabled value="" placeholder={t(profile.provider === "claude-code" ? "urlManagedClaude" : "urlManagedCodex")} /></label>}
+                      <label><span>{t("model")}</span><input type="text" spellCheck={false} value={modelEditModelId} onChange={(event) => setModelEditModelId(event.target.value)} /></label>
+                    </div>
                     <label className="check-row"><input type="checkbox" checked={modelEditImages} onChange={(event) => setModelEditImages(event.target.checked)} /><span>{t("enableImages")}</span></label>
                     <div className="profile-actions">
-                      <button type="button" className="secondary" onClick={() => setModelEditId(null)}>{t("cancel")}</button>
-                      <button type="button" onClick={() => void saveModelEdit()}>{t("saveSettings")}</button>
+                      <button type="button" className="secondary" disabled={modelSaving} onClick={() => setModelEditId(null)}>{t("cancel")}</button>
+                      <button type="button" disabled={modelSaving} onClick={() => void saveModelEdit()}>{modelSaving ? t("savingShort") : t("saveSettings")}</button>
                     </div>
                   </div>
                 ) : (

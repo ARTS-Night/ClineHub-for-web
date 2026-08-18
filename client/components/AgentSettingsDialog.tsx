@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react"
-import { api } from "../api.js"
-import type { TFunction } from "../i18n.js"
-import type { AgentSettings, ManagedTool, McpServerSettings, McpTransport, PermissionPreset, PreviewResult, PromptTemplate, ToolPermission } from "../types.js"
+import { api } from "../lib/api.js"
+import type { TFunction } from "../lib/i18n.js"
+import type { AgentSettings, ManagedTool, McpServerSettings, McpTestResult, McpTestTool, McpTransport, PermissionPreset, PreviewResult, PromptTemplate, ToolPermission } from "../lib/types.js"
 
 type Tab = "templates" | "mcp" | "automation"
 
@@ -90,7 +90,52 @@ export function AgentSettingsDialog({ t, open, onClose, onSaved }: Props) {
   }
   const showPreview = async () => { if (!draft?.prompt.trim()) return; try { setPreview(await api<PreviewResult>("/api/agent-settings/preview", { method: "POST", body: JSON.stringify({ template: draft.prompt }) })) } catch (error) { setStatus(error instanceof Error ? error.message : String(error)) } }
   const updateMcp = (id: string, patch: Partial<McpServerSettings>) => update("mcpServers", (settings?.mcpServers ?? []).map((server) => server.id === id ? { ...server, ...patch } : server))
-  const addMcp = () => update("mcpServers", [...(settings?.mcpServers ?? []), { id: `mcp-${Date.now()}`, name: "", enabled: true, transport: "stdio" as McpTransport, command: "npx", args: [], url: "" }])
+  const addMcp = () => update("mcpServers", [...(settings?.mcpServers ?? []), { id: `mcp-${Date.now()}`, name: "", enabled: true, transport: "stdio" as McpTransport, command: "npx", args: [], url: "", autoApprove: false, disabledTools: [] }])
+  const toggleMcpTool = (server: McpServerSettings, toolName: string, toolEnabled: boolean) => {
+    const disabledTools = toolEnabled ? server.disabledTools.filter((name) => name !== toolName) : [...server.disabledTools, toolName]
+    updateMcp(server.id, { disabledTools })
+  }
+  // The arguments field is free text while focused — re-deriving it from the
+  // parsed args array on every keystroke (the old behavior) snapped a typed
+  // trailing comma straight back out, since an empty trailing segment gets
+  // filtered from the array immediately, making "," effectively untypable.
+  // Parsing into mcpServers only happens on blur.
+  const [mcpArgsText, setMcpArgsText] = useState<Record<string, string>>({})
+  const argsTextFor = (server: McpServerSettings) => mcpArgsText[server.id] ?? server.args.join(", ")
+  const commitArgsText = (server: McpServerSettings) => {
+    const text = mcpArgsText[server.id]
+    if (text === undefined) return
+    updateMcp(server.id, { args: text.split(",").map((arg) => arg.trim()).filter(Boolean) })
+  }
+  const [mcpTestStatus, setMcpTestStatus] = useState<Record<string, { busy: boolean; message: string; error: boolean; tools?: McpTestTool[] }>>({})
+  // Holds the in-flight test's AbortController per server id — a ref, not
+  // state, since aborting shouldn't itself trigger a re-render.
+  const mcpAbortControllers = useRef<Record<string, AbortController>>({})
+  const testMcp = async (server: McpServerSettings) => {
+    const controller = new AbortController()
+    mcpAbortControllers.current[server.id] = controller
+    setMcpTestStatus((current) => ({ ...current, [server.id]: { busy: true, message: t("mcpTesting"), error: false } }))
+    try {
+      const result = await api<McpTestResult>("/api/agent-settings/mcp/test", { method: "POST", body: JSON.stringify({ transport: server.transport, command: server.command, args: server.args, url: server.url }), signal: controller.signal })
+      const message = result.ok ? t("mcpTestSuccess", { count: result.toolCount }) : result.error
+      setMcpTestStatus((current) => ({ ...current, [server.id]: { busy: false, message, error: !result.ok, tools: result.ok ? result.tools : undefined } }))
+    } catch (error) {
+      if (controller.signal.aborted) { setMcpTestStatus((current) => ({ ...current, [server.id]: { busy: false, message: t("mcpStopped"), error: false } })); return }
+      setMcpTestStatus((current) => ({ ...current, [server.id]: { busy: false, message: error instanceof Error ? error.message : String(error), error: true } }))
+    } finally {
+      delete mcpAbortControllers.current[server.id]
+    }
+  }
+  // Removing a server (especially a stdio one) while its test is still
+  // running must not leave the spawned process orphaned in the background —
+  // cancel the in-flight request first, which tears the process down server-side.
+  const removeMcp = (id: string) => {
+    mcpAbortControllers.current[id]?.abort()
+    delete mcpAbortControllers.current[id]
+    setMcpTestStatus((current) => { const { [id]: _removed, ...rest } = current; return rest })
+    setMcpArgsText((current) => { const { [id]: _removed, ...rest } = current; return rest })
+    update("mcpServers", (settings?.mcpServers ?? []).filter((item) => item.id !== id))
+  }
   const save = async () => {
     if (!settings) return
     setSaving(true)
@@ -110,7 +155,7 @@ export function AgentSettingsDialog({ t, open, onClose, onSaved }: Props) {
     <div className="agent-settings-tabs" role="tablist">{tabs.map(([id, key]) => <button key={id} className={tab === id ? "active" : ""} type="button" role="tab" aria-selected={tab === id} onClick={() => setTab(id)}>{key === "MCP" ? "MCP" : t(key)}</button>)}</div>
     {!settings ? <p>{t("loading")}</p> : <>
       {tab === "templates" && <>
-        <label><span>{t("workingFolder")}</span><input value={settings.workspacePath} spellCheck={false} onChange={(event) => update("workspacePath", event.target.value)} /><small>Allowed root: <code>{settings.allowedRoot}</code></small></label>
+        <label><span>{t("workingFolder")}</span><input value={settings.workspacePath} spellCheck={false} onChange={(event) => update("workspacePath", event.target.value)} /><small>{settings.allowedRoot ? <>{t("allowedRoot")}: <code>{settings.allowedRoot}</code></> : t("allowedRootUnrestricted")}</small></label>
         <fieldset><legend>{t("templatesList")}</legend>
           <p className="settings-note">{t("templatesNote")}</p>
           <div className="profile-list">
@@ -164,7 +209,63 @@ export function AgentSettingsDialog({ t, open, onClose, onSaved }: Props) {
           <label><span>{t("compactionStrategy")}</span><select value={settings.compactionStrategy} onChange={(event) => update("compactionStrategy", event.target.value as AgentSettings["compactionStrategy"])}><option value="agentic">{t("agenticSummary")}</option><option value="basic">{t("basicCompaction")}</option></select></label>
         </fieldset>
       </>}
-      {tab === "mcp" && <><p className="settings-note">{t("mcpNote")}</p><div className="mcp-list">{settings.mcpServers.map((server, index) => <fieldset className="mcp-card" key={server.id}><legend>{t("mcpServerLabel")} {index + 1}</legend><div className="mcp-card-actions"><label className="check-row"><input type="checkbox" checked={server.enabled} onChange={(event) => updateMcp(server.id, { enabled: event.target.checked })} /><span>{t("enabled")}</span></label><button className="secondary" type="button" onClick={() => update("mcpServers", settings.mcpServers.filter((item) => item.id !== server.id))}>{t("remove")}</button></div><div className="two-columns"><label><span>{t("name")}</span><input value={server.name} placeholder="filesystem" onChange={(event) => updateMcp(server.id, { name: event.target.value })} /></label><label><span>{t("transport")}</span><select value={server.transport} onChange={(event) => updateMcp(server.id, { transport: event.target.value as McpTransport })}><option value="stdio">stdio</option><option value="sse">SSE</option><option value="streamableHttp">Streamable HTTP</option></select></label></div>{server.transport === "stdio" ? <><label><span>{t("command")}</span><input value={server.command} placeholder="npx" onChange={(event) => updateMcp(server.id, { command: event.target.value })} /></label><label><span>{t("argsSpaceSeparated")}</span><input value={server.args.join(" ")} placeholder="-y @modelcontextprotocol/server-filesystem" onChange={(event) => updateMcp(server.id, { args: event.target.value.trim() ? event.target.value.trim().split(/\s+/) : [] })} /></label></> : <label><span>URL</span><input type="url" value={server.url} placeholder="https://example.com/mcp" onChange={(event) => updateMcp(server.id, { url: event.target.value })} /></label>}</fieldset>)}</div><button className="secondary" type="button" onClick={addMcp}>+ {t("addMcpServer")}</button></>}
+      {tab === "mcp" && (
+        <>
+          <p className="settings-note">{t("mcpNote")}</p>
+          <label className="check-row"><input type="checkbox" checked={settings.mcpEnabled} onChange={(event) => update("mcpEnabled", event.target.checked)} /><span>{t("mcpEnabled")}</span></label>
+          <div className="mcp-list">
+            {settings.mcpServers.map((server, index) => {
+              const testStatus = mcpTestStatus[server.id]
+              return (
+                <fieldset className="mcp-card" key={server.id}>
+                  <legend>{t("mcpServerLabel")} {index + 1}</legend>
+                  <div className="mcp-card-actions">
+                    <div className="mcp-card-status">
+                      <label className="check-row"><input type="checkbox" checked={server.enabled} onChange={(event) => updateMcp(server.id, { enabled: event.target.checked })} /><span>{t("enabled")}</span></label>
+                      <span className="mcp-status" data-state={testStatus?.busy ? "running" : "idle"}>{testStatus?.busy ? t("mcpRunning") : t("mcpIdle")}</span>
+                    </div>
+                    <div className="mcp-card-buttons">
+                      <button className="secondary" type="button" disabled={testStatus?.busy} onClick={() => void testMcp(server)}>{testStatus?.busy ? t("mcpTesting") : t("testMcp")}</button>
+                      <button className="secondary" type="button" onClick={() => removeMcp(server.id)}>{t("remove")}</button>
+                    </div>
+                  </div>
+                  {testStatus && !testStatus.busy && <p className={testStatus.error ? "error" : "mcp-test-success"} role="status">{testStatus.message}</p>}
+                  {testStatus?.tools && testStatus.tools.length > 0 && (
+                    <ul className="mcp-tool-list">
+                      {testStatus.tools.map((tool) => (
+                        <li key={tool.name}>
+                          <label className="check-row">
+                            <input type="checkbox" checked={!server.disabledTools.includes(tool.name)} onChange={(event) => toggleMcpTool(server, tool.name, event.target.checked)} />
+                            <span><code>{tool.name}</code>{tool.description ? ` — ${tool.description}` : ""}</span>
+                          </label>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  <label className="check-row"><input type="checkbox" checked={server.autoApprove} onChange={(event) => updateMcp(server.id, { autoApprove: event.target.checked })} /><span>{t("mcpAutoApprove")}</span></label>
+                  <div className="two-columns">
+                    <label><span>{t("name")}</span><input value={server.name} placeholder="filesystem" onChange={(event) => updateMcp(server.id, { name: event.target.value })} /></label>
+                    <label><span>{t("transport")}</span>
+                      <select value={server.transport} onChange={(event) => updateMcp(server.id, { transport: event.target.value as McpTransport })}>
+                        <option value="stdio">stdio</option>
+                        <option value="sse">SSE</option>
+                        <option value="streamableHttp">Streamable HTTP</option>
+                      </select>
+                    </label>
+                  </div>
+                  {server.transport === "stdio"
+                    ? <>
+                        <label><span>{t("command")}</span><input value={server.command} placeholder="npx" onChange={(event) => updateMcp(server.id, { command: event.target.value })} /></label>
+                        <label><span>{t("argsCommaSeparated")}</span><input value={argsTextFor(server)} placeholder="-y, @modelcontextprotocol/server-filesystem" onChange={(event) => setMcpArgsText((current) => ({ ...current, [server.id]: event.target.value }))} onBlur={() => commitArgsText(server)} /></label>
+                      </>
+                    : <label><span>URL</span><input type="url" value={server.url} placeholder="https://example.com/mcp" onChange={(event) => updateMcp(server.id, { url: event.target.value })} /></label>}
+                </fieldset>
+              )
+            })}
+          </div>
+          <button className="secondary" type="button" onClick={addMcp}>+ {t("addMcpServer")}</button>
+        </>
+      )}
       {tab === "automation" && <fieldset><legend>{t("shellIdleTitle")}</legend><p className="settings-note">{t("shellIdleNote")}</p><div className="two-columns"><label><span>{t("idleTimeoutSeconds")}</span><input type="number" min="5" max="3600" value={settings.shellIdleTimeoutSeconds} onChange={(event) => update("shellIdleTimeoutSeconds", Number(event.target.value))} /></label><label><span>{t("defaultResponse")}</span><select value={settings.shellIdleAction} onChange={(event) => update("shellIdleAction", event.target.value as AgentSettings["shellIdleAction"])}><option value="ask">{t("idleAsk")}</option><option value="enter">{t("idleEnterSafe")}</option><option value="wait">{t("idleWaitOnce")}</option><option value="close">{t("idleCancel")}</option><option value="auto">{t("idleAuto")}</option></select></label></div>
         {settings.shellIdleAction === "auto" && <div className="settings-note">
           <label className="check-row"><input type="checkbox" checked={settings.shellIdleCarryContext} onChange={(event) => update("shellIdleCarryContext", event.target.checked)} /><span>{t("shellIdleCarryContext")}</span></label>

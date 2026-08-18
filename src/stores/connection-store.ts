@@ -1,6 +1,6 @@
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises"
 import { dirname } from "node:path"
-import type { ConnectionSettings, ModelInfo, ProviderKind } from "./providers.js"
+import type { ConnectionSettings, ModelInfo, ProviderKind } from "../providers.js"
 
 type StoredConnection = {
   version: 1
