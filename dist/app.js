@@ -9669,14 +9669,44 @@ var Pt = class {
 	assistantStreamPending = "";
 	reasoningStreamPending = "";
 	streamAnimationFrame = null;
-	constructor(e, t, n, r, i = !1) {
-		this.container = e, this.t = t, this.showToolDetails = n, this.locale = r, this.planStyle = i;
+	atBottom = !0;
+	locked = !1;
+	onScrollState;
+	BOTTOM_SLACK = 24;
+	constructor(e, t, n, r, i = !1, a) {
+		this.container = e, this.t = t, this.showToolDetails = n, this.locale = r, this.planStyle = i, this.onScrollState = a, e.addEventListener("scroll", this.handleScroll);
+	}
+	handleScroll = () => {
+		if (this.locked) {
+			this.forceBottom();
+			return;
+		}
+		let e = this.container.scrollHeight - this.container.scrollTop - this.container.clientHeight;
+		this.setAtBottom(e <= this.BOTTOM_SLACK);
+	};
+	setAtBottom(e) {
+		e !== this.atBottom && (this.atBottom = e, this.onScrollState?.(this.atBottom, this.locked));
+	}
+	forceBottom() {
+		this.container.scrollTop = this.container.scrollHeight, this.setAtBottom(!0);
 	}
 	scrollToBottom() {
-		this.container.scrollTop = this.container.scrollHeight;
+		(this.locked || this.atBottom) && (this.container.scrollTop = this.container.scrollHeight);
+	}
+	jumpToBottom() {
+		this.forceBottom();
+	}
+	setLocked(e) {
+		this.locked = e, e && this.forceBottom(), this.onScrollState?.(this.atBottom, this.locked);
+	}
+	getScrollState() {
+		return {
+			atBottom: this.atBottom,
+			locked: this.locked
+		};
 	}
 	clear() {
-		this.resetStreamNodes(), this.toolCards.clear(), this.container.replaceChildren();
+		this.resetStreamNodes(), this.toolCards.clear(), this.container.replaceChildren(), this.locked = !1, this.setAtBottom(!0), this.onScrollState?.(this.atBottom, this.locked);
 	}
 	addMessage(e, t, n = []) {
 		let r = document.createElement("div");
@@ -12522,12 +12552,31 @@ function Cn({ t: e, open: t, onClose: n, onOpenConnection: r, onOpenProfiles: i,
 	});
 }
 //#endregion
+//#region client/components/ScrollToBottomButton.tsx
+function wn({ t: e, atBottom: t, locked: n, onJump: r, onToggleLock: i }) {
+	return t ? /* @__PURE__ */ (0, z.jsx)("button", {
+		type: "button",
+		className: `scroll-bottom-button${n ? " locked" : ""}`,
+		title: e(n ? "unlockAutoScroll" : "lockAutoScroll"),
+		"aria-label": e(n ? "unlockAutoScroll" : "lockAutoScroll"),
+		onClick: i,
+		children: n ? "🔒" : "🔓"
+	}) : /* @__PURE__ */ (0, z.jsx)("button", {
+		type: "button",
+		className: "scroll-bottom-button",
+		title: e("scrollToBottom"),
+		"aria-label": e("scrollToBottom"),
+		onClick: r,
+		children: "⬇"
+	});
+}
+//#endregion
 //#region client/App.tsx
-var wn = {
+var Tn = {
 	models: [],
 	workspaces: []
 };
-function Tn({ onLogout: e } = {}) {
+function En({ onLogout: e } = {}) {
 	let [t, n] = (0, d.useState)(b), [r, i] = (0, d.useState)({}), [a, o] = (0, d.useState)({}), [s, c] = (0, d.useState)([]), l = (e) => {
 		localStorage.setItem("cline-language", e), n(e);
 	};
@@ -12541,7 +12590,10 @@ function Tn({ onLogout: e } = {}) {
 	let u = (0, d.useMemo)(() => (e, t) => y(r, a, e, t), [r, a]), [f, h] = (0, d.useState)(() => localStorage.getItem("cline-theme") ?? (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark")), [g, x] = (0, d.useState)(() => {
 		let e = localStorage.getItem("cline-sidebar-collapsed");
 		return e === null ? matchMedia("(max-width: 760px)").matches : e === "true";
-	}), [S, C] = (0, d.useState)(() => localStorage.getItem("cline-show-tool-details") === "true"), [w, ee] = (0, d.useState)(() => localStorage.getItem("cline-hide-plan-banner") === "true"), [te, T] = (0, d.useState)(!1), [ne, E] = (0, d.useState)([]), [re, D, ie] = Rt(null), [ae, O] = (0, d.useState)(null), [oe, k] = (0, d.useState)(!1), [A, se] = (0, d.useState)(!1), ce = (0, d.useRef)(0), [le, j] = (0, d.useState)(null), [M, N] = (0, d.useState)(null), [P, ue] = (0, d.useState)(wn), [F, de] = (0, d.useState)(null), [fe, pe] = (0, d.useState)(null), [me, he] = (0, d.useState)([]), [ge, _e] = (0, d.useState)([]), [ve, ye] = (0, d.useState)(""), [be, xe] = (0, d.useState)([]), [Se, Ce, we] = Rt([]), [Te, Ee] = (0, d.useState)([]), [De, Oe] = (0, d.useState)(!1), [ke, Ae] = (0, d.useState)("connecting"), [je, Me] = (0, d.useState)(!1), [Ne, Pe] = (0, d.useState)(!1), [Fe, Ie] = (0, d.useState)(null), [Le, Re] = (0, d.useState)(!1), [ze, Be] = (0, d.useState)(!1), [Ve, He] = (0, d.useState)(!1), [Ue, We] = (0, d.useState)(!1), [Ge, Ke] = (0, d.useState)(null), qe = (0, d.useRef)(0), Je = (0, d.useRef)(null), Ye = (0, d.useRef)(null), I = () => Ye.current;
+	}), [S, C] = (0, d.useState)(() => localStorage.getItem("cline-show-tool-details") === "true"), [w, ee] = (0, d.useState)(() => localStorage.getItem("cline-hide-plan-banner") === "true"), [te, T] = (0, d.useState)(!1), [ne, E] = (0, d.useState)([]), [re, D, ie] = Rt(null), [ae, O] = (0, d.useState)(null), [oe, k] = (0, d.useState)(!1), [A, se] = (0, d.useState)(!1), ce = (0, d.useRef)(0), [le, j] = (0, d.useState)(null), [M, N] = (0, d.useState)(null), [P, ue] = (0, d.useState)(Tn), [F, de] = (0, d.useState)(null), [fe, pe] = (0, d.useState)(null), [me, he] = (0, d.useState)([]), [ge, _e] = (0, d.useState)([]), [ve, ye] = (0, d.useState)(""), [be, xe] = (0, d.useState)([]), [Se, Ce, we] = Rt([]), [Te, Ee] = (0, d.useState)([]), [De, Oe] = (0, d.useState)(!1), [ke, Ae] = (0, d.useState)("connecting"), [je, Me] = (0, d.useState)(!1), [Ne, Pe] = (0, d.useState)(!1), [Fe, Ie] = (0, d.useState)(null), [Le, Re] = (0, d.useState)(!1), [ze, Be] = (0, d.useState)(!1), [Ve, He] = (0, d.useState)(!1), [Ue, We] = (0, d.useState)(!1), [Ge, Ke] = (0, d.useState)(null), qe = (0, d.useRef)(0), Je = (0, d.useRef)(null), Ye = (0, d.useRef)(null), I = () => Ye.current, [Xe, Ze] = (0, d.useState)({
+		atBottom: !0,
+		locked: !1
+	});
 	(0, d.useEffect)(() => {
 		let e = () => {
 			let e = oe && ce.current > 0 && Date.now() - ce.current >= 1e4;
@@ -12557,7 +12609,10 @@ function Tn({ onLogout: e } = {}) {
 	}, [t]), (0, d.useEffect)(() => {
 		document.body.classList.toggle("sidebar-collapsed", g);
 	}, [g]), (0, d.useEffect)(() => {
-		Je.current && !Ye.current && (Ye.current = new Pt(Je.current, u, S, t, F?.activeTemplateId === "plan"));
+		Je.current && !Ye.current && (Ye.current = new Pt(Je.current, u, S, t, F?.activeTemplateId === "plan", (e, t) => Ze({
+			atBottom: e,
+			locked: t
+		})));
 	}, []), (0, d.useEffect)(() => {
 		Ye.current && (Ye.current.t = u, Ye.current.showToolDetails = S, Ye.current.locale = t, Ye.current.planStyle = F?.activeTemplateId === "plan");
 	}, [
@@ -12568,22 +12623,22 @@ function Tn({ onLogout: e } = {}) {
 	]), (0, d.useEffect)(() => {
 		F?.activeTemplateId === "plan" && T(!1);
 	}, [F?.activeTemplateId]);
-	let Xe = (e = null, t = !1) => {
+	let Qe = (e = null, t = !1) => {
 		qe.current += 1, Ke({
 			info: e,
 			newProfile: t,
 			token: qe.current
 		});
-	}, Ze = async () => {
+	}, $e = async () => {
 		let e = await m("/api/profiles");
 		return ue(e), e;
-	}, Qe = async () => {
+	}, et = async () => {
 		let e = await m("/api/sessions");
 		E(e);
-	}, $e = async () => {
+	}, tt = async () => {
 		let e = await m("/api/agent-settings");
 		return de(e), e;
-	}, et = async () => {
+	}, nt = async () => {
 		let e = ie.current;
 		if (!e) {
 			Ee([]);
@@ -12591,13 +12646,13 @@ function Tn({ onLogout: e } = {}) {
 		}
 		let t = await m(`/api/sessions/${encodeURIComponent(e)}/queue`);
 		Ee(Array.isArray(t) ? t : []);
-	}, tt = async () => {
+	}, rt = async () => {
 		let e = ie.current;
 		if (e) try {
 			let t = await m(`/api/sessions/${encodeURIComponent(e)}`);
 			O(t);
 		} catch {}
-	}, nt = async () => {
+	}, it = async () => {
 		let e = ie.current;
 		if (!e || we.current.length === 0) return;
 		let t = we.current;
@@ -12613,39 +12668,39 @@ function Tn({ onLogout: e } = {}) {
 		} catch (e) {
 			I().showError(e, "Queued send failed");
 		}
-		et().catch(() => {});
-	}, rt = () => {
+		nt().catch(() => {});
+	}, at = () => {
 		I().clear(), he([]), xe([]), ye(""), _e([]);
-	}, it = async (e) => {
-		D(e), Oe(!1), Ce([]), Ee([]), rt();
+	}, ot = async (e) => {
+		D(e), Oe(!1), Ce([]), Ee([]), at();
 		try {
 			let [t, n] = await Promise.all([m(`/api/sessions/${encodeURIComponent(e)}/messages`), m(`/api/sessions/${encodeURIComponent(e)}`)]);
 			O(n);
 			for (let e of t) I().renderHistoryMessage(e);
 			he(n.compactions ?? []);
 			for (let e of n.compactions ?? []) I().addCompactionEvent(e);
-			k(n.session?.status === "running"), ce.current = n.session?.status === "running" ? Date.now() : 0, se(!1), pe(n.context), await et(), await Qe(), matchMedia("(max-width: 760px)").matches && x(!0);
+			k(n.session?.status === "running"), ce.current = n.session?.status === "running" ? Date.now() : 0, se(!1), pe(n.context), await nt(), await et(), matchMedia("(max-width: 760px)").matches && x(!0);
 		} catch (e) {
 			if (e instanceof p && e.status === 404) {
-				D(null), O(null), k(!1), pe(null), await Qe(), I().addMessage("tool", "This session is no longer available. Select another session or start a new one.");
+				D(null), O(null), k(!1), pe(null), await et(), I().addMessage("tool", "This session is no longer available. Select another session or start a new one.");
 				return;
 			}
 			I().showError(e, "Session load failed");
 		}
-	}, at = () => {
+	}, st = () => {
 		if (!le) {
-			Xe();
+			Qe();
 			return;
 		}
-		D(null), O(null), Oe(!1), k(!1), ce.current = 0, se(!1), Ce([]), Ee([]), rt(), pe(null), I().addMessage("tool", "New session ready. Enter a message and press Send."), Qe().catch((e) => I().showError(e, "Session list failed"));
-	}, ot = async () => {
+		D(null), O(null), Oe(!1), k(!1), ce.current = 0, se(!1), Ce([]), Ee([]), at(), pe(null), I().addMessage("tool", "New session ready. Enter a message and press Send."), et().catch((e) => I().showError(e, "Session list failed"));
+	}, ct = async () => {
 		if (confirm("Delete all Cline sessions? This cannot be undone.")) try {
 			let e = await m("/api/sessions", { method: "DELETE" });
-			D(null), O(null), Oe(!1), k(!1), Ce([]), Ee([]), rt(), await Qe(), I().addMessage("tool", `Deleted ${e.deleted} session(s).${e.failed.length ? ` Failed: ${e.failed.join(", ")}` : ""}`);
+			D(null), O(null), Oe(!1), k(!1), Ce([]), Ee([]), at(), await et(), I().addMessage("tool", `Deleted ${e.deleted} session(s).${e.failed.length ? ` Failed: ${e.failed.join(", ")}` : ""}`);
 		} catch (e) {
 			I().showError(e, "Clear sessions failed");
 		}
-	}, st = async (e) => {
+	}, lt = async (e) => {
 		let t = /* @__PURE__ */ new Set([
 			"image/png",
 			"image/jpeg",
@@ -12667,9 +12722,9 @@ function Tn({ onLogout: e } = {}) {
 			});
 		}
 		_e((e) => [...e, ...r]);
-	}, ct = async () => {
+	}, ut = async () => {
 		if (!le) {
-			Xe();
+			Qe();
 			return;
 		}
 		let e = ge.map((e) => e.dataUrl), t = [...ge], n = ve.trim() || (e.length ? u("imageOnlyPrompt") : "");
@@ -12701,25 +12756,25 @@ function Tn({ onLogout: e } = {}) {
 							images: e
 						})
 					});
-					t.sessionId && t.sessionId !== re && (D(t.sessionId), Qe().catch(() => {}), tt());
+					t.sessionId && t.sessionId !== re && (D(t.sessionId), et().catch(() => {}), rt());
 				}
 			} catch (e) {
 				re || Oe(!1), k(!1), ce.current = 0, se(!1), ge.length === 0 && _e(t), I().showError(e, "Send failed");
 			}
 		}
-	}, lt = async () => {
+	}, dt = async () => {
 		if (re) try {
 			await m(`/api/sessions/${encodeURIComponent(re)}/abort`, { method: "POST" }), I().addMessage("tool", "Stop requested");
 		} catch (e) {
 			I().showError(e, "Stop failed");
 		}
-	}, ut = [...Se.map((e) => ({
+	}, ft = [...Se.map((e) => ({
 		...e,
 		source: "startup"
 	})), ...Te.map((e) => ({
 		...e,
 		source: "server"
-	}))], dt = async (e, t) => {
+	}))], pt = async (e, t) => {
 		if (e.source === "startup") {
 			Ce((n) => n.map((n) => n.id === e.id ? {
 				...n,
@@ -12730,33 +12785,33 @@ function Tn({ onLogout: e } = {}) {
 		await m(`/api/sessions/${encodeURIComponent(re ?? "")}/queue/${encodeURIComponent(e.id)}`, {
 			method: "PATCH",
 			body: JSON.stringify({ prompt: t })
-		}), await et();
-	}, ft = async (e) => {
+		}), await nt();
+	}, mt = async (e) => {
 		if (e.source === "startup") {
 			Ce((t) => t.filter((t) => t.id !== e.id));
 			return;
 		}
-		await m(`/api/sessions/${encodeURIComponent(re ?? "")}/queue/${encodeURIComponent(e.id)}`, { method: "DELETE" }), await et();
-	}, pt = F?.templates.find((e) => e.id === F.activeTemplateId) ?? null, mt = pt?.permissions ?? null, ht = async (e) => {
-		if (!F || !pt || !(e in pt.permissions)) return;
+		await m(`/api/sessions/${encodeURIComponent(re ?? "")}/queue/${encodeURIComponent(e.id)}`, { method: "DELETE" }), await nt();
+	}, ht = F?.templates.find((e) => e.id === F.activeTemplateId) ?? null, gt = ht?.permissions ?? null, _t = async (e) => {
+		if (!F || !ht || !(e in ht.permissions)) return;
 		let t = [
 			"disabled",
 			"ask",
 			"allow"
-		], n = pt.permissions[e], r = t[(t.indexOf(n) + 1) % t.length], i = F, a = {
-			...pt.permissions,
+		], n = ht.permissions[e], r = t[(t.indexOf(n) + 1) % t.length], i = F, a = {
+			...ht.permissions,
 			[e]: r
 		};
 		de({
 			...i,
-			templates: i.templates.map((e) => e.id === pt.id ? {
+			templates: i.templates.map((e) => e.id === ht.id ? {
 				...e,
 				permissions: a,
 				permissionPreset: "custom"
 			} : e)
 		});
 		try {
-			let e = await m(`/api/agent-settings/templates/${encodeURIComponent(pt.id)}`, {
+			let e = await m(`/api/agent-settings/templates/${encodeURIComponent(ht.id)}`, {
 				method: "PATCH",
 				body: JSON.stringify({ permissions: a })
 			});
@@ -12767,7 +12822,7 @@ function Tn({ onLogout: e } = {}) {
 		} catch (e) {
 			de(i), I().showError(e, "Permission update failed");
 		}
-	}, gt = async () => {
+	}, vt = async () => {
 		if (!F) return;
 		let e = F, t = !F.mcpEnabled;
 		de({
@@ -12782,13 +12837,13 @@ function Tn({ onLogout: e } = {}) {
 		} catch (t) {
 			de(e), I().showError(t, "MCP toggle failed");
 		}
-	}, [_t, vt] = (0, d.useState)(!1), yt = async (e) => {
+	}, [yt, bt] = (0, d.useState)(!1), L = async (e) => {
 		if (!F || F.activeTemplateId === e) return;
 		let t = F;
 		de({
 			...t,
 			activeTemplateId: e
-		}), vt(!0);
+		}), bt(!0);
 		try {
 			de(await m("/api/agent-settings", {
 				method: "PATCH",
@@ -12797,9 +12852,9 @@ function Tn({ onLogout: e } = {}) {
 		} catch (e) {
 			de(t), I().showError(e, "Template switch failed");
 		} finally {
-			vt(!1);
+			bt(!1);
 		}
-	}, bt = async (e, t) => {
+	}, R = async (e, t) => {
 		try {
 			await m(`/api/approvals/${encodeURIComponent(e)}`, {
 				method: "POST",
@@ -12808,7 +12863,7 @@ function Tn({ onLogout: e } = {}) {
 		} catch (e) {
 			I().showError(e, "Approval failed");
 		}
-	}, L = async (e) => {
+	}, xt = async (e) => {
 		let t = P.activeModelProfileId;
 		Me(!0);
 		try {
@@ -12827,7 +12882,7 @@ function Tn({ onLogout: e } = {}) {
 		} finally {
 			Me(!1);
 		}
-	}, R = async (e) => {
+	}, St = async (e) => {
 		let t = P.activeWorkspaceProfileId;
 		Pe(!0);
 		try {
@@ -12844,14 +12899,14 @@ function Tn({ onLogout: e } = {}) {
 		} finally {
 			Pe(!1);
 		}
-	}, xt = (e) => {
-		j(e.modelId), N(e), D(null), O(null), rt(), I().resetStreamNodes(), pe(null), m("/api/context").then(pe).catch(() => {}), Ze().catch(() => {}), I().addMessage("tool", `AI connected: ${e.provider} / ${e.modelId}`);
-	}, St = (e) => {
-		de(e), Ze().catch(() => {}), m("/api/context").then(pe).catch(() => {});
+	}, Ct = (e) => {
+		j(e.modelId), N(e), D(null), O(null), at(), I().resetStreamNodes(), pe(null), m("/api/context").then(pe).catch(() => {}), $e().catch(() => {}), I().addMessage("tool", `AI connected: ${e.provider} / ${e.modelId}`);
+	}, wt = (e) => {
+		de(e), $e().catch(() => {}), m("/api/context").then(pe).catch(() => {});
 	};
 	(0, d.useEffect)(() => {
-		Qe().catch((e) => I().showError(e, "Session list failed")), Ze().catch((e) => I().showError(e, "Profile load failed")), $e().catch((e) => I().showError(e, "Agent settings failed")), m("/api/config").then((e) => {
-			e.configured ? (j(e.modelId), N(e), m("/api/context").then(pe).catch(() => {})) : Xe(e);
+		et().catch((e) => I().showError(e, "Session list failed")), $e().catch((e) => I().showError(e, "Profile load failed")), tt().catch((e) => I().showError(e, "Agent settings failed")), m("/api/config").then((e) => {
+			e.configured ? (j(e.modelId), N(e), m("/api/context").then(pe).catch(() => {})) : Qe(e);
 		}).catch((e) => I().showError(e, "Configuration failed"));
 		let e = new EventSource("/api/events");
 		e.onopen = () => Ae("open"), e.onerror = () => Ae("retry");
@@ -12873,14 +12928,14 @@ function Tn({ onLogout: e } = {}) {
 		]) e.addEventListener(t, (e) => {
 			let n = JSON.parse(e.data), r = I();
 			if (t === "session_replaced") {
-				n.sessionId === ie.current && n.data?.sessionId && (D(n.data.sessionId), k(!1), Qe().catch(() => {}), tt());
+				n.sessionId === ie.current && n.data?.sessionId && (D(n.data.sessionId), k(!1), et().catch(() => {}), rt());
 				return;
 			}
 			if (t === "cline_error") {
 				(n.sessionId === ie.current || n.sessionId === "unknown") && r.resetStreamNodes(), r.addMessage("tool", `Cline error: ${n.data}`);
 				return;
 			}
-			if (!ie.current && n.sessionId && (D(n.sessionId), Oe(!1), Qe().catch((e) => r.showError(e, "Session list failed")), tt(), nt().catch((e) => r.showError(e, "Queue flush failed"))), n.sessionId === ie.current) {
+			if (!ie.current && n.sessionId && (D(n.sessionId), Oe(!1), et().catch((e) => r.showError(e, "Session list failed")), rt(), it().catch((e) => r.showError(e, "Queue flush failed"))), n.sessionId === ie.current) {
 				if ([
 					"prompt_started",
 					"text",
@@ -12890,15 +12945,15 @@ function Tn({ onLogout: e } = {}) {
 					"iteration",
 					"usage",
 					"status"
-				].includes(t) && (ce.current = Date.now(), se(!1)), t === "queue" && Ee(Array.isArray(n.data?.prompts) ? n.data.prompts : []), t === "prompt_started" && (r.finishStreamNodes(), r.resetStreamNodes(), typeof n.data?.prompt == "string" && r.addMessage("user", n.data.prompt, Array.isArray(n.data?.images) ? n.data.images : []), Qe().catch(() => {}), tt()), t === "text" && r.appendStream("text", n.data), t === "reasoning" && r.appendStream("reasoning", typeof n.data == "string" ? n.data : n.data?.text, !!n.data?.redacted), t === "iteration" && (r.finishStreamNodes(), r.resetStreamNodes()), t === "tool" && (r.finishStreamNodes(), r.addToolActivity(n.data)), t === "tool_result" && r.finishToolActivity(n.data), t === "approval" && xe((e) => [...e, n.data]), t === "usage" && pe(n.data), t === "status" && n.data?.reason === "auto_compaction") {
+				].includes(t) && (ce.current = Date.now(), se(!1)), t === "queue" && Ee(Array.isArray(n.data?.prompts) ? n.data.prompts : []), t === "prompt_started" && (r.finishStreamNodes(), r.resetStreamNodes(), typeof n.data?.prompt == "string" && r.addMessage("user", n.data.prompt, Array.isArray(n.data?.images) ? n.data.images : []), et().catch(() => {}), rt()), t === "text" && r.appendStream("text", n.data), t === "reasoning" && r.appendStream("reasoning", typeof n.data == "string" ? n.data : n.data?.text, !!n.data?.redacted), t === "iteration" && (r.finishStreamNodes(), r.resetStreamNodes()), t === "tool" && (r.finishStreamNodes(), r.addToolActivity(n.data)), t === "tool_result" && r.finishToolActivity(n.data), t === "approval" && xe((e) => [...e, n.data]), t === "usage" && pe(n.data), t === "status" && n.data?.reason === "auto_compaction") {
 					let e = {
 						at: n.data.at ?? (/* @__PURE__ */ new Date()).toISOString(),
 						message: n.data.message ?? ""
 					};
 					he((t) => [...t, e]), r.addCompactionEvent(e);
 				}
-				if (t === "status" && typeof n.data == "string" && (k(n.data === "running"), n.data === "idle" && et().catch(() => {})), t === "turn_finished" || t === "ended") {
-					k(!1), ce.current = 0, se(!1), t === "turn_finished" && et().catch(() => {}), t === "ended" && r.finishStreamNodes(), r.resetStreamNodes();
+				if (t === "status" && typeof n.data == "string" && (k(n.data === "running"), n.data === "idle" && nt().catch(() => {})), t === "turn_finished" || t === "ended") {
+					k(!1), ce.current = 0, se(!1), t === "turn_finished" && nt().catch(() => {}), t === "ended" && r.finishStreamNodes(), r.resetStreamNodes();
 					let e = ie.current;
 					e && m(`/api/sessions/${encodeURIComponent(e)}`).then((e) => {
 						O(e), pe(e.context);
@@ -12908,16 +12963,16 @@ function Tn({ onLogout: e } = {}) {
 		});
 		return () => e.close();
 	}, []);
-	let Ct = ke === "retry" ? u("sseRetry") : le ? `${u("connected")} · ${le}` : u(ke === "open" ? "serverConnected" : "connecting"), wt = ke === "retry" ? "#f5c979" : le ? "#79d69a" : "#f5c979", Tt = P.workspaces.find((e) => e.id === P.activeWorkspaceProfileId), Et = Tt ? `${Tt.type === "ssh" ? "SSH" : "workspace"}: ${Tt.type === "ssh" ? `${Tt.username}@${Tt.host}:${Tt.remoteDirectory}` : Tt.path}` : "workspace: loading...";
+	let Tt = ke === "retry" ? u("sseRetry") : le ? `${u("connected")} · ${le}` : u(ke === "open" ? "serverConnected" : "connecting"), Et = ke === "retry" ? "#f5c979" : le ? "#79d69a" : "#f5c979", Dt = P.workspaces.find((e) => e.id === P.activeWorkspaceProfileId), Ot = Dt ? `${Dt.type === "ssh" ? "SSH" : "workspace"}: ${Dt.type === "ssh" ? `${Dt.username}@${Dt.host}:${Dt.remoteDirectory}` : Dt.path}` : "workspace: loading...";
 	return /* @__PURE__ */ (0, z.jsxs)(z.Fragment, { children: [
 		/* @__PURE__ */ (0, z.jsx)(Ut, {
 			t: u,
-			connectionText: Ct,
-			connectionColor: wt,
-			workspaceDisplay: Et,
+			connectionText: Tt,
+			connectionColor: Et,
+			workspaceDisplay: Ot,
 			profilesData: P,
-			onModelProfileChange: L,
-			onWorkspaceProfileChange: R,
+			onModelProfileChange: xt,
+			onWorkspaceProfileChange: St,
 			modelProfileBusy: je,
 			workspaceProfileBusy: Ne,
 			sidebarCollapsed: g,
@@ -12933,10 +12988,10 @@ function Tn({ onLogout: e } = {}) {
 			t: u,
 			sessions: ne,
 			activeSession: re,
-			onSelect: it,
+			onSelect: ot,
 			onOpenDetails: Ie,
-			onNewSession: at,
-			onClearSessions: ot
+			onNewSession: st,
+			onClearSessions: ct
 		}), /* @__PURE__ */ (0, z.jsxs)("section", {
 			className: "conversation",
 			children: [
@@ -12947,25 +13002,34 @@ function Tn({ onLogout: e } = {}) {
 					compactions: me,
 					showToolDetails: S,
 					onToggleShowToolDetails: (e) => {
-						C(e), localStorage.setItem("cline-show-tool-details", String(e)), re && it(re);
+						C(e), localStorage.setItem("cline-show-tool-details", String(e)), re && ot(re);
 					},
 					session: ae?.session ?? null
 				}),
-				/* @__PURE__ */ (0, z.jsx)("div", {
-					id: "messages",
-					className: "messages",
-					ref: Je
+				/* @__PURE__ */ (0, z.jsxs)("div", {
+					className: "messages-wrap",
+					children: [/* @__PURE__ */ (0, z.jsx)("div", {
+						id: "messages",
+						className: "messages",
+						ref: Je
+					}), /* @__PURE__ */ (0, z.jsx)(wn, {
+						t: u,
+						atBottom: Xe.atBottom,
+						locked: Xe.locked,
+						onJump: () => I().jumpToBottom(),
+						onToggleLock: () => I().setLocked(!Xe.locked)
+					})]
 				}),
 				/* @__PURE__ */ (0, z.jsx)(Zt, {
 					t: u,
 					approvals: be,
-					onResolve: bt
+					onResolve: R
 				}),
 				/* @__PURE__ */ (0, z.jsx)(Qt, {
 					t: u,
-					entries: ut,
-					onUpdate: dt,
-					onCancel: ft
+					entries: ft,
+					onUpdate: pt,
+					onCancel: mt
 				}),
 				F?.activeTemplateId === "plan" && !w && !te && /* @__PURE__ */ (0, z.jsxs)("div", {
 					className: "mode-banner",
@@ -12974,8 +13038,8 @@ function Tn({ onLogout: e } = {}) {
 						children: [/* @__PURE__ */ (0, z.jsx)("button", {
 							type: "button",
 							className: "secondary",
-							disabled: _t,
-							onClick: () => void yt("coding"),
+							disabled: yt,
+							onClick: () => void L("coding"),
 							children: u("switchToCode")
 						}), /* @__PURE__ */ (0, z.jsx)("button", {
 							type: "button",
@@ -12991,21 +13055,21 @@ function Tn({ onLogout: e } = {}) {
 					t: u,
 					prompt: ve,
 					onPromptChange: ye,
-					onSubmit: () => void ct(),
-					onAbort: () => void lt(),
+					onSubmit: () => void ut(),
+					onAbort: () => void dt(),
 					running: oe,
 					stalled: A,
 					pendingImages: ge,
-					onAddImages: (e) => void st(e).catch((e) => I().showError(e, "Image attachment failed")),
+					onAddImages: (e) => void lt(e).catch((e) => I().showError(e, "Image attachment failed")),
 					onRemoveImage: (e) => _e((t) => t.filter((t, n) => n !== e)),
 					imagesEnabled: !!(M && "imagesEnabled" in M && M.imagesEnabled),
 					agentSettings: F,
-					effectivePermissions: mt,
-					onCyclePermission: ht,
+					effectivePermissions: gt,
+					onCyclePermission: _t,
 					mcpEnabled: F?.mcpEnabled ?? null,
-					onToggleMcp: gt,
-					onSelectTemplate: (e) => void yt(e),
-					templateBusy: _t
+					onToggleMcp: vt,
+					onSelectTemplate: (e) => void L(e),
+					templateBusy: yt
 				})
 			]
 		})] }),
@@ -13027,9 +13091,9 @@ function Tn({ onLogout: e } = {}) {
 			t: u,
 			open: Ue,
 			onClose: () => We(!1),
-			onOpenConnection: async () => Xe(await m("/api/config")),
+			onOpenConnection: async () => Qe(await m("/api/config")),
 			onOpenProfiles: async () => {
-				await Ze(), Re(!0);
+				await $e(), Re(!0);
 			},
 			onOpenAgentSettings: () => Be(!0)
 		}),
@@ -13038,7 +13102,7 @@ function Tn({ onLogout: e } = {}) {
 			request: Ge,
 			onClose: () => {},
 			profilesData: P,
-			onConnected: xt
+			onConnected: Ct
 		}),
 		/* @__PURE__ */ (0, z.jsx)(pn, {
 			t: u,
@@ -13047,7 +13111,7 @@ function Tn({ onLogout: e } = {}) {
 			profilesData: P,
 			onProfilesChanged: ue,
 			onAddModelProfile: async () => {
-				Re(!1), Xe(await m("/api/config"), !0);
+				Re(!1), Qe(await m("/api/config"), !0);
 			}
 		}),
 		/* @__PURE__ */ (0, z.jsx)(hn, {
@@ -13056,23 +13120,23 @@ function Tn({ onLogout: e } = {}) {
 			sessionId: Fe,
 			onClose: () => Ie(null),
 			onRenamed: () => {
-				Ie(null), Qe().catch(() => {});
+				Ie(null), et().catch(() => {});
 			},
 			onDeleted: (e) => {
-				Ie(null), re === e && (D(null), O(null), rt(), pe(null)), Qe().catch(() => {});
+				Ie(null), re === e && (D(null), O(null), at(), pe(null)), et().catch(() => {});
 			}
 		}),
 		/* @__PURE__ */ (0, z.jsx)(yn, {
 			t: u,
 			open: ze,
 			onClose: () => Be(!1),
-			onSaved: St
+			onSaved: wt
 		})
 	] });
 }
 //#endregion
 //#region client/components/LoginScreen.tsx
-function En({ t: e, onSuccess: t }) {
+function Dn({ t: e, onSuccess: t }) {
 	let [n, r] = (0, d.useState)(""), [i, a] = (0, d.useState)(""), [o, s] = (0, d.useState)(!1), [c, l] = (0, d.useState)(""), u = async (e) => {
 		e.preventDefault(), s(!0), l("");
 		try {
@@ -13130,7 +13194,7 @@ function En({ t: e, onSuccess: t }) {
 }
 //#endregion
 //#region client/components/AuthGate.tsx
-function Dn() {
+function On() {
 	let [e, t] = (0, d.useState)(null), [n, r] = (0, d.useState)({}), [i, a] = (0, d.useState)({}), o = (0, d.useMemo)(() => (e, t) => y(n, i, e, t), [n, i]);
 	if ((0, d.useEffect)(() => {
 		fetch("/api/auth/status").then((e) => e.json()).then(t).catch(() => t({
@@ -13140,7 +13204,7 @@ function Dn() {
 	}, []), (0, d.useEffect)(() => {
 		!e?.required || e.authenticated || (_("en").then(a).catch(() => {}), _(b()).then(r).catch(() => {}));
 	}, [e]), !e) return null;
-	if (e.required && !e.authenticated) return /* @__PURE__ */ (0, z.jsx)(En, {
+	if (e.required && !e.authenticated) return /* @__PURE__ */ (0, z.jsx)(Dn, {
 		t: o,
 		onSuccess: () => t({
 			required: !0,
@@ -13153,10 +13217,10 @@ function Dn() {
 			authenticated: !1
 		}));
 	} : void 0;
-	return /* @__PURE__ */ (0, z.jsx)(Tn, { onLogout: s });
+	return /* @__PURE__ */ (0, z.jsx)(En, { onLogout: s });
 }
 //#endregion
 //#region client/main.tsx
-var On = document.querySelector("#root");
-On && (0, f.createRoot)(On).render(/* @__PURE__ */ (0, z.jsx)(Dn, {}));
+var kn = document.querySelector("#root");
+kn && (0, f.createRoot)(kn).render(/* @__PURE__ */ (0, z.jsx)(On, {}));
 //#endregion
