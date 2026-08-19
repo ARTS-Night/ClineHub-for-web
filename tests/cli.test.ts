@@ -2,7 +2,7 @@ import assert from "node:assert/strict"
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { addUser, flagString, parseArgs, removeUser } from "../src/cli.js"
+import { addUser, flagString, HELP_TEXT, parseArgs, removeUser } from "../src/cli.js"
 
 // --- parseArgs -------------------------------------------------------------
 
@@ -12,6 +12,22 @@ assert.equal(flagString(parsed.flags, "ip"), "0.0.0.0")
 assert.equal(parsed.flags.get("add-user"), true, "bare flag with no = has no value")
 assert.deepEqual(parsed.positional, ["alice", "hunter2"])
 assert.equal(flagString(parsed.flags, "missing"), undefined)
+
+// --- short flags (-h, -p, -i) -----------------------------------------------
+
+const short = parseArgs(["-p", "8080", "-i", "0.0.0.0"])
+assert.equal(flagString(short.flags, "port"), "8080")
+assert.equal(flagString(short.flags, "ip"), "0.0.0.0")
+
+const bareHelp = parseArgs(["-h"])
+assert.equal(bareHelp.flags.get("help"), true, "bare -h with no following value has no value")
+
+const helpBeforeFlag = parseArgs(["-h", "-p", "80"])
+assert.equal(helpBeforeFlag.flags.get("help"), true, "-h doesn't swallow the next flag as its value")
+assert.equal(flagString(helpBeforeFlag.flags, "port"), "80")
+
+assert.match(HELP_TEXT, /--port/)
+assert.match(HELP_TEXT, /-h/)
 
 // --- addUser / removeUser ---------------------------------------------------
 

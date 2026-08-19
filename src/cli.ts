@@ -3,22 +3,47 @@ import { resolve } from "node:path"
 
 export type ParsedArgs = { flags: Map<string, string | true>; positional: string[] }
 
-/** Minimal `--flag`, `--flag=value`, and bare-positional parsing — enough for
- *  this CLI's handful of options, no need for a dependency. */
+// Short forms for the handful of flags common enough to want one.
+const SHORT_FLAGS: Record<string, string> = { h: "help", p: "port", i: "ip" }
+
+/** Minimal `--flag`, `--flag=value`, `-x`/`-x value` (via SHORT_FLAGS), and
+ *  bare-positional parsing — enough for this CLI's handful of options, no
+ *  need for a dependency. */
 export function parseArgs(argv: string[]): ParsedArgs {
   const flags = new Map<string, string | true>()
   const positional: string[] = []
-  for (const arg of argv) {
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i]!
     if (arg.startsWith("--")) {
       const eq = arg.indexOf("=")
       if (eq === -1) flags.set(arg.slice(2), true)
       else flags.set(arg.slice(2, eq), arg.slice(eq + 1))
+    } else if (arg.startsWith("-") && arg.length > 1 && SHORT_FLAGS[arg.slice(1)]) {
+      const name = SHORT_FLAGS[arg.slice(1)]!
+      const next = argv[i + 1]
+      // Only consume the next arg as a value if there is one and it isn't
+      // itself a flag — keeps bare `-h` working.
+      if (next !== undefined && !next.startsWith("-")) {
+        flags.set(name, next)
+        i++
+      } else {
+        flags.set(name, true)
+      }
     } else {
       positional.push(arg)
     }
   }
   return { flags, positional }
 }
+
+export const HELP_TEXT = `Usage: clinehub-for-web [options]
+
+  --port=<n>, -p <n>          Port to listen on (default: 3000, or $PORT)
+  --ip=<addr>, -i <addr>      Address to bind (default: 127.0.0.1, or $HOST)
+  --add-user <user> <pass>    Set the login username/password in .env
+  --remove-user                Clear the login username/password from .env
+  --help, -h                   Show this help
+`
 
 export function flagString(flags: Map<string, string | true>, name: string): string | undefined {
   const value = flags.get(name)

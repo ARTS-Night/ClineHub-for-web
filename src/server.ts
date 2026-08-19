@@ -7,7 +7,7 @@ import { networkInterfaces } from "node:os"
 import { dirname, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import { authRequired, createSession, destroySession, isValidSession, verifyCredentials } from "./auth.js"
-import { addUser, flagString, parseArgs, removeUser } from "./cli.js"
+import { addUser, flagString, HELP_TEXT, parseArgs, removeUser } from "./cli.js"
 import { ClineRuntime, SessionNotFoundError, validateUserImages, type RuntimeEvent } from "./runtime.js"
 import type { ConnectionRequest } from "./providers.js"
 import { isWithin } from "./stores/agent-settings.js"
@@ -47,6 +47,10 @@ const cli = isMainModule ? parseArgs(process.argv.slice(2)) : { flags: new Map<s
 // exit immediately — they never start the server, so they run before any of the
 // runtime/workspace setup below.
 if (isMainModule) {
+  if (cli.flags.has("help")) {
+    console.log(HELP_TEXT)
+    process.exit(0)
+  }
   if (cli.flags.has("add-user")) {
     const [username, password] = cli.positional
     if (!username || !password) {
