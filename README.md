@@ -111,7 +111,7 @@ clinehub-for-web --remove-user              # ログインを解除
 
 既定URLは以下です。
 
-- LM Studio: `http://192.168.8.223:1234`
+- LM Studio: `http://127.0.0.1:1234`
 - llama.cpp: `http://127.0.0.1:8080`
 - Ollama: `http://127.0.0.1:11434`
 - ChatGPT Pro / Codex: ChatGPT OAuthログイン（URL入力不要）

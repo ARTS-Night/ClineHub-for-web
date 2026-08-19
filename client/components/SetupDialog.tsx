@@ -4,7 +4,7 @@ import type { TFunction } from "../lib/i18n.js"
 import type { ConnectionInfo, ModelInfo, ProfilesData, ProviderKind } from "../lib/types.js"
 
 const providerDefaults: Record<ProviderKind, string> = {
-  lmstudio: "http://192.168.8.223:1234",
+  lmstudio: "http://127.0.0.1:1234",
   llamacpp: "http://127.0.0.1:8080",
   ollama: "http://127.0.0.1:11434",
   codex: "https://chatgpt.com/backend-api/codex",
