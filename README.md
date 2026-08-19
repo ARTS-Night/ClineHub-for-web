@@ -2,6 +2,18 @@
 
 # ClineHub-for-web
 
+> ⚠️ **本プロジェクトは開発中です。** インストールには `release` ブランチを使用してください。
+>
+> ```bash
+> npm add -g github:ARTS-Night/ClineHub-for-web#release
+> ```
+>
+> ⚠️ **This project is under active development.** For installation, use the `release` branch:
+>
+> ```bash
+> npm add -g github:ARTS-Night/ClineHub-for-web#release
+> ```
+
 Cline SDK の `ClineCore` をローカル実行基盤として利用し、ブラウザからセッションを操作する最小 Web UI です。
 
 ## 技術スタック
@@ -22,7 +34,7 @@ Cline SDK の `ClineCore` をローカル実行基盤として利用し、ブラ
 `release` ブランチには、ビルド済みのdistとサーバー実行に必要な依存関係だけを積んだパッケージを配布しています。ソースを持ってくる必要はありません。
 
 ```bash
-npm add -g https://github.com/ARTS-Night/ClineHub-for-web#release
+npm add -g github:ARTS-Night/ClineHub-for-web#release
 clinehub-for-web
 ```
 
@@ -71,7 +83,7 @@ clinehub-for-web -p 8080 -i 0.0.0.0
 インストール時と同じコマンドを再実行すると、`release`ブランチの最新版に入れ替わります。
 
 ```bash
-npm add -g https://github.com/ARTS-Night/ClineHub-for-web#release
+npm add -g github:ARTS-Night/ClineHub-for-web#release
 ```
 
 ### アンインストール

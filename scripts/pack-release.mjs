@@ -47,9 +47,9 @@ writeFileSync(
   ) + "\n",
 )
 
-writeFileSync(
-  resolve(pack, "README.md"),
-  `# ${pkg.name} (packed release)\n\nPrebuilt distribution — no source, no dev toolchain.\n\n\`\`\`\npnpm install --prod\npnpm start\n\`\`\`\n\nOr install it globally and run it as a command from anywhere:\n\n\`\`\`\npnpm add -g .\nclinehub-for-web\n\`\`\`\n\nConfigure via \`.env\` (see \`.env.example\`) in whichever directory you run it from.\n`,
-)
+// RELEASE.md is the release branch's actual README — usage plus an
+// explanation of how the app works internally, aimed at someone who only
+// ever sees this branch (via `npm add -g`), not the source tree.
+cpSync(resolve(root, "RELEASE.md"), resolve(pack, "README.md"))
 
 console.log(`packed release into ${pack}`)
