@@ -1,4 +1,5 @@
 import type { TFunction } from "../lib/i18n.js"
+import { Icon } from "./Icon.js"
 
 type Props = { t: TFunction; atBottom: boolean; locked: boolean; onJump: () => void; onToggleLock: () => void }
 
@@ -8,12 +9,12 @@ type Props = { t: TFunction; atBottom: boolean; locked: boolean; onJump: () => v
 // locked pins the view and ignores scroll attempts entirely.
 export function ScrollToBottomButton({ t, atBottom, locked, onJump, onToggleLock }: Props) {
   if (!atBottom) {
-    return <button type="button" className="scroll-bottom-button" title={t("scrollToBottom")} aria-label={t("scrollToBottom")} onClick={onJump}>⬇</button>
+    return <button type="button" className="scroll-bottom-button" title={t("scrollToBottom")} aria-label={t("scrollToBottom")} onClick={onJump}><Icon name="arrowDownward" /></button>
   }
   return (
     <button type="button" className={`scroll-bottom-button${locked ? " locked" : ""}`}
       title={t(locked ? "unlockAutoScroll" : "lockAutoScroll")} aria-label={t(locked ? "unlockAutoScroll" : "lockAutoScroll")} onClick={onToggleLock}>
-      {locked ? "🔒" : "🔓"}
+      <Icon name={locked ? "lock" : "lockOpen"} />
     </button>
   )
 }

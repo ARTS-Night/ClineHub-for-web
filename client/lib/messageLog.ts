@@ -122,7 +122,12 @@ export class MessageLog {
   }
 
   private forceBottom() {
-    this.container.scrollTop = this.container.scrollHeight
+    // `.messages` has `scroll-behavior: smooth`, which the scrollTop setter
+    // honors too — an animated scroll fires intermediate "scroll" events
+    // whose distance-from-bottom is still > BOTTOM_SLACK, so handleScroll
+    // would flip atBottom back to false mid-flight and the button would
+    // flicker between its arrow and lock icon. Jump instantly instead.
+    this.container.scrollTo({ top: this.container.scrollHeight, behavior: "instant" })
     this.setAtBottom(true)
   }
 
