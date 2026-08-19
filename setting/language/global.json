@@ -244,5 +244,5 @@
   "idleAuto": "🙈🎲",
   "shellIdleCarryContext": "🐍📜",
   "shellIdleCarryContextHelp": "OFF:👋 ON:🐍📜",
-  "savingShort": "⌛💾", "scrollToBottom": "Scroll to bottom", "lockAutoScroll": "Lock auto-scroll", "unlockAutoScroll": "Unlock auto-scroll"
+  "savingShort": "⌛💾", "scrollToBottom": "Scroll to bottom", "lockAutoScroll": "Lock auto-scroll", "unlockAutoScroll": "Unlock auto-scroll", "sessionModelProfileMissing": "This session used the model profile \"{name}\", which no longer exists. Choose another model to continue.", "sessionWorkspaceProfileMissing": "This session used the workspace profile \"{name}\", which no longer exists. Choose another workspace to continue."
 }

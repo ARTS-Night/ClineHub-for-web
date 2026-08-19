@@ -244,5 +244,5 @@
   "idleAuto": "自动处理",
   "shellIdleCarryContext": "将终端日志带入上下文",
   "shellIdleCarryContextHelp": "开启后，终端超时日志将保留并继续传递给后续对话。",
-  "savingShort": "保存中...", "scrollToBottom": "滚动到底部", "lockAutoScroll": "锁定自动滚动", "unlockAutoScroll": "解锁自动滚动"
+  "savingShort": "保存中...", "scrollToBottom": "滚动到底部", "lockAutoScroll": "锁定自动滚动", "unlockAutoScroll": "解锁自动滚动", "sessionModelProfileMissing": "此会话使用的模型配置「{name}」已不存在，请选择其他模型。", "sessionWorkspaceProfileMissing": "此会话使用的工作区配置「{name}」已不存在，请选择其他工作区。"
 }

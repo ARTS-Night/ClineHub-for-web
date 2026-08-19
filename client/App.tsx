@@ -168,6 +168,28 @@ export function App({ onLogout }: { onLogout?: () => void } = {}) {
     setPendingImages([])
   }
 
+  // A session records which model/workspace profile it was created with
+  // (session.metadata.{model,workspace}ProfileId, plus a name snapshot under
+  // environmentSnapshot that survives the profile itself being deleted
+  // later). Opening the session re-activates that profile so the header and
+  // the next message actually match what's shown; a profile that's since
+  // been deleted surfaces as a message instead of silently continuing on
+  // whatever happened to be active.
+  const restoreSessionProfiles = async (details: SessionDetails) => {
+    const metadata = details.session?.metadata as Record<string, unknown> | undefined
+    const snapshot = metadata?.environmentSnapshot as { model?: { profileName?: string }; workspace?: { name?: string } } | undefined
+    const recordedModelId = metadata?.modelProfileId as string | undefined
+    const recordedWorkspaceId = metadata?.workspaceProfileId as string | undefined
+    if (recordedModelId && recordedModelId !== profilesData.activeModelProfileId) {
+      if (profilesData.models.some((profile) => profile.id === recordedModelId)) await onModelProfileChange(recordedModelId)
+      else getLog().addMessage("tool", t("sessionModelProfileMissing", { name: snapshot?.model?.profileName ?? recordedModelId }))
+    }
+    if (recordedWorkspaceId && recordedWorkspaceId !== profilesData.activeWorkspaceProfileId) {
+      if (profilesData.workspaces.some((profile) => profile.id === recordedWorkspaceId)) await onWorkspaceProfileChange(recordedWorkspaceId)
+      else getLog().addMessage("tool", t("sessionWorkspaceProfileMissing", { name: snapshot?.workspace?.name ?? recordedWorkspaceId }))
+    }
+  }
+
   const selectSession = async (id: string) => {
     setActiveSession(id)
     setSessionStarting(false)
@@ -187,6 +209,7 @@ export function App({ onLogout }: { onLogout?: () => void } = {}) {
       lastAgentActivityRef.current = details.session?.status === "running" ? Date.now() : 0
       setStreamStalled(false)
       setActiveContext(details.context)
+      await restoreSessionProfiles(details)
       await refreshQueue()
       await loadSessions()
       if (matchMedia("(max-width: 760px)").matches) setSidebarCollapsed(true)
