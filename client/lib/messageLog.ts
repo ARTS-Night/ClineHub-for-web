@@ -90,21 +90,67 @@ export class MessageLog {
   private assistantStreamPending = ""
   private reasoningStreamPending = ""
   private streamAnimationFrame: number | null = null
+  // Scroll-follow state: `atBottom` tracks whether the viewport is currently
+  // sitting at (or near) the bottom — new content keeps it pinned there.
+  // `locked` is the user-requested "always follow" mode: scroll events are
+  // ignored outright and the view is snapped back to the bottom every time.
+  private atBottom = true
+  private locked = false
+  private onScrollState?: (atBottom: boolean, locked: boolean) => void
+  private readonly BOTTOM_SLACK = 24
 
-  constructor(container: HTMLElement, t: TFunction, showToolDetails: boolean, locale: Locale, planStyle = false) {
+  constructor(container: HTMLElement, t: TFunction, showToolDetails: boolean, locale: Locale, planStyle = false, onScrollState?: (atBottom: boolean, locked: boolean) => void) {
     this.container = container
     this.t = t
     this.showToolDetails = showToolDetails
     this.locale = locale
     this.planStyle = planStyle
+    this.onScrollState = onScrollState
+    container.addEventListener("scroll", this.handleScroll)
   }
 
-  private scrollToBottom() { this.container.scrollTop = this.container.scrollHeight }
+  private handleScroll = () => {
+    if (this.locked) { this.forceBottom(); return }
+    const distance = this.container.scrollHeight - this.container.scrollTop - this.container.clientHeight
+    this.setAtBottom(distance <= this.BOTTOM_SLACK)
+  }
+
+  private setAtBottom(value: boolean) {
+    if (value === this.atBottom) return
+    this.atBottom = value
+    this.onScrollState?.(this.atBottom, this.locked)
+  }
+
+  private forceBottom() {
+    this.container.scrollTop = this.container.scrollHeight
+    this.setAtBottom(true)
+  }
+
+  /** New content only pulls the view down while it's already following the
+   *  bottom (or locked there) — scrolled-up readers are left alone. */
+  private scrollToBottom() {
+    if (this.locked || this.atBottom) this.container.scrollTop = this.container.scrollHeight
+  }
+
+  /** "Jump to bottom" button: always scrolls, and resumes following. */
+  jumpToBottom() { this.forceBottom() }
+
+  setLocked(locked: boolean) {
+    this.locked = locked
+    if (locked) this.forceBottom()
+    this.onScrollState?.(this.atBottom, this.locked)
+  }
+
+  getScrollState(): { atBottom: boolean; locked: boolean } { return { atBottom: this.atBottom, locked: this.locked } }
 
   clear() {
     this.resetStreamNodes()
     this.toolCards.clear()
     this.container.replaceChildren()
+    // A fresh session/history view always starts pinned to the bottom.
+    this.locked = false
+    this.setAtBottom(true)
+    this.onScrollState?.(this.atBottom, this.locked)
   }
 
   addMessage(kind: "user" | "assistant" | "tool", text: unknown, imageUrls: string[] = []): HTMLElement {

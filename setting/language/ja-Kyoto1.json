@@ -244,5 +244,5 @@
   "idleAuto": "お任せ",
   "shellIdleCarryContext": "お返事の後もそのお控えをお残しになります",
   "shellIdleCarryContextHelp": "消されましたら、「こうしておきましたえ」と一言申し上げまして、昔のことはきれいに忘れます。残されましたら、いつまでも根に持って会話を続けますわ。",
-  "savingShort": "お書き留めでございます"
+  "savingShort": "お書き留めでございます", "scrollToBottom": "一番下までいきますえ", "lockAutoScroll": "自動スクロールをロックしますえ", "unlockAutoScroll": "ロックを解きますえ"
 }

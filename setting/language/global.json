@@ -244,5 +244,5 @@
   "idleAuto": "🙈🎲",
   "shellIdleCarryContext": "🐍📜",
   "shellIdleCarryContextHelp": "OFF:👋 ON:🐍📜",
-  "savingShort": "⌛💾"
+  "savingShort": "⌛💾", "scrollToBottom": "Scroll to bottom", "lockAutoScroll": "Lock auto-scroll", "unlockAutoScroll": "Unlock auto-scroll"
 }

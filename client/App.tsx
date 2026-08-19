@@ -16,6 +16,7 @@ import { SessionDialog } from "./components/SessionDialog.js"
 import { AgentSettingsDialog } from "./components/AgentSettingsDialog.js"
 import { GeneralSettingsDialog } from "./components/GeneralSettingsDialog.js"
 import { AiSettingsMenu } from "./components/AiSettingsMenu.js"
+import { ScrollToBottomButton } from "./components/ScrollToBottomButton.js"
 
 const emptyProfiles: ProfilesData = { models: [], workspaces: [] }
 
@@ -73,6 +74,7 @@ export function App({ onLogout }: { onLogout?: () => void } = {}) {
   const messagesRef = useRef<HTMLDivElement>(null)
   const logRef = useRef<MessageLog | null>(null)
   const getLog = () => logRef.current!
+  const [scrollState, setScrollState] = useState({ atBottom: true, locked: false })
 
   useEffect(() => {
     const checkStale = () => {
@@ -97,7 +99,7 @@ export function App({ onLogout }: { onLogout?: () => void } = {}) {
   // Create the imperative message-log once the container mounts, and keep
   // its localization/filter options current without recreating it.
   useEffect(() => {
-    if (messagesRef.current && !logRef.current) logRef.current = new MessageLog(messagesRef.current, t, showToolDetails, locale, agentSettings?.activeTemplateId === "plan")
+    if (messagesRef.current && !logRef.current) logRef.current = new MessageLog(messagesRef.current, t, showToolDetails, locale, agentSettings?.activeTemplateId === "plan", (atBottom, locked) => setScrollState({ atBottom, locked }))
   }, [])
   useEffect(() => {
     if (!logRef.current) return
@@ -551,7 +553,11 @@ export function App({ onLogout }: { onLogout?: () => void } = {}) {
           <ContextPanel t={t} locale={locale} context={activeContext} compactions={activeCompactions} showToolDetails={showToolDetails}
             onToggleShowToolDetails={(value) => { setShowToolDetails(value); localStorage.setItem("cline-show-tool-details", String(value)); if (activeSession) selectSession(activeSession) }}
             session={activeSessionDetails?.session ?? null} />
-          <div id="messages" className="messages" ref={messagesRef} />
+          <div className="messages-wrap">
+            <div id="messages" className="messages" ref={messagesRef} />
+            <ScrollToBottomButton t={t} atBottom={scrollState.atBottom} locked={scrollState.locked}
+              onJump={() => getLog().jumpToBottom()} onToggleLock={() => getLog().setLocked(!scrollState.locked)} />
+          </div>
           <ApprovalList t={t} approvals={approvals} onResolve={resolveApproval} />
           <QueueStatus t={t} entries={queueEntries} onUpdate={onQueueUpdate} onCancel={onQueueCancel} />
           {agentSettings?.activeTemplateId === "plan" && !hidePlanBanner && !planBannerDismissed && (
