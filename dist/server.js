@@ -40,20 +40,39 @@ function destroySession(token) {
 // src/cli.ts
 import { chmod, open, readFile } from "fs/promises";
 import { resolve } from "path";
+var SHORT_FLAGS = { h: "help", p: "port", i: "ip" };
 function parseArgs(argv) {
   const flags = /* @__PURE__ */ new Map();
   const positional = [];
-  for (const arg of argv) {
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i];
     if (arg.startsWith("--")) {
       const eq = arg.indexOf("=");
       if (eq === -1) flags.set(arg.slice(2), true);
       else flags.set(arg.slice(2, eq), arg.slice(eq + 1));
+    } else if (arg.startsWith("-") && arg.length > 1 && SHORT_FLAGS[arg.slice(1)]) {
+      const name = SHORT_FLAGS[arg.slice(1)];
+      const next = argv[i + 1];
+      if (next !== void 0 && !next.startsWith("-")) {
+        flags.set(name, next);
+        i++;
+      } else {
+        flags.set(name, true);
+      }
     } else {
       positional.push(arg);
     }
   }
   return { flags, positional };
 }
+var HELP_TEXT = `Usage: clinehub-for-web [options]
+
+  --port=<n>, -p <n>          Port to listen on (default: 3000, or $PORT)
+  --ip=<addr>, -i <addr>      Address to bind (default: 127.0.0.1, or $HOST)
+  --add-user <user> <pass>    Set the login username/password in .env
+  --remove-user                Clear the login username/password from .env
+  --help, -h                   Show this help
+`;
 function flagString(flags, name) {
   const value = flags.get(name);
   return typeof value === "string" ? value : void 0;
@@ -2642,6 +2661,10 @@ var thisFile = await realpath2(fileURLToPath(import.meta.url));
 var isMainModule = process.argv[1] !== void 0 && thisFile === await realpath2(resolve4(process.argv[1])).catch(() => null);
 var cli = isMainModule ? parseArgs(process.argv.slice(2)) : { flags: /* @__PURE__ */ new Map(), positional: [] };
 if (isMainModule) {
+  if (cli.flags.has("help")) {
+    console.log(HELP_TEXT);
+    process.exit(0);
+  }
   if (cli.flags.has("add-user")) {
     const [username, password] = cli.positional;
     if (!username || !password) {
