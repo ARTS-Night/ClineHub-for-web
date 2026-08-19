@@ -4,44 +4,103 @@
 
 Cline SDK の `ClineCore` をローカル実行基盤として利用し、ブラウザからセッションを操作する最小 Web UI です。
 
-## 起動
+## 技術スタック
 
-Node.js 22 以上と pnpm を用意します。ローカルモデルを使う場合はモデルサーバー（LM Studio、llama.cpp、Ollamaのいずれか）も起動しておきます。ChatGPT ProのCodexを使う場合はブラウザーでChatGPTへログインできる状態にします。Claude Codeを使う場合はClaude Code CLIをインストールしてログインします。
+- **サーバー**: Node.js、[Hono](https://hono.dev/)、[@hono/node-server](https://github.com/honojs/node-server)、TypeScript
+- **AIバックエンド**: [Cline SDK](https://www.npmjs.com/package/@cline/sdk)（`ClineCore`）、Claude Code連携は[ai-sdk-provider-claude-code](https://www.npmjs.com/package/ai-sdk-provider-claude-code)
+- **フロントエンド**: React 19、Vite、SCSS（ビルド後の静的ファイルをHonoが配信）
+- **SSH**: [ssh2](https://www.npmjs.com/package/ssh2)
+- **MCP**: [@modelcontextprotocol/sdk](https://www.npmjs.com/package/@modelcontextprotocol/sdk)（stdio / SSE / Streamable HTTP）
+- **Markdown/図表**: [marked](https://www.npmjs.com/package/marked)、[mermaid](https://www.npmjs.com/package/mermaid)、[DOMPurify](https://www.npmjs.com/package/dompurify)
+- **ビルド/実行**: pnpm、tsx（開発時実行）、tsup（サーバーバンドル）、tsc（型チェックのみ、出力なし）
+- **テスト**: `node:assert` によるスクリプト形式のテスト（`tests/*.test.ts` を各々独立した `tsx` プロセスで実行、`pnpm test` で一括実行。追加のテストフレームワークは不使用）
 
-```powershell
-pnpm install
-pnpm dev
+バージョンの詳細は [package.json](package.json) を参照してください。
+
+## クイックスタート
+
+`release` ブランチには、ビルド済みのdistとサーバー実行に必要な依存関係だけを積んだパッケージを配布しています。ソースを持ってくる必要はありません。
+
+```bash
+npm add -g https://github.com/ARTS-Night/ClineHub-for-web#release
+clinehub-for-web
 ```
 
-ブラウザで <http://localhost:3000> を開きます。
+ブラウザで [http://localhost:3000](http://localhost:3000) を開くと、初回は接続設定画面が表示されます。詳細は以下の各セクションを参照してください。
 
-`pnpm dev` は既定で `0.0.0.0` にバインドするため、スマートフォンなど同じLAN上の他端末からも `http://<このPCのIP>:3000` でアクセスできます。認証機能はないため、信頼できないネットワークでは公開しないでください。localhostのみに限定する場合は起動前に指定します。
+`.env`や`.cline-data/`（セッション・接続設定・SSH秘密情報など）は、`clinehub-for-web`を実行した時点のカレントディレクトリに作られます。作業用のフォルダーを1つ作ってそこから起動することをおすすめします。
 
-```powershell
-$env:HOST = "127.0.0.1"
-pnpm dev
+```bash
+mkdir clinehub-for-web && cd clinehub-for-web
+clinehub-for-web
+```
+
+## 必要環境
+
+- Node.js 22 以上（npmも同梱されています）
+- ローカルモデルを使う場合はモデルサーバー（LM Studio、llama.cpp、Ollamaのいずれか）
+- ChatGPT ProのCodexを使う場合はブラウザーでChatGPTへログインできる状態
+- Claude Codeを使う場合はClaude Code CLIをインストールしてログイン
+- ソースからビルド・起動する場合のみ、追加でpnpmが必要（[開発者向け情報](#開発者向け情報)を参照）
+
+## 起動
+
+```bash
+clinehub-for-web
+```
+
+既定では `127.0.0.1:3000` にバインドするため、そのPC内からのみアクセスできます。スマートフォンなど同じLAN上の他端末からアクセスできるようにするには、明示的に全インターフェースへバインドします。認証機能は既定でオフのため、信頼できないネットワークでは公開しないでください（必須にする方法は[ログイン](#ログイン)を参照）。
+
+```bash
+clinehub-for-web --ip=0.0.0.0
 ```
 
 ### 起動オプション（`--port=`、`--ip=`）
 
-`pnpm add -g` でグローバルインストールした場合や `pnpm start` で起動する場合は、環境変数の代わりにコマンドライン引数でポート・バインドアドレスを指定できます（指定した方が環境変数より優先されます）。`-p`/`-i` は短縮形です。
+環境変数の代わりに、コマンドライン引数でポート・バインドアドレスを指定できます（指定した方が環境変数より優先されます）。`-p`/`-i` は短縮形です。
 
 ```bash
 clinehub-for-web --port=8080 --ip=0.0.0.0
 clinehub-for-web -p 8080 -i 0.0.0.0
-# ソースから: pnpm start -- --port=8080 --ip=0.0.0.0
 ```
 
 `--help`（短縮形 `-h`）で全オプションの一覧を表示します。
 
-### ログインユーザーの追加・削除（`--add-user`、`--remove-user`）
+### アップデート
 
-`.env` を手編集する代わりに、コマンドラインから `CLINEHUB_USER`/`CLINEHUB_PASSWORD` を設定・削除できます。カレントディレクトリの `.env`（なければ新規作成）を書き換えるだけで、サーバーは再起動するまで反映しません。
+インストール時と同じコマンドを再実行すると、`release`ブランチの最新版に入れ替わります。
+
+```bash
+npm add -g https://github.com/ARTS-Night/ClineHub-for-web#release
+```
+
+### アンインストール
+
+```bash
+npm uninstall -g clinehub-for-web
+```
+
+`.env`と`.cline-data/`はアンインストールしても削除されません。起動時に使っていた作業ディレクトリに残るので、不要であれば手動で削除してください。
+
+## ログイン
+
+既定ではログイン不要です。LAN上に公開する場合などにログインを必須にするには、`.env`（`.env.example`をコピー）へ `CLINEHUB_USER` と `CLINEHUB_PASSWORD` の両方を設定します。片方だけ設定した場合はログイン不要のままです。
+
+```env
+CLINEHUB_USER=alice
+CLINEHUB_PASSWORD=hunter2
+```
+
+`.env` を手編集する代わりに、コマンドラインから設定・削除することもできます。カレントディレクトリの `.env`（なければ新規作成）を書き換えるだけで、サーバーは再起動するまで反映しません。
 
 ```bash
 clinehub-for-web --add-user alice hunter2   # ログインを設定（既存の他の行は保持）
 clinehub-for-web --remove-user              # ログインを解除
 ```
+
+ログインするとhttpOnly Cookieでセッションを保持します（既定30日）。セッションはサーバーのメモリ内だけに保持するため、サーバー再起動で全員ログアウトになります。ヘッダーの`ログアウト`からいつでも手動ログアウトできます。この認証はシンプルな共有ログインで、複数ユーザーの個別アカウントやアクセス権の使い分けには対応していません。
+
+## AI接続
 
 起動時に接続設定画面が表示されます。
 
@@ -62,16 +121,26 @@ LM Studioでは現在ロード中のLLM、Ollamaではインストール済み�
 
 LM Studio、llama.cpp、Ollama、Claude Codeの接続先と選択モデルは`.cline-data/connection.json`へ保存し、サーバー再起動時に自動復元します。このファイルにはAPIキーや認証トークンを保存しません。Claude Codeの認証情報はClaude Code CLI側が安全に管理するため、CLIのログインが有効な間は再ログイン不要です。ChatGPT OAuthトークンはサーバーのメモリ内だけに保持するため、Codexは再起動後に再ログインが必要です。接続後もヘッダーの `AI settings` から変更でき、新しいセッションから反映されます。
 
-## ログイン
+### Claude Codeで接続
 
-既定ではログイン不要です。LAN上に公開する場合などにログインを必須にするには、`.env`（`.env.example`をコピー）へ `CLINEHUB_USER` と `CLINEHUB_PASSWORD` の両方を設定します。片方だけ設定した場合はログイン不要のままです。
+Claude Code CLIをインストールし、ターミナルでログインします。
 
-```env
-CLINEHUB_USER=alice
-CLINEHUB_PASSWORD=hunter2
+```powershell
+claude auth login
+claude auth status
 ```
 
-ログインするとhttpOnly Cookieでセッションを保持します（既定30日）。セッションはサーバーのメモリ内だけに保持するため、サーバー再起動で全員ログアウトになります。ヘッダーの`ログアウト`からいつでも手動ログアウトできます。この認証はシンプルな共有ログインで、複数ユーザーの個別アカウントやアクセス権の使い分けには対応していません。
+`loggedIn: true`になったら、Web画面で次の順に操作します。
+
+1. `AI settings`を開く
+2. `Claude Code Pro / Max`を選ぶ
+3. `Fetch models`を押す
+4. `sonnet`、`opus`、`haiku`のいずれかを選ぶ
+5. `Connect`を押す
+
+Claude Code選択時はサーバーURLとAPIキーは不要です。このモードはClaude CodeをClineCoreのモデルバックエンドとして利用する構成で、ブラウザーUI、Clineのセッション履歴、working directory、Tool Approval、権限設定は引き続きClineHub-for-webが担当します。Claude Codeを直接ターミナルで使うだけなら本アプリは不要ですが、Web UIや他プロバイダーとの切り替えが必要な場合にこの構成を利用します。
+
+内部ではCline SDKの`claude-code`プロバイダーと、公式Claude Agent SDKを橋渡しする`ai-sdk-provider-claude-code`を使用します。後者はコミュニティ提供のアダプターです。
 
 ## モデル／ワークスペースプロファイル
 
@@ -93,26 +162,7 @@ Linuxプロファイルではsudoを`使用禁止`、`毎回確認（推奨）`�
 
 `確認せず許可`は、AIへリモート管理者権限を自動付与する危険な設定です。誤操作、データ消失、OS破損、セキュリティ事故について本アプリは安全性や復旧可能性を保証しません。UIでは警告表示と保存時の再確認を行います。
 
-## Claude Codeで接続
-
-Claude Code CLIをインストールし、ターミナルでログインします。
-
-```powershell
-claude auth login
-claude auth status
-```
-
-`loggedIn: true`になったら、Web画面で次の順に操作します。
-
-1. `AI settings`を開く
-2. `Claude Code Pro / Max`を選ぶ
-3. `Fetch models`を押す
-4. `sonnet`、`opus`、`haiku`のいずれかを選ぶ
-5. `Connect`を押す
-
-Claude Code選択時はサーバーURLとAPIキーは不要です。このモードはClaude CodeをClineCoreのモデルバックエンドとして利用する構成で、ブラウザーUI、Clineのセッション履歴、working directory、Tool Approval、権限設定は引き続きClineHub-for-webが担当します。Claude Codeを直接ターミナルで使うだけなら本アプリは不要ですが、Web UIや他プロバイダーとの切り替えが必要な場合にこの構成を利用します。
-
-内部ではCline SDKの`claude-code`プロバイダーと、公式Claude Agent SDKを橋渡しする`ai-sdk-provider-claude-code`を使用します。後者はコミュニティ提供のアダプターです。
+## 表示設定（言語・テーマ）
 
 ヘッダーの言語選択で日本語と英語を切り替えられます。選択した言語だけはブラウザーに保存されます。
 
@@ -169,7 +219,62 @@ Session一覧の `⋯` から、状態、Provider、Model、working directory、
 
 ターン実行中に送信すると、そのメッセージは自動でキューに入り、現在のターンが終わり次第送信されます（送信欄から内容の修正・取消も可能）。応答が止まって進まなくなった場合は送信ボタンが「強制送信」に変わり、押すと現在のターンを中断してから、キューにあるメッセージ（今送ったものを含む）を後継セッションへ引き継いで実行します。会話履歴は保持されます。
 
-## 構成
+## 実装済み
+
+- ClineCore の local backend 起動
+- セッション一覧・作成・履歴取得
+- メッセージ送信
+- `cline.subscribe()` による SSE ストリーミング
+- Tool Approval の Approve / Reject
+- Abort
+- 起動時プロバイダー設定とモデル自動取得
+- LM Studio、llama.cpp、Ollama、ChatGPT Pro / Codex、Claude Code Pro / Max対応
+- OAuthトークンのメモリ内保持、自動更新、レスポンスからの秘匿
+- Cline標準Tool Policyによる権限プリセット・個別承認設定
+- System prompt、working directory、最大iteration数の設定
+- Session詳細、使用量、名前変更、個別削除、一括削除
+- 日本語/英語UI、現在のコンテキスト使用率とモデル上限の表示
+- Cline SDK標準の自動コンテキスト圧縮設定
+- thinking/reasoning、通常回答、Tool履歴の構造を保ったセッション再表示
+- ファイル読取・検索・コマンド・編集の実行状況カード、折りたたみ式の結果全文、内部Toolの表示切替
+- SDK 標準のセッション永続化・組み込みツール・設定探索の利用
+- モデル／ローカル／SSHワークスペースプロファイルの保存と即時切替
+- パスワードまたは秘密鍵によるSSH接続、リモートコマンド・読取・検索・書込
+- System prompt・権限プリセットをセットにしたテンプレート（モード）切替
+- 実行中メッセージの自動キュー、キューの修正・取消、強制送信
+- stdio / SSE / Streamable HTTP対応のMCPサーバー登録、接続テストとツール一覧表示、サーバー単位・ツール単位の有効/無効、サーバー単位の確認なし許可、MCP全体のクイックオン/オフ
+- MCPツール呼び出しの承認要求・実行状況を「MCP: サーバー名 → ツール名」として会話ログ・Approvalに明示
+- ワークスペースの絶対パス指定（既定では起動フォルダー配下に限定しない）、UIでのフォルダー参照
+- `.env`によるオプトインのログイン機構（未設定なら従来通りログイン不要）、`--add-user`/`--remove-user`によるCLI管理
+- `--port=`/`--ip=`起動オプション、`npm add -g`（`release`ブランチ）でのグローバルコマンド実行に対応
+- ストリーミング中の自動スクロール制御（下端追従・ロック・ジャンプボタン）
+
+## 既知の制限
+
+- ChatGPT OAuthのコールバックは `localhost:1455` を使用します。他のプロセスがこのポートを使用している場合はログインできません。
+- Claude Code連携はClaude Code CLIとコミュニティ提供のAI SDKアダプターを経由します。Claude Code CLIの仕様変更時にはアダプターの更新が必要になる場合があります。
+- ChatGPT Pro / CodexのOAuth資格情報は永続化していません。永続化する場合はハッシュではなく、Windows資格情報マネージャーなどOSの安全な資格情報ストアへの対応が必要です。
+- `.env`でのログインは単一の共有ユーザー/パスワードのみで、複数ユーザーの個別アカウントやアクセス権の使い分けには対応していません。ソースから `pnpm dev` で起動する場合は既定でLAN上の他端末からアクセスできる構成になるため、信頼できないネットワークではログインを設定するか、`HOST=127.0.0.1` に限定してください（`clinehub-for-web` コマンドは既定で `127.0.0.1` 限定です）。
+- セッション作成ボタンは空の interactive session を開始します。最初のメッセージ送信時に prompt を渡すこともできます。
+- フォルダー参照UIは選択中パスから上下に辿るだけで、Windowsの他ドライブ一覧などは表示しません。別ドライブへ移動する場合は絶対パスを直接入力してください。
+- `--add-user`/`--remove-user`は`.env`を書き換えるだけで、実行中のサーバーへは反映しません。反映するには再起動が必要です。
+
+## 開発者向け情報
+
+### ソースから起動する
+
+`npm add -g`によるインストールは`release`ブランチの配布物を使います。ソースを直接編集・デバッグする場合は、リポジトリをcloneしてpnpmで起動します。
+
+```bash
+git clone https://github.com/ARTS-Night/ClineHub-for-web.git
+cd ClineHub-for-web
+pnpm install
+pnpm dev
+```
+
+`pnpm dev` はソース変更を監視して再ビルドし、既定で `0.0.0.0` にバインドします（スマートフォンなど同じLAN上の他端末からもアクセス可能。ローカル限定にする場合は`$env:HOST = "127.0.0.1"`を先に設定します）。ビルド済みの`dist/`から起動するだけなら`pnpm start`（`tsx src/server.ts`を実行、既定`127.0.0.1`）も使えます。
+
+### 構成
 
 ```text
 src/                        サーバー（Node / Hono）
@@ -202,7 +307,7 @@ dist/                       ビルド成果物（app.js、styles.css、index.htm
 
 セッションデータはプロジェクト内の `.cline-data/` に保存します。Cline SDK の標準保存機構を利用しつつ、ユーザーのホームディレクトリへ書き込まない構成です。
 
-## スタイル（SCSS）
+### スタイル（SCSS）
 
 見た目は `client/styles/` のSCSSから `dist/styles.css` へビルドします。`dist/` は生成物なので直接編集しません。
 
@@ -218,42 +323,3 @@ client/styles/
 ```
 
 配色はテーマごとに **main（操作色）／main-sub（情報色）／sub（中間色）** の3色だけを起点にし、背景・境界・文字色はすべてそこから導出します。`_tokens.scss` 冒頭の6つの値を変えるだけでテーマ全体が一貫して切り替わります。
-
-## 実装済み
-
-- ClineCore の local backend 起動
-- セッション一覧・作成・履歴取得
-- メッセージ送信
-- `cline.subscribe()` による SSE ストリーミング
-- Tool Approval の Approve / Reject
-- Abort
-- 起動時プロバイダー設定とモデル自動取得
-- LM Studio、llama.cpp、Ollama、ChatGPT Pro / Codex、Claude Code Pro / Max対応
-- OAuthトークンのメモリ内保持、自動更新、レスポンスからの秘匿
-- Cline標準Tool Policyによる権限プリセット・個別承認設定
-- System prompt、working directory、最大iteration数の設定
-- Session詳細、使用量、名前変更、個別削除、一括削除
-- 日本語/英語UI、現在のコンテキスト使用率とモデル上限の表示
-- Cline SDK標準の自動コンテキスト圧縮設定
-- thinking/reasoning、通常回答、Tool履歴の構造を保ったセッション再表示
-- ファイル読取・検索・コマンド・編集の実行状況カード、折りたたみ式の結果全文、内部Toolの表示切替
-- SDK 標準のセッション永続化・組み込みツール・設定探索の利用
-- モデル／ローカル／SSHワークスペースプロファイルの保存と即時切替
-- パスワードまたは秘密鍵によるSSH接続、リモートコマンド・読取・検索・書込
-- System prompt・権限プリセットをセットにしたテンプレート（モード）切替
-- 実行中メッセージの自動キュー、キューの修正・取消、強制送信
-- stdio / SSE / Streamable HTTP対応のMCPサーバー登録、接続テストとツール一覧表示、サーバー単位・ツール単位の有効/無効、サーバー単位の確認なし許可、MCP全体のクイックオン/オフ
-- MCPツール呼び出しの承認要求・実行状況を「MCP: サーバー名 → ツール名」として会話ログ・Approvalに明示
-- ワークスペースの絶対パス指定（既定では起動フォルダー配下に限定しない）、UIでのフォルダー参照
-- `.env`によるオプトインのログイン機構（未設定なら従来通りログイン不要）、`--add-user`/`--remove-user`によるCLI管理
-- `--port=`/`--ip=`起動オプション、`pnpm add -g`でのグローバルコマンド実行に対応
-
-## 既知の制限
-
-- ChatGPT OAuthのコールバックは `localhost:1455` を使用します。他のプロセスがこのポートを使用している場合はログインできません。
-- Claude Code連携はClaude Code CLIとコミュニティ提供のAI SDKアダプターを経由します。Claude Code CLIの仕様変更時にはアダプターの更新が必要になる場合があります。
-- ChatGPT Pro / CodexのOAuth資格情報は永続化していません。永続化する場合はハッシュではなく、Windows資格情報マネージャーなどOSの安全な資格情報ストアへの対応が必要です。
-- `.env`でのログインは単一の共有ユーザー/パスワードのみで、複数ユーザーの個別アカウントやアクセス権の使い分けには対応していません。`pnpm dev` は既定でLAN上の他端末からアクセスできる構成のため、信頼できないネットワークではログインを設定するか、`HOST=127.0.0.1` に限定してください。
-- セッション作成ボタンは空の interactive session を開始します。最初のメッセージ送信時に prompt を渡すこともできます。
-- フォルダー参照UIは選択中パスから上下に辿るだけで、Windowsの他ドライブ一覧などは表示しません。別ドライブへ移動する場合は絶対パスを直接入力してください。
-- `--add-user`/`--remove-user`は`.env`を書き換えるだけで、実行中のサーバーへは反映しません。反映するには再起動が必要です。
