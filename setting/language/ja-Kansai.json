@@ -243,5 +243,5 @@
   "idleAuto": "AIにおまかせ（ユーザーには訊かん）",
   "shellIdleCarryContext": "対応したあともそのshellログを会話に残しとく",
   "shellIdleCarryContextHelp": "オフにしたら、AIは判断したあとログを引っ張ってこんと、「こうしといたで〜」って一言報告して終わりに shelter するわ。オンにしといたら、いつも通りログ踏まえて会話続けられるで。",
-  "savingShort": "保存中やで…", "scrollToBottom": "一番下まで行くで", "lockAutoScroll": "自動スクロールをロックするで", "unlockAutoScroll": "ロック解除するで"
+  "savingShort": "保存中やで…", "scrollToBottom": "一番下まで行くで", "lockAutoScroll": "自動スクロールをロックするで", "unlockAutoScroll": "ロック解除するで", "sessionModelProfileMissing": "このセッションのモデルプロファイル「{name}」、もう無くなってもうてるで。別のモデル選んでや。", "sessionWorkspaceProfileMissing": "このセッションのワークスペースプロファイル「{name}」、もう無くなってもうてるで。別のワークスペース選んでや。"
 }

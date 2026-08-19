@@ -12689,6 +12689,9 @@ function En({ onLogout: e } = {}) {
 	}, at = () => {
 		I().clear(), he([]), xe([]), ye(""), _e([]);
 	}, ot = async (e) => {
+		let t = e.session?.metadata, n = t?.environmentSnapshot, r = t?.modelProfileId, i = t?.workspaceProfileId;
+		r && r !== P.activeModelProfileId && (P.models.some((e) => e.id === r) ? await St(r) : I().addMessage("tool", u("sessionModelProfileMissing", { name: n?.model?.profileName ?? r }))), i && i !== P.activeWorkspaceProfileId && (P.workspaces.some((e) => e.id === i) ? await Ct(i) : I().addMessage("tool", u("sessionWorkspaceProfileMissing", { name: n?.workspace?.name ?? i })));
+	}, st = async (e) => {
 		D(e), Oe(!1), Ce([]), Ee([]), at();
 		try {
 			let [t, n] = await Promise.all([m(`/api/sessions/${encodeURIComponent(e)}/messages`), m(`/api/sessions/${encodeURIComponent(e)}`)]);
@@ -12696,7 +12699,7 @@ function En({ onLogout: e } = {}) {
 			for (let e of t) I().renderHistoryMessage(e);
 			he(n.compactions ?? []);
 			for (let e of n.compactions ?? []) I().addCompactionEvent(e);
-			k(n.session?.status === "running"), ce.current = n.session?.status === "running" ? Date.now() : 0, se(!1), pe(n.context), await nt(), await et(), matchMedia("(max-width: 760px)").matches && x(!0);
+			k(n.session?.status === "running"), ce.current = n.session?.status === "running" ? Date.now() : 0, se(!1), pe(n.context), await ot(n), await nt(), await et(), matchMedia("(max-width: 760px)").matches && x(!0);
 		} catch (e) {
 			if (e instanceof p && e.status === 404) {
 				D(null), O(null), k(!1), pe(null), await et(), I().addMessage("tool", "This session is no longer available. Select another session or start a new one.");
@@ -12704,20 +12707,20 @@ function En({ onLogout: e } = {}) {
 			}
 			I().showError(e, "Session load failed");
 		}
-	}, st = () => {
+	}, ct = () => {
 		if (!le) {
 			Qe();
 			return;
 		}
 		D(null), O(null), Oe(!1), k(!1), ce.current = 0, se(!1), Ce([]), Ee([]), at(), pe(null), I().addMessage("tool", "New session ready. Enter a message and press Send."), et().catch((e) => I().showError(e, "Session list failed"));
-	}, ct = async () => {
+	}, lt = async () => {
 		if (confirm("Delete all Cline sessions? This cannot be undone.")) try {
 			let e = await m("/api/sessions", { method: "DELETE" });
 			D(null), O(null), Oe(!1), k(!1), Ce([]), Ee([]), at(), await et(), I().addMessage("tool", `Deleted ${e.deleted} session(s).${e.failed.length ? ` Failed: ${e.failed.join(", ")}` : ""}`);
 		} catch (e) {
 			I().showError(e, "Clear sessions failed");
 		}
-	}, lt = async (e) => {
+	}, ut = async (e) => {
 		let t = /* @__PURE__ */ new Set([
 			"image/png",
 			"image/jpeg",
@@ -12739,7 +12742,7 @@ function En({ onLogout: e } = {}) {
 			});
 		}
 		_e((e) => [...e, ...r]);
-	}, ut = async () => {
+	}, dt = async () => {
 		if (!le) {
 			Qe();
 			return;
@@ -12779,19 +12782,19 @@ function En({ onLogout: e } = {}) {
 				re || Oe(!1), k(!1), ce.current = 0, se(!1), ge.length === 0 && _e(t), I().showError(e, "Send failed");
 			}
 		}
-	}, dt = async () => {
+	}, ft = async () => {
 		if (re) try {
 			await m(`/api/sessions/${encodeURIComponent(re)}/abort`, { method: "POST" }), I().addMessage("tool", "Stop requested");
 		} catch (e) {
 			I().showError(e, "Stop failed");
 		}
-	}, ft = [...Se.map((e) => ({
+	}, pt = [...Se.map((e) => ({
 		...e,
 		source: "startup"
 	})), ...Te.map((e) => ({
 		...e,
 		source: "server"
-	}))], pt = async (e, t) => {
+	}))], mt = async (e, t) => {
 		if (e.source === "startup") {
 			Ce((n) => n.map((n) => n.id === e.id ? {
 				...n,
@@ -12803,32 +12806,32 @@ function En({ onLogout: e } = {}) {
 			method: "PATCH",
 			body: JSON.stringify({ prompt: t })
 		}), await nt();
-	}, mt = async (e) => {
+	}, ht = async (e) => {
 		if (e.source === "startup") {
 			Ce((t) => t.filter((t) => t.id !== e.id));
 			return;
 		}
 		await m(`/api/sessions/${encodeURIComponent(re ?? "")}/queue/${encodeURIComponent(e.id)}`, { method: "DELETE" }), await nt();
-	}, ht = F?.templates.find((e) => e.id === F.activeTemplateId) ?? null, gt = ht?.permissions ?? null, _t = async (e) => {
-		if (!F || !ht || !(e in ht.permissions)) return;
+	}, gt = F?.templates.find((e) => e.id === F.activeTemplateId) ?? null, _t = gt?.permissions ?? null, vt = async (e) => {
+		if (!F || !gt || !(e in gt.permissions)) return;
 		let t = [
 			"disabled",
 			"ask",
 			"allow"
-		], n = ht.permissions[e], r = t[(t.indexOf(n) + 1) % t.length], i = F, a = {
-			...ht.permissions,
+		], n = gt.permissions[e], r = t[(t.indexOf(n) + 1) % t.length], i = F, a = {
+			...gt.permissions,
 			[e]: r
 		};
 		de({
 			...i,
-			templates: i.templates.map((e) => e.id === ht.id ? {
+			templates: i.templates.map((e) => e.id === gt.id ? {
 				...e,
 				permissions: a,
 				permissionPreset: "custom"
 			} : e)
 		});
 		try {
-			let e = await m(`/api/agent-settings/templates/${encodeURIComponent(ht.id)}`, {
+			let e = await m(`/api/agent-settings/templates/${encodeURIComponent(gt.id)}`, {
 				method: "PATCH",
 				body: JSON.stringify({ permissions: a })
 			});
@@ -12839,7 +12842,7 @@ function En({ onLogout: e } = {}) {
 		} catch (e) {
 			de(i), I().showError(e, "Permission update failed");
 		}
-	}, vt = async () => {
+	}, yt = async () => {
 		if (!F) return;
 		let e = F, t = !F.mcpEnabled;
 		de({
@@ -12854,13 +12857,13 @@ function En({ onLogout: e } = {}) {
 		} catch (t) {
 			de(e), I().showError(t, "MCP toggle failed");
 		}
-	}, [yt, bt] = (0, d.useState)(!1), L = async (e) => {
+	}, [bt, L] = (0, d.useState)(!1), R = async (e) => {
 		if (!F || F.activeTemplateId === e) return;
 		let t = F;
 		de({
 			...t,
 			activeTemplateId: e
-		}), bt(!0);
+		}), L(!0);
 		try {
 			de(await m("/api/agent-settings", {
 				method: "PATCH",
@@ -12869,9 +12872,9 @@ function En({ onLogout: e } = {}) {
 		} catch (e) {
 			de(t), I().showError(e, "Template switch failed");
 		} finally {
-			bt(!1);
+			L(!1);
 		}
-	}, R = async (e, t) => {
+	}, xt = async (e, t) => {
 		try {
 			await m(`/api/approvals/${encodeURIComponent(e)}`, {
 				method: "POST",
@@ -12880,7 +12883,7 @@ function En({ onLogout: e } = {}) {
 		} catch (e) {
 			I().showError(e, "Approval failed");
 		}
-	}, xt = async (e) => {
+	}, St = async (e) => {
 		let t = P.activeModelProfileId;
 		Me(!0);
 		try {
@@ -12899,7 +12902,7 @@ function En({ onLogout: e } = {}) {
 		} finally {
 			Me(!1);
 		}
-	}, St = async (e) => {
+	}, Ct = async (e) => {
 		let t = P.activeWorkspaceProfileId;
 		Pe(!0);
 		try {
@@ -12916,9 +12919,9 @@ function En({ onLogout: e } = {}) {
 		} finally {
 			Pe(!1);
 		}
-	}, Ct = (e) => {
-		j(e.modelId), N(e), D(null), O(null), at(), I().resetStreamNodes(), pe(null), m("/api/context").then(pe).catch(() => {}), $e().catch(() => {}), I().addMessage("tool", `AI connected: ${e.provider} / ${e.modelId}`);
 	}, wt = (e) => {
+		j(e.modelId), N(e), D(null), O(null), at(), I().resetStreamNodes(), pe(null), m("/api/context").then(pe).catch(() => {}), $e().catch(() => {}), I().addMessage("tool", `AI connected: ${e.provider} / ${e.modelId}`);
+	}, Tt = (e) => {
 		de(e), $e().catch(() => {}), m("/api/context").then(pe).catch(() => {});
 	};
 	(0, d.useEffect)(() => {
@@ -12980,16 +12983,16 @@ function En({ onLogout: e } = {}) {
 		});
 		return () => e.close();
 	}, []);
-	let Tt = ke === "retry" ? u("sseRetry") : le ? `${u("connected")} · ${le}` : u(ke === "open" ? "serverConnected" : "connecting"), Et = ke === "retry" ? "#f5c979" : le ? "#79d69a" : "#f5c979", Dt = P.workspaces.find((e) => e.id === P.activeWorkspaceProfileId), Ot = Dt ? `${Dt.type === "ssh" ? "SSH" : "workspace"}: ${Dt.type === "ssh" ? `${Dt.username}@${Dt.host}:${Dt.remoteDirectory}` : Dt.path}` : "workspace: loading...";
+	let Et = ke === "retry" ? u("sseRetry") : le ? `${u("connected")} · ${le}` : u(ke === "open" ? "serverConnected" : "connecting"), Dt = ke === "retry" ? "#f5c979" : le ? "#79d69a" : "#f5c979", Ot = P.workspaces.find((e) => e.id === P.activeWorkspaceProfileId), kt = Ot ? `${Ot.type === "ssh" ? "SSH" : "workspace"}: ${Ot.type === "ssh" ? `${Ot.username}@${Ot.host}:${Ot.remoteDirectory}` : Ot.path}` : "workspace: loading...";
 	return /* @__PURE__ */ (0, z.jsxs)(z.Fragment, { children: [
 		/* @__PURE__ */ (0, z.jsx)(Ut, {
 			t: u,
-			connectionText: Tt,
-			connectionColor: Et,
-			workspaceDisplay: Ot,
+			connectionText: Et,
+			connectionColor: Dt,
+			workspaceDisplay: kt,
 			profilesData: P,
-			onModelProfileChange: xt,
-			onWorkspaceProfileChange: St,
+			onModelProfileChange: St,
+			onWorkspaceProfileChange: Ct,
 			modelProfileBusy: je,
 			workspaceProfileBusy: Ne,
 			sidebarCollapsed: g,
@@ -13005,10 +13008,10 @@ function En({ onLogout: e } = {}) {
 			t: u,
 			sessions: ne,
 			activeSession: re,
-			onSelect: ot,
+			onSelect: st,
 			onOpenDetails: Ie,
-			onNewSession: st,
-			onClearSessions: ct
+			onNewSession: ct,
+			onClearSessions: lt
 		}), /* @__PURE__ */ (0, z.jsxs)("section", {
 			className: "conversation",
 			children: [
@@ -13019,7 +13022,7 @@ function En({ onLogout: e } = {}) {
 					compactions: me,
 					showToolDetails: S,
 					onToggleShowToolDetails: (e) => {
-						C(e), localStorage.setItem("cline-show-tool-details", String(e)), re && ot(re);
+						C(e), localStorage.setItem("cline-show-tool-details", String(e)), re && st(re);
 					},
 					session: ae?.session ?? null
 				}),
@@ -13040,13 +13043,13 @@ function En({ onLogout: e } = {}) {
 				/* @__PURE__ */ (0, z.jsx)(Zt, {
 					t: u,
 					approvals: be,
-					onResolve: R
+					onResolve: xt
 				}),
 				/* @__PURE__ */ (0, z.jsx)(Qt, {
 					t: u,
-					entries: ft,
-					onUpdate: pt,
-					onCancel: mt
+					entries: pt,
+					onUpdate: mt,
+					onCancel: ht
 				}),
 				F?.activeTemplateId === "plan" && !w && !te && /* @__PURE__ */ (0, z.jsxs)("div", {
 					className: "mode-banner",
@@ -13055,8 +13058,8 @@ function En({ onLogout: e } = {}) {
 						children: [/* @__PURE__ */ (0, z.jsx)("button", {
 							type: "button",
 							className: "secondary",
-							disabled: yt,
-							onClick: () => void L("coding"),
+							disabled: bt,
+							onClick: () => void R("coding"),
 							children: u("switchToCode")
 						}), /* @__PURE__ */ (0, z.jsx)("button", {
 							type: "button",
@@ -13072,21 +13075,21 @@ function En({ onLogout: e } = {}) {
 					t: u,
 					prompt: ve,
 					onPromptChange: ye,
-					onSubmit: () => void ut(),
-					onAbort: () => void dt(),
+					onSubmit: () => void dt(),
+					onAbort: () => void ft(),
 					running: oe,
 					stalled: A,
 					pendingImages: ge,
-					onAddImages: (e) => void lt(e).catch((e) => I().showError(e, "Image attachment failed")),
+					onAddImages: (e) => void ut(e).catch((e) => I().showError(e, "Image attachment failed")),
 					onRemoveImage: (e) => _e((t) => t.filter((t, n) => n !== e)),
 					imagesEnabled: !!(M && "imagesEnabled" in M && M.imagesEnabled),
 					agentSettings: F,
-					effectivePermissions: gt,
-					onCyclePermission: _t,
+					effectivePermissions: _t,
+					onCyclePermission: vt,
 					mcpEnabled: F?.mcpEnabled ?? null,
-					onToggleMcp: vt,
-					onSelectTemplate: (e) => void L(e),
-					templateBusy: yt
+					onToggleMcp: yt,
+					onSelectTemplate: (e) => void R(e),
+					templateBusy: bt
 				})
 			]
 		})] }),
@@ -13119,7 +13122,7 @@ function En({ onLogout: e } = {}) {
 			request: Ge,
 			onClose: () => {},
 			profilesData: P,
-			onConnected: Ct
+			onConnected: wt
 		}),
 		/* @__PURE__ */ (0, z.jsx)(pn, {
 			t: u,
@@ -13147,7 +13150,7 @@ function En({ onLogout: e } = {}) {
 			t: u,
 			open: ze,
 			onClose: () => Be(!1),
-			onSaved: wt
+			onSaved: Tt
 		})
 	] });
 }

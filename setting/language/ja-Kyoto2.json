@@ -244,5 +244,5 @@
   "idleAuto": "後で文句をおっしゃらないでくださいね",
   "shellIdleCarryContext": "執念深うございますね",
   "shellIdleCarryContextHelp": "オフなら「こうしておきましたえ」と一言言っておしまい。オンならいつまでも根に持って会話を続けますわ。",
-  "savingShort": "お待ちやす", "scrollToBottom": "一番下までまいりますわ", "lockAutoScroll": "自動スクロールをロックいたしますわ", "unlockAutoScroll": "ロックを解除いたしますわ"
+  "savingShort": "お待ちやす", "scrollToBottom": "一番下までまいりますわ", "lockAutoScroll": "自動スクロールをロックいたしますわ", "unlockAutoScroll": "ロックを解除いたしますわ", "sessionModelProfileMissing": "このセッションのモデルプロファイル「{name}」は、もう無くなってしまいましたわ。別のモデルをお選びくださいませ。", "sessionWorkspaceProfileMissing": "このセッションのワークスペースプロファイル「{name}」は、もう無くなってしまいましたわ。別のワークスペースをお選びくださいませ。"
 }
