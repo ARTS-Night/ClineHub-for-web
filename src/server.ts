@@ -2,7 +2,8 @@ import { serve } from "@hono/node-server"
 import { serveStatic } from "@hono/node-server/serve-static"
 import { getCookie, setCookie, deleteCookie } from "hono/cookie"
 import { Hono } from "hono"
-import { readdir, realpath } from "node:fs/promises"
+import { readdir, realpath, stat } from "node:fs/promises"
+import { platform } from "node:os"
 import { networkInterfaces } from "node:os"
 import { dirname, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
@@ -119,8 +120,10 @@ app.get("/api/languages", async (c) => {
   return c.json({ locales: files.filter((file) => file.endsWith(".json")).map((file) => file.slice(0, -5)) })
 })
 app.use("/setting/language/*", serveStatic({ root: packageRoot }))
-app.get("/api/sessions", async (c) => c.json(await runtime.list()))
+app.get("/api/sessions", async (c) => c.json(await runtime.list({ includeArchived: c.req.query("archived") === "1" })))
 app.delete("/api/sessions", async (c) => c.json(await runtime.deleteAll()))
+app.patch("/api/sessions/:id/tags", async (c) => { const body = await c.req.json<{ tags?: unknown }>(); await runtime.setSessionTags(c.req.param("id"), body.tags); return c.json({ ok: true }) })
+app.post("/api/sessions/:id/archive", async (c) => { const body = await c.req.json<{ archived?: unknown }>(); await runtime.setSessionArchived(c.req.param("id"), body.archived === true); return c.json({ ok: true }) })
 app.get("/api/agent-settings", (c) => c.json(runtime.agentSettingsInfo()))
 app.patch("/api/agent-settings", async (c) => c.json(await runtime.updateAgentSettings(await c.req.json())))
 // Backs the folder-browse UI (workspace path fields): lists subdirectories of a
@@ -139,6 +142,20 @@ app.get("/api/browse-directory", async (c) => {
   const parentPath = dirname(real)
   const parent = parentPath !== real && isWithin(allowedRoot, parentPath) ? parentPath : null
   return c.json({ path: real, parent, directories })
+})
+// Windows-only: lets the folder-browse UI jump straight to another drive
+// (C:\, E:\, ...) instead of being limited to "up" navigation, which can
+// never leave the drive it started on. Empty on other platforms, where the
+// filesystem is a single tree and this concept doesn't apply.
+app.get("/api/drives", async (c) => {
+  if (platform() !== "win32") return c.json({ drives: [] })
+  const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")
+  const found = await Promise.all(letters.map(async (letter) => {
+    const root = `${letter}:\\`
+    const info = await stat(root).catch(() => null)
+    return info?.isDirectory() && isWithin(allowedRoot, root) ? root : null
+  }))
+  return c.json({ drives: found.filter((drive): drive is string => drive !== null) })
 })
 app.post("/api/agent-settings/preview", async (c) => {
   const body = await c.req.json<{ template?: unknown }>()
@@ -214,6 +231,11 @@ app.post("/api/sessions/:id/messages", async (c) => {
   return c.json({ started: true, sessionId: activeSessionId }, 202)
 })
 app.post("/api/sessions/:id/abort", async (c) => { await runtime.abort(c.req.param("id")); return c.json({ ok: true }) })
+app.get("/api/auto-chats", (c) => c.json(runtime.autoChatsInfo()))
+app.post("/api/auto-chats", async (c) => c.json(await runtime.createAutoChat(await c.req.json())))
+app.patch("/api/auto-chats/:id", async (c) => c.json(await runtime.updateAutoChat(c.req.param("id"), await c.req.json())))
+app.delete("/api/auto-chats/:id", async (c) => { await runtime.deleteAutoChat(c.req.param("id")); return c.json({ ok: true }) })
+app.post("/api/auto-chats/:id/run", async (c) => c.json(await runtime.runAutoChat(c.req.param("id"))))
 app.get("/api/approvals", (c) => c.json(runtime.pendingApprovals()))
 app.post("/api/approvals/:id", async (c) => { const body = await c.req.json<{ approved: boolean }>(); return c.json({ ok: runtime.approve(c.req.param("id"), body.approved) }) })
 app.get("/api/events", (c) => {

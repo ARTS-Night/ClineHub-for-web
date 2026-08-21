@@ -181,7 +181,7 @@
   "agentSettingsIntro": "🦥🔀",
   "workingFolder": "🏚️📂",
   "browse": "🔍📁",
-  "browseDirectory": "📁❓",
+  "browseDirectory": "📁❓", "directoryPathPlaceholder": "📁📝 C:\\...", "go": "🏃➡️",
   "directoryUp": "⬆️",
   "selectThisDirectory": "👉📁",
   "templatesList": "📋❓",
@@ -244,5 +244,16 @@
   "idleAuto": "🙈🎲",
   "shellIdleCarryContext": "🐍📜",
   "shellIdleCarryContextHelp": "OFF:👋 ON:🐍📜",
-  "savingShort": "⌛💾", "scrollToBottom": "Scroll to bottom", "lockAutoScroll": "Lock auto-scroll", "unlockAutoScroll": "Unlock auto-scroll", "sessionModelProfileMissing": "This session used the model profile \"{name}\", which no longer exists. Choose another model to continue.", "sessionWorkspaceProfileMissing": "This session used the workspace profile \"{name}\", which no longer exists. Choose another workspace to continue."
+  "savingShort": "⌛💾", "scrollToBottom": "Scroll to bottom", "lockAutoScroll": "Lock auto-scroll", "unlockAutoScroll": "Unlock auto-scroll", "sessionModelProfileMissing": "This session used the model profile \"{name}\", which no longer exists. Choose another model to continue.", "sessionWorkspaceProfileMissing": "This session used the workspace profile \"{name}\", which no longer exists. Choose another workspace to continue.",
+  "archivedSessions": "🗄️💬", "filterByTag": "🏷️🔍", "allTags": "🏷️🌐", "showActive": "🟢👀", "showArchived": "🗄️👀", "autoTag": "🤖🏷️",
+  "tags": "🏷️", "removeTag": "🏷️❌", "noTags": "🏷️🚫", "addTagPlaceholder": "🏷️➕...", "addTag": "🏷️➕", "archived": "🗄️",
+  "autoChats": "🤖💬", "autoChatsMenuDescription": "⏰🤖💬", "autoChatsDescription": "💾➡️🆕💬",
+  "noAutoChats": "🤖💬🚫", "newAutoChat": "➕🤖💬", "runNow": "▶️🏃", "enable": "🟢⚙️", "disable": "🔴⚙️",
+  "deleteAutoChatConfirm": "🗑️🤖💬 {name}❓",
+  "mcpServers": "🏪📦", "runPrompt": "▶️📝", "runPromptHelp": "📅{{date}} 🕐{{time}} 🏠{{workspace}} 🆔{{session_id}}",
+  "schedule": "📅⏰", "scheduleManual": "🖐️", "scheduleOnce": "1️⃣", "scheduleDaily": "☀️🔁", "scheduleWeekly": "🗓️🔁",
+  "runAt": "⏰📍", "time": "🕐",
+  "weekday_sun": "☀️1️⃣", "weekday_mon": "🌙2️⃣", "weekday_tue": "🔥3️⃣", "weekday_wed": "💧4️⃣", "weekday_thu": "🌳5️⃣", "weekday_fri": "💰6️⃣", "weekday_sat": "🪨7️⃣",
+  "serverTimezoneLabel": "🌍🕐 {timezone}",
+  "autoChatNeverRun": "🚫▶️", "autoChatSuccess": "✅🎉", "autoChatSkipped": "⏭️🙅", "autoChatFailed": "💥❌"
 }

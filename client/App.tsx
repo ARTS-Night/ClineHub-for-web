@@ -17,6 +17,8 @@ import { AgentSettingsDialog } from "./components/AgentSettingsDialog.js"
 import { GeneralSettingsDialog } from "./components/GeneralSettingsDialog.js"
 import { AiSettingsMenu } from "./components/AiSettingsMenu.js"
 import { ScrollToBottomButton } from "./components/ScrollToBottomButton.js"
+import { AutoChatsDialog } from "./components/AutoChatsDialog.js"
+import { userTags } from "./lib/tags.js"
 
 const emptyProfiles: ProfilesData = { models: [], workspaces: [] }
 
@@ -42,6 +44,8 @@ export function App({ onLogout }: { onLogout?: () => void } = {}) {
   const [planBannerDismissed, setPlanBannerDismissed] = useState(false)
 
   const [sessions, setSessions] = useState<SessionSummary[]>([])
+  const [showArchived, setShowArchived] = useState(false)
+  const [autoChatsOpen, setAutoChatsOpen] = useState(false)
   const [activeSession, setActiveSession, activeSessionRef] = useSyncedState<string | null>(null)
   const [activeSessionDetails, setActiveSessionDetails] = useState<SessionDetails | null>(null)
   const [activeSessionRunning, setActiveSessionRunning] = useState(false)
@@ -110,6 +114,7 @@ export function App({ onLogout }: { onLogout?: () => void } = {}) {
   }, [t, showToolDetails, locale, agentSettings?.activeTemplateId])
   // The × on the banner only hides it until Plan mode is re-entered.
   useEffect(() => { if (agentSettings?.activeTemplateId === "plan") setPlanBannerDismissed(false) }, [agentSettings?.activeTemplateId])
+  useEffect(() => { loadSessions().catch((error) => getLog().showError(error, "Session list failed")) }, [showArchived])
 
   const openSetup = (info: ConnectionInfo | null = null, newProfile = false) => {
     setupTokenRef.current += 1
@@ -122,7 +127,7 @@ export function App({ onLogout }: { onLogout?: () => void } = {}) {
     return result
   }
   const loadSessions = async () => {
-    const items = await api<SessionSummary[]>("/api/sessions")
+    const items = await api<SessionSummary[]>(`/api/sessions${showArchived ? "?archived=1" : ""}`)
     setSessions(items)
   }
   const loadAgentSettings = async () => {
@@ -556,6 +561,7 @@ export function App({ onLogout }: { onLogout?: () => void } = {}) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  const allSessionTags = useMemo(() => [...new Set(sessions.flatMap((item) => userTags(Array.isArray(item.metadata?.tags) ? (item.metadata!.tags as string[]) : [])))].sort((a, b) => a.localeCompare(b)), [sessions])
   const connectionText = sseState === "retry" ? t("sseRetry") : selectedModel ? `${t("connected")} · ${selectedModel}` : sseState === "open" ? t("serverConnected") : t("connecting")
   const connectionColor = sseState === "retry" ? "#f5c979" : selectedModel ? "#79d69a" : "#f5c979"
   const workspaceProfile = profilesData.workspaces.find((item) => item.id === profilesData.activeWorkspaceProfileId)
@@ -571,7 +577,8 @@ export function App({ onLogout }: { onLogout?: () => void } = {}) {
         sidebarCollapsed={sidebarCollapsed} onToggleSidebar={() => setSidebarCollapsed((current) => { const next = !current; localStorage.setItem("cline-sidebar-collapsed", String(next)); return next })}
         onOpenGeneralSettings={() => setGeneralSettingsOpen(true)} onOpenAiSettings={() => setAiSettingsMenuOpen(true)} onLogout={onLogout} />
       <main>
-        <Sidebar t={t} sessions={sessions} activeSession={activeSession} onSelect={selectSession} onOpenDetails={setSessionDialogId} onNewSession={newSession} onClearSessions={clearSessions} />
+        <Sidebar t={t} sessions={sessions} activeSession={activeSession} onSelect={selectSession} onOpenDetails={setSessionDialogId} onNewSession={newSession} onClearSessions={clearSessions}
+          showArchived={showArchived} onToggleArchived={setShowArchived} />
         <section className="conversation">
           <ContextPanel t={t} locale={locale} context={activeContext} compactions={activeCompactions} showToolDetails={showToolDetails}
             onToggleShowToolDetails={(value) => { setShowToolDetails(value); localStorage.setItem("cline-show-tool-details", String(value)); if (activeSession) selectSession(activeSession) }}
@@ -608,11 +615,13 @@ export function App({ onLogout }: { onLogout?: () => void } = {}) {
       <AiSettingsMenu t={t} open={aiSettingsMenuOpen} onClose={() => setAiSettingsMenuOpen(false)}
         onOpenConnection={async () => openSetup(await api<ConnectionInfo>("/api/config"))}
         onOpenProfiles={async () => { await loadProfiles(); setProfilesDialogOpen(true) }}
-        onOpenAgentSettings={() => setAgentSettingsOpen(true)} />
+        onOpenAgentSettings={() => setAgentSettingsOpen(true)}
+        onOpenAutoChats={() => setAutoChatsOpen(true)} />
       <SetupDialog t={t} request={setupRequest} onClose={() => {}} profilesData={profilesData} onConnected={onSetupConnected} />
       <ProfilesDialog t={t} open={profilesDialogOpen} onClose={() => setProfilesDialogOpen(false)} profilesData={profilesData} onProfilesChanged={setProfilesData}
         onAddModelProfile={async () => { setProfilesDialogOpen(false); openSetup(await api<ConnectionInfo>("/api/config"), true) }} />
-      <SessionDialog t={t} locale={locale} sessionId={sessionDialogId} onClose={() => setSessionDialogId(null)}
+      <SessionDialog t={t} locale={locale} sessionId={sessionDialogId} allTags={allSessionTags} onClose={() => setSessionDialogId(null)}
+        onSessionUpdated={() => loadSessions().catch(() => {})}
         onRenamed={() => { setSessionDialogId(null); loadSessions().catch(() => {}) }}
         onDeleted={(id) => {
           setSessionDialogId(null)
@@ -620,6 +629,8 @@ export function App({ onLogout }: { onLogout?: () => void } = {}) {
           loadSessions().catch(() => {})
         }} />
       <AgentSettingsDialog t={t} open={agentSettingsOpen} onClose={() => setAgentSettingsOpen(false)} onSaved={onAgentSettingsSaved} />
+      <AutoChatsDialog t={t} open={autoChatsOpen} onClose={() => setAutoChatsOpen(false)} profilesData={profilesData} agentSettings={agentSettings}
+        onRanSession={() => loadSessions().catch(() => {})} />
     </>
   )
 }

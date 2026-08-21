@@ -2,14 +2,15 @@ import { useState } from "react"
 import type { TFunction } from "../lib/i18n.js"
 import type { ManagedTool, ToolPermission } from "../lib/types.js"
 import { useDismissiblePopover } from "../hooks/useDismissiblePopover.js"
+import { Icon, type IconName } from "./Icon.js"
 
 // Kept as a local literal (not imported from src/agent-settings.ts) so the
 // client bundle never pulls in the server's fs-backed settings store.
 const managedTools: ManagedTool[] = ["read_files", "search_codebase", "fetch_web_content", "skills", "run_commands", "editor", "apply_patch"]
 const permissionOrder = ["disabled", "ask", "allow"] as const
-const toolIcons: Record<ManagedTool, string> = {
-  read_files: "▤", search_codebase: "⌕", fetch_web_content: "◎", skills: "✦",
-  run_commands: ">_", editor: "✎", apply_patch: "±",
+const toolIcons: Record<ManagedTool, IconName> = {
+  read_files: "description", search_codebase: "search", fetch_web_content: "public", skills: "bolt",
+  run_commands: "terminal", editor: "edit", apply_patch: "difference",
 }
 
 type Props = {
@@ -42,9 +43,9 @@ export function QuickPermissions({ t, permissions, onCycle, mcpEnabled, onToggle
         <span id="quick-permissions-indicator" className="quick-permissions-indicator" aria-hidden="true">
           {managedTools.map((tool) => {
             const state = permissions?.[tool] ?? "ask"
-            return <span key={tool} className={`permission-tool-icon state-${state}`} title={`${t(tool)}: ${t(state)}`}>{toolIcons[tool]}</span>
+            return <span key={tool} className={`permission-tool-icon state-${state}`} title={`${t(tool)}: ${t(state)}`}><Icon name={toolIcons[tool]} /></span>
           })}
-          <span className={`permission-tool-icon state-${mcpState}`} title={`MCP: ${t(mcpState)}`}>⛁</span>
+          <span className={`permission-tool-icon state-${mcpState}`} title={`MCP: ${t(mcpState)}`}><Icon name="extension" /></span>
         </span>
       </button>
       {open && permissions && (
@@ -55,14 +56,14 @@ export function QuickPermissions({ t, permissions, onCycle, mcpEnabled, onToggle
               const state = permissions[tool] ?? "ask"
               return (
                 <button type="button" key={tool} className={`quick-permission-row state-${state}`} title={`${t(tool)}: ${t(state)}`} onClick={() => onCycle(tool)}>
-                  <span className="quick-tool-icon">{toolIcons[tool]}</span>
+                  <span className="quick-tool-icon"><Icon name={toolIcons[tool]} /></span>
                   <span className="quick-tool-name">{t(tool)}</span>
                   <span className="quick-tool-state">{t(state)}</span>
                 </button>
               )
             })}
             <button type="button" className={`quick-permission-row state-${mcpState}`} title={`MCP: ${t(mcpState)}`} onClick={() => void onToggleMcp()}>
-              <span className="quick-tool-icon">⛁</span>
+              <span className="quick-tool-icon"><Icon name="extension" /></span>
               <span className="quick-tool-name">MCP</span>
               <span className="quick-tool-state">{t(mcpState)}</span>
             </button>

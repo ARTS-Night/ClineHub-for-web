@@ -27,7 +27,7 @@ export function Header(props: Props) {
   const activeWorkspace = profilesData.workspaces.find((profile) => profile.id === profilesData.activeWorkspaceProfileId)
   return (
     <header>
-      <button id="sidebar-toggle" className="sidebar-toggle" type="button" aria-expanded={!sidebarCollapsed} title={t(sidebarCollapsed ? "openSessions" : "closeSessions")} onClick={onToggleSidebar}>☰</button>
+      <button id="sidebar-toggle" className="sidebar-toggle" type="button" aria-expanded={!sidebarCollapsed} title={t(sidebarCollapsed ? "openSessions" : "closeSessions")} onClick={onToggleSidebar}><Icon name="menu" className="header-btn-icon" /></button>
       <img src={logoUrl} alt="" className="app-logo" width={34} height={34} />
       <strong>ClineHub-for-web</strong>
       <span id="connection" style={{ color: connectionColor }}>{connectionText}</span>

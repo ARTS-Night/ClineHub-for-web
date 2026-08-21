@@ -13,7 +13,8 @@
     "build": "pnpm run build:client && tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "sessions:clear": "tsx scripts/clear-sessions.ts",
-    "test": "pnpm run build:client && node --check dist/app.js && tsc --noEmit && node scripts/run-tests.mjs"
+    "test": "pnpm run build:client && node --check dist/app.js && tsc --noEmit && node scripts/run-tests.mjs",
+    "test:e2e": "pnpm run build:client && playwright test"
   },
   "keywords": [],
   "author": "",
@@ -40,6 +41,7 @@
     "ssh2": "^1.17.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@types/node": "^26.2.0",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",

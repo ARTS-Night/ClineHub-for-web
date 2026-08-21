@@ -9,6 +9,7 @@
 // conflict.
 import { toBcp47, type Locale, type TFunction } from "./i18n.js"
 import { renderMarkdown, renderMermaidBlocks } from "./markdown.js"
+import { buildIconSvg } from "../components/Icon.js"
 
 export function cleanDisplayText(value: unknown): string {
   return String(value ?? "")
@@ -235,9 +236,8 @@ export class MessageLog {
     header.className = "tool-activity-header"
     const title = document.createElement("strong")
     const mcp = mcpToolParts(toolName)
-    title.textContent = mcp
-      ? `⛁ ${this.t("mcpToolActivity", mcp)}`
-      : `${toolName.includes("run_commands") ? ">" : toolName.includes("read_files") ? "▤" : "◆"} ${this.t(toolName)}`
+    const iconName = mcp ? "extension" : toolName.includes("run_commands") ? "terminal" : toolName.includes("read_files") ? "description" : "bolt"
+    title.append(buildIconSvg(iconName), document.createTextNode(` ${mcp ? this.t("mcpToolActivity", mcp) : this.t(toolName)}`))
     const status = document.createElement("span")
     status.className = "tool-status"
     status.textContent = this.t("toolRunning")

@@ -8,9 +8,10 @@ type Props = {
   onOpenConnection: () => void
   onOpenProfiles: () => void
   onOpenAgentSettings: () => void
+  onOpenAutoChats: () => void
 }
 
-export function AiSettingsMenu({ t, open, onClose, onOpenConnection, onOpenProfiles, onOpenAgentSettings }: Props) {
+export function AiSettingsMenu({ t, open, onClose, onOpenConnection, onOpenProfiles, onOpenAgentSettings, onOpenAutoChats }: Props) {
   const dialog = useRef<HTMLDialogElement>(null)
 
   useEffect(() => { if (open) dialog.current?.showModal(); else dialog.current?.close() }, [open])
@@ -23,6 +24,7 @@ export function AiSettingsMenu({ t, open, onClose, onOpenConnection, onOpenProfi
       <div className="profile-list-row"><span className="profile-description"><strong>{t("aiConnection")}</strong><br />{t("aiConnectionDescription")}</span><button type="button" onClick={() => go(onOpenConnection)}>{t("aiConnection")}</button></div>
       <div className="profile-list-row"><span className="profile-description"><strong>{t("profiles")}</strong><br />{t("profilesMenuDescription")}</span><button type="button" onClick={() => go(onOpenProfiles)}>{t("profiles")}</button></div>
       <div className="profile-list-row"><span className="profile-description"><strong>{t("agentSettings")}</strong><br />{t("agentSettingsMenuDescription")}</span><button type="button" onClick={() => go(onOpenAgentSettings)}>{t("agentSettings")}</button></div>
+      <div className="profile-list-row"><span className="profile-description"><strong>{t("autoChats")}</strong><br />{t("autoChatsMenuDescription")}</span><button type="button" onClick={() => go(onOpenAutoChats)}>{t("autoChats")}</button></div>
     </div>
   </div></dialog>
 }

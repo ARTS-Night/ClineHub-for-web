@@ -5,7 +5,10 @@ dist/
 # hashed lazy chunks, the sass-compiled styles.css, and a copy of
 # client/index.html. Sources all live in client/.
 .cline-data/
+.cline-data-e2e/
 .env
 .env.*
 !.env.example
 pack/
+test-results/
+playwright-report/

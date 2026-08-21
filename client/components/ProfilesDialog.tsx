@@ -3,6 +3,7 @@ import { api } from "../lib/api.js"
 import type { TFunction } from "../lib/i18n.js"
 import type { ModelProfile, ProfilesData, RemoteOperatingSystem, SudoPermission, WorkspaceProfile } from "../lib/types.js"
 import { DirectoryPicker } from "./DirectoryPicker.js"
+import { Icon } from "./Icon.js"
 
 type WorkspaceForm = {
   editorId: string
@@ -202,7 +203,11 @@ export function ProfilesDialog({ t, open, onClose, profilesData, onProfilesChang
                   <div className="profile-list-row" key={profile.id}>
                     <span className="profile-description">
                       <strong>{profile.name}</strong>
-                      <small>{profile.provider} · {profile.modelId}{profile.imagesEnabled ? " · 🖼" : ""}{profile.timeoutMs ? ` · ⏱${profile.timeoutMs / 1000}s` : ""}</small>
+                      <small>
+                        {profile.provider} · {profile.modelId}
+                        {profile.imagesEnabled && <> · <Icon name="image" className="inline-icon" /></>}
+                        {profile.timeoutMs ? <> · <Icon name="timer" className="inline-icon" />{profile.timeoutMs / 1000}s</> : ""}
+                      </small>
                     </span>
                     <div className="profile-actions">
                       <button type="button" className="secondary" onClick={() => startEditModel(profile)}>{t("edit")}</button>

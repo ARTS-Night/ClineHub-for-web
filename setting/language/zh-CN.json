@@ -181,7 +181,7 @@
   "agentSettingsIntro": "选择模板快速应用 Agent 设置",
   "workingFolder": "工作文件夹",
   "browse": "浏览…",
-  "browseDirectory": "选择文件夹",
+  "browseDirectory": "选择文件夹", "directoryPathPlaceholder": "输入路径，例如 C:\\Projects", "go": "前往",
   "directoryUp": "上一级",
   "selectThisDirectory": "选择此文件夹",
   "templatesList": "预设模板列表",
@@ -244,5 +244,16 @@
   "idleAuto": "自动处理",
   "shellIdleCarryContext": "将终端日志带入上下文",
   "shellIdleCarryContextHelp": "开启后，终端超时日志将保留并继续传递给后续对话。",
-  "savingShort": "保存中...", "scrollToBottom": "滚动到底部", "lockAutoScroll": "锁定自动滚动", "unlockAutoScroll": "解锁自动滚动", "sessionModelProfileMissing": "此会话使用的模型配置「{name}」已不存在，请选择其他模型。", "sessionWorkspaceProfileMissing": "此会话使用的工作区配置「{name}」已不存在，请选择其他工作区。"
+  "savingShort": "保存中...", "scrollToBottom": "滚动到底部", "lockAutoScroll": "锁定自动滚动", "unlockAutoScroll": "解锁自动滚动", "sessionModelProfileMissing": "此会话使用的模型配置「{name}」已不存在，请选择其他模型。", "sessionWorkspaceProfileMissing": "此会话使用的工作区配置「{name}」已不存在，请选择其他工作区。",
+  "archivedSessions": "已归档会话", "filterByTag": "按标签筛选", "allTags": "所有标签", "showActive": "显示活跃会话", "showArchived": "显示已归档会话", "autoTag": "自动",
+  "tags": "标签", "removeTag": "删除标签", "noTags": "暂无标签", "addTagPlaceholder": "添加标签...", "addTag": "添加", "archived": "已归档",
+  "autoChats": "Auto Chat", "autoChatsMenuDescription": "按计划使用已保存的设置自动生成新会话", "autoChatsDescription": "从已保存的设置手动或按计划生成新会话",
+  "noAutoChats": "暂无 Auto Chat", "newAutoChat": "新建 Auto Chat", "runNow": "立即执行", "enable": "启用", "disable": "禁用",
+  "deleteAutoChatConfirm": "删除 Auto Chat「{name}」？已生成的会话不会被删除。",
+  "mcpServers": "MCP 服务器", "runPrompt": "执行提示词", "runPromptHelp": "例如：查找今天 {{date}} 的 AI 新闻，并保存到 reports/{{date}}.md",
+  "schedule": "计划", "scheduleManual": "手动", "scheduleOnce": "仅一次", "scheduleDaily": "每天", "scheduleWeekly": "每周",
+  "runAt": "执行时间", "time": "时间",
+  "weekday_sun": "日", "weekday_mon": "一", "weekday_tue": "二", "weekday_wed": "三", "weekday_thu": "四", "weekday_fri": "五", "weekday_sat": "六",
+  "serverTimezoneLabel": "服务器时区：{timezone}",
+  "autoChatNeverRun": "从未执行", "autoChatSuccess": "成功", "autoChatSkipped": "已跳过", "autoChatFailed": "失败"
 }

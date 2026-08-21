@@ -181,7 +181,7 @@
   "agentSettingsIntro": "お手本をお選びになれば、ご言伝とお許しが一緒にお切り替わりになります。",
   "workingFolder": "お仕事場",
   "browse": "拝見します",
-  "browseDirectory": "お部屋をお選びください",
+  "browseDirectory": "お部屋をお選びください", "directoryPathPlaceholder": "お道筋をお書きください（例: C:\\Projects）", "go": "参ります",
   "directoryUp": "ひとつ上へ",
   "selectThisDirectory": "こちらでお願いします",
   "templatesList": "お手本の一覧",
@@ -244,5 +244,16 @@
   "idleAuto": "お任せ",
   "shellIdleCarryContext": "お返事の後もそのお控えをお残しになります",
   "shellIdleCarryContextHelp": "消されましたら、「こうしておきましたえ」と一言申し上げまして、昔のことはきれいに忘れます。残されましたら、いつまでも根に持って会話を続けますわ。",
-  "savingShort": "お書き留めでございます", "scrollToBottom": "一番下までいきますえ", "lockAutoScroll": "自動スクロールをロックしますえ", "unlockAutoScroll": "ロックを解きますえ", "sessionModelProfileMissing": "このセッションのモデルプロファイル「{name}」、もう無くなってしもてますえ。別のモデルを選んでおくれやす。", "sessionWorkspaceProfileMissing": "このセッションのワークスペースプロファイル「{name}」、もう無くなってしもてますえ。別のワークスペースを選んでおくれやす。"
+  "savingShort": "お書き留めでございます", "scrollToBottom": "一番下までいきますえ", "lockAutoScroll": "自動スクロールをロックしますえ", "unlockAutoScroll": "ロックを解きますえ", "sessionModelProfileMissing": "このセッションのモデルプロファイル「{name}」、もう無くなってしもてますえ。別のモデルを選んでおくれやす。", "sessionWorkspaceProfileMissing": "このセッションのワークスペースプロファイル「{name}」、もう無くなってしもてますえ。別のワークスペースを選んでおくれやす。",
+  "archivedSessions": "お仕舞いになったお話", "filterByTag": "お札でお絞りください", "allTags": "すべてのお札", "showActive": "今のお話にお戻しします", "showArchived": "お仕舞いのお話を拝見します", "autoTag": "お任せ",
+  "tags": "お札", "removeTag": "お札をお外しします", "noTags": "お札はございません", "addTagPlaceholder": "お札をお書きください…", "addTag": "お加えします", "archived": "お仕舞いにいたします",
+  "autoChats": "お任せのお話", "autoChatsMenuDescription": "お決めになった時刻に、お控えの設定で新しいお話を勝手にお始めいたします", "autoChatsDescription": "お控えの設定から、お望みの時か決まったお時間に新しいお話をお始めします",
+  "noAutoChats": "まだ何もお決めになっておられません", "newAutoChat": "新しくお任せをお作りします", "runNow": "ただいまお始めします", "enable": "お使いになります", "disable": "お休みになります",
+  "deleteAutoChatConfirm": "お任せ「{name}」をお仕舞いにしてもよろしゅうおすか？もうお作りになったお話は残ります",
+  "mcpServers": "お道具のお店", "runPrompt": "お言いつけ", "runPromptHelp": "例えば、今日 {{date}} のお噂を調べて reports/{{date}}.md にお納めください、というふうに",
+  "schedule": "お時間の取り決め", "scheduleManual": "お望みの時に", "scheduleOnce": "一度だけ", "scheduleDaily": "毎日", "scheduleWeekly": "毎週",
+  "runAt": "お始めになる日時", "time": "お時間",
+  "weekday_sun": "日", "weekday_mon": "月", "weekday_tue": "火", "weekday_wed": "水", "weekday_thu": "木", "weekday_fri": "金", "weekday_sat": "土",
+  "serverTimezoneLabel": "お屋敷のお時間: {timezone}",
+  "autoChatNeverRun": "まだ一度もお始めになっておられません", "autoChatSuccess": "つつがなく終わりました", "autoChatSkipped": "見合わせておきました", "autoChatFailed": "うまくいきませんでした"
 }

@@ -3,13 +3,15 @@ import { execFile } from "node:child_process"
 import { truncate } from "node:fs/promises"
 import { resolve } from "node:path"
 import { createConnection, discoverModels, publicConnection, type CodexCredentials, type ConnectionRequest, type ConnectionSettings } from "./providers.js"
-import { AgentSettingsStore, parseMcpServerConnectionFields, type AgentSettingsUpdate, type McpServerSettings, type TemplateInput, type ToolPolicy } from "./stores/agent-settings.js"
+import { AgentSettingsStore, parseMcpServerConnectionFields, type AgentSettingsUpdate, type McpServerSettings, type PromptTemplate, type TemplateInput, type ToolPolicy } from "./stores/agent-settings.js"
 import { ConnectionStore } from "./stores/connection-store.js"
 import { ProfileStore, type ModelProfile, type SshWorkspaceInput } from "./stores/profile-store.js"
 import { createSshTools, testSshWorkspace } from "./workspace/ssh-workspace.js"
 import { CompactionStore } from "./stores/compaction-store.js"
 import { buildWorkspaceSystemPrompt, createWorkspaceGuardHooks, localPromptVariables, type WorkspacePromptVariables } from "./workspace/workspace-security.js"
 import { buildMcpSettingsServers, mcpServerNameForTool, testMcpConnection, type McpTestInput, type McpTestResult } from "./mcp-extension.js"
+import { AutoChatStore, templateHasAsk, type AutoChatDefinition, type AutoChatInput, type AutoChatRunResult } from "./stores/auto-chat-store.js"
+import { ARCHIVED_TAG, AUTO_TAG, mergeUserTags, parseUserTags, sessionTags, withReservedTag } from "./tags.js"
 
 export type Approval = { id: string; sessionId: string; toolName: string; input: unknown }
 export type RuntimeEvent = { type: "text" | "reasoning" | "tool" | "tool_result" | "iteration" | "status" | "usage" | "turn_finished" | "ended" | "approval" | "queue" | "prompt_started" | "session_replaced" | "cline_error"; sessionId: string; data: unknown }
@@ -59,6 +61,8 @@ export class ClineRuntime {
   private readonly connectionStore: ConnectionStore
   private readonly profileStore: ProfileStore
   private readonly compactionStore: CompactionStore
+  private readonly autoChatStore: AutoChatStore
+  private schedulerTimer: NodeJS.Timeout | undefined
   private readonly dataDirectory: string
   private readonly mcpSettingsPath: string
   private readonly mcpToolCache = new Map<string, { signature: string; toolNames: string[] }>()
@@ -76,6 +80,7 @@ export class ClineRuntime {
     this.connectionStore = new ConnectionStore(resolve(dataDirectory, "connection.json"))
     this.profileStore = new ProfileStore(resolve(dataDirectory, "profiles.json"), resolve(dataDirectory, "profiles.key"))
     this.compactionStore = new CompactionStore(resolve(dataDirectory, "compactions.json"))
+    this.autoChatStore = new AutoChatStore(resolve(dataDirectory, "auto-chats.json"))
     // ClineCore only ever loads MCP tools from this settings file (see the
     // note atop mcp-extension.ts) — kept inside our own data dir instead of
     // ClineCore's global default (~/.cline/data/settings/) so it travels with
@@ -111,23 +116,32 @@ export class ClineRuntime {
     await runtime.agentSettings.load().catch((error: unknown) => console.warn(`Saved agent settings could not be restored: ${errorMessage(error)}`))
     await runtime.profileStore.load()
     await runtime.compactionStore.load()
+    await runtime.autoChatStore.load()
     await runtime.restoreConnection()
     if (runtime.connection) await runtime.profileStore.ensureModel(runtime.connection)
     await runtime.profileStore.ensureLocalWorkspace("Local workspace", initialWorkspace)
     const activeWorkspace = runtime.profileStore.activeWorkspace()
     if (activeWorkspace?.type === "local") await runtime.agentSettings.update({ workspacePath: activeWorkspace.path })
+    // Scheduler (C14): a single setInterval tick, not a job framework. Each
+    // tick asks the store which Auto Chats are due — the store itself
+    // persists their next fire time before handing back the due list, so a
+    // slow run below never causes the same slot to fire twice.
+    runtime.schedulerTimer = setInterval(() => { void runtime?.tickScheduler() }, 30_000).unref()
     return runtime
   }
 
   subscribe(listener: Listener): () => void { this.listeners.add(listener); return () => this.listeners.delete(listener) }
-  async list() {
+  async list(options?: { includeArchived?: boolean }) {
     const sessions = await this.cline.list(200) as Array<{ sessionId: string; metadata?: unknown } & Record<string, unknown>>
     const superseded = new Set<string>()
     for (const session of sessions) {
       const continuedFrom = isRecord(session.metadata) ? session.metadata.continuedFrom : undefined
       if (typeof continuedFrom === "string") superseded.add(continuedFrom)
     }
-    return sessions.filter((session) => !superseded.has(session.sessionId)).slice(0, 50)
+    return sessions
+      .filter((session) => !superseded.has(session.sessionId))
+      .filter((session) => options?.includeArchived || !sessionTags(session.metadata as Record<string, unknown> | undefined).includes(ARCHIVED_TAG))
+      .slice(0, 50)
   }
   async session(sessionId: string) {
     const session = await this.cline.get(sessionId)
@@ -194,6 +208,149 @@ export class ClineRuntime {
     await truncate(resolve(this.dataDirectory, "logs", "hooks.jsonl"), 0).catch(() => {})
     return { deleted, failed }
   }
+  // --- Session Tags (design review Phase 1) ---
+
+  async setSessionTags(sessionId: string, tags: unknown): Promise<void> {
+    const userTags = parseUserTags(tags)
+    const session = await this.cline.get(sessionId)
+    if (!session) throw new SessionNotFoundError(sessionId)
+    const metadata = isRecord(session.metadata) ? session.metadata : {}
+    const current = sessionTags(metadata)
+    await this.cline.update(sessionId, { metadata: { ...metadata, tags: mergeUserTags(current, userTags) } })
+  }
+
+  async setSessionArchived(sessionId: string, archived: boolean): Promise<void> {
+    const session = await this.cline.get(sessionId)
+    if (!session) throw new SessionNotFoundError(sessionId)
+    const metadata = isRecord(session.metadata) ? session.metadata : {}
+    const current = sessionTags(metadata)
+    await this.cline.update(sessionId, { metadata: { ...metadata, tags: withReservedTag(current, ARCHIVED_TAG, archived) } })
+  }
+
+  // --- Auto Chat (design review Phase 2-4) ---
+  //
+  // Auto Chat is not a separate Session kind or a separate Runtime — it's a
+  // saved definition (workspace/model/template/prompt/schedule) that calls
+  // this.start() the same way a person clicking "New session" does (C7).
+  // The only thing special about a generated Session is a few metadata
+  // fields (autoChatId, previousRunSessionId, tags) attached right after.
+
+  autoChatsInfo() { return { timezone: this.serverTimezone(), autoChats: this.autoChatStore.list() } }
+  serverTimezone(): string { return Intl.DateTimeFormat().resolvedOptions().timeZone }
+
+  /** Only checked when the save's EFFECTIVE state (input merged over
+   * `current`, the same merge AutoChatStore.save() itself does) is
+   * enabled=true: every reference must resolve and the Template must be
+   * Ask-free (C2). Saving *disabled* — creating one, editing an unrelated
+   * field, or turning it off — is never blocked by a stale or even
+   * never-valid reference; that's the only way to "fix" a broken Auto Chat
+   * from the UI without deleting it outright, and it's what lets a
+   * profile/template deleted after the fact surface as a run-time failure
+   * (C13's lastRunResult) instead of an unfixable save. */
+  private assertAutoChatSavable(input: AutoChatInput, current?: AutoChatDefinition): void {
+    const enabled = input.enabled !== undefined ? input.enabled === true : current?.enabled === true
+    if (!enabled) return
+    // C2 first: whether this Auto Chat can run unattended at all is the more
+    // fundamental gate than which specific profile it points at.
+    const templateId = input.templateId !== undefined ? String(input.templateId) : current?.templateId
+    const template = templateId ? this.agentSettings.get().templates.find((item) => item.id === templateId) : undefined
+    if (!template) throw new Error("Template not found")
+    if (templateHasAsk(template.permissions)) {
+      throw new Error("This Template asks for approval on at least one tool. Auto Chat cannot run unattended with Ask permissions — choose a Template without Ask, or leave this Auto Chat disabled.")
+    }
+    const workspaceProfileId = input.workspaceProfileId !== undefined ? String(input.workspaceProfileId) : current?.workspaceProfileId
+    if (!workspaceProfileId || !this.profileStore.list().workspaces.some((profile) => profile.id === workspaceProfileId)) throw new Error("Workspace profile not found")
+    const modelProfileId = input.modelProfileId !== undefined ? String(input.modelProfileId) : current?.modelProfileId
+    if (!modelProfileId || !this.profileStore.list().models.some((profile) => profile.id === modelProfileId)) throw new Error("Model profile not found")
+  }
+
+  async createAutoChat(input: AutoChatInput): Promise<AutoChatDefinition> {
+    this.assertAutoChatSavable(input)
+    return await this.autoChatStore.save(input)
+  }
+
+  async updateAutoChat(id: string, input: AutoChatInput): Promise<AutoChatDefinition> {
+    const current = this.autoChatStore.get(id)
+    if (!current) throw new Error("Auto Chat not found")
+    this.assertAutoChatSavable(input, current)
+    return await this.autoChatStore.save({ ...input, id })
+  }
+
+  async deleteAutoChat(id: string): Promise<void> {
+    // Sessions this Auto Chat already generated are ordinary Sessions and
+    // are left alone (C6/C13) — only the definition itself is removed.
+    await this.autoChatStore.delete(id)
+  }
+
+  private async tickScheduler(): Promise<void> {
+    const due = await this.autoChatStore.claimDue(new Date())
+    for (const id of due) await this.runAutoChat(id).catch((error: unknown) => console.error(`Auto Chat ${id} failed: ${errorMessage(error)}`))
+  }
+
+  /** The one execution path for Auto Chat, used by both the manual "Run now"
+   * button and the scheduler tick. Validates everything referenced still
+   * exists and re-checks for Ask (C3) before touching anything, applies the
+   * saved Workspace/Model/Template, then calls the normal this.start() —
+   * exactly the entry point a person uses — and tags the resulting Session
+   * afterward. On any failure before a Session is created, nothing is
+   * started; the 4-field run state (C13) is updated either way. */
+  async runAutoChat(id: string): Promise<{ sessionId?: string; result: AutoChatRunResult; message?: string }> {
+    const definition = this.autoChatStore.get(id)
+    if (!definition) throw new Error("Auto Chat not found")
+
+    const workspace = this.profileStore.list().workspaces.find((profile) => profile.id === definition.workspaceProfileId)
+    if (!workspace) return await this.finishAutoChatRun(id, "failed", undefined, "Workspace profile not found")
+    const model = this.profileStore.list().models.find((profile) => profile.id === definition.modelProfileId)
+    if (!model) return await this.finishAutoChatRun(id, "failed", undefined, "Model profile not found")
+    const template = this.agentSettings.get().templates.find((item) => item.id === definition.templateId)
+    if (!template) return await this.finishAutoChatRun(id, "failed", undefined, "Template not found")
+    const knownMcp = new Map(this.agentSettings.get().mcpServers.map((server) => [server.id, server]))
+    const missingMcp = definition.mcpServerIds.filter((mcpId) => !knownMcp.has(mcpId))
+    if (missingMcp.length > 0) return await this.finishAutoChatRun(id, "failed", undefined, `MCP server not found: ${missingMcp.join(", ")}`)
+    // Best-effort only: this flags a server the user turned off, not a live
+    // reachability check (an unreachable-but-enabled server already degrades
+    // to "no tools this turn" inside the normal session-start path below,
+    // per resolveMcpToolPolicies()'s existing behavior — it never blocks).
+    const disabledMcp = definition.mcpServerIds.filter((mcpId) => knownMcp.get(mcpId)?.enabled === false)
+
+    // C3: re-check Ask immediately before execution, not just at save time —
+    // the Template may have been edited since this Auto Chat was enabled.
+    if (templateHasAsk(template.permissions)) {
+      return await this.finishAutoChatRun(id, "skipped", undefined, "Template contains Ask permission")
+    }
+
+    try {
+      await this.activateWorkspaceProfile(workspace.id)
+      await this.activateModelProfile(model.id)
+      await this.agentSettings.update({ activeTemplateId: template.id })
+      this.settingsGeneration++
+
+      const runId = `${definition.id}-${Date.now()}`
+      const prompt = substituteRunPromptVariables(definition.runPrompt, this.workspaceDisplay(), runId)
+      const sessionId = await this.start(prompt)
+
+      const session = await this.cline.get(sessionId)
+      const metadata = isRecord(session?.metadata) ? session!.metadata : {}
+      await this.cline.update(sessionId, { metadata: {
+        ...metadata,
+        autoChatId: definition.id,
+        autoChatRunId: runId,
+        previousRunSessionId: definition.lastRunSessionId,
+        tags: mergeUserTags([...sessionTags(metadata), AUTO_TAG], definition.tags),
+      } })
+
+      const message = disabledMcp.length > 0 ? `MCP server was disabled: ${disabledMcp.join(", ")}` : undefined
+      return await this.finishAutoChatRun(id, "success", sessionId, message)
+    } catch (error: unknown) {
+      return await this.finishAutoChatRun(id, "failed", undefined, errorMessage(error))
+    }
+  }
+
+  private async finishAutoChatRun(id: string, result: AutoChatRunResult, sessionId: string | undefined, message: string | undefined) {
+    await this.autoChatStore.recordRun(id, result, sessionId, message)
+    return { sessionId, result, message }
+  }
+
   agentSettingsInfo() { return this.agentSettings.get() }
   async createPromptTemplate(input: TemplateInput) {
     const template = await this.agentSettings.createTemplate(input)
@@ -495,7 +652,7 @@ export class ClineRuntime {
     // get drained once the running turn actually finishes aborting.
     await this.cline.abort(sessionId, "Stopped from web UI")
   }
-  async dispose(): Promise<void> { await this.cline.dispose("Server shutting down") }
+  async dispose(): Promise<void> { clearInterval(this.schedulerTimer); await this.cline.dispose("Server shutting down") }
   pendingApprovals(): Approval[] { return [...this.approvals.values()].map(({ approval }) => approval) }
 
   approve(id: string, approved: boolean): boolean {
@@ -949,6 +1106,19 @@ function shellIdlePrompt(settings: ReturnType<AgentSettingsStore["get"]>): strin
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null
+}
+
+// v1's entire "template engine" (design review: no conditionals/loops/expr,
+// just safe string substitution of a fixed variable set).
+function substituteRunPromptVariables(prompt: string, workspace: string, sessionVariableId: string): string {
+  const now = new Date()
+  const vars: Record<string, string> = {
+    date: now.toISOString().slice(0, 10),
+    time: now.toTimeString().slice(0, 5),
+    workspace,
+    session_id: sessionVariableId,
+  }
+  return prompt.replace(/\{\{\s*(date|time|workspace|session_id)\s*\}\}/g, (_match, key: string) => vars[key] ?? "")
 }
 
 function findLatestRequestInputTokens(messages: unknown[]): number | undefined {

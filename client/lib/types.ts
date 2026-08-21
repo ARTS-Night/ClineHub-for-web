@@ -7,8 +7,9 @@ import type { ModelInfo, ProviderKind } from "../../src/providers.js"
 import type { ModelProfile, RemoteOperatingSystem, SudoPermission, WorkspaceProfile } from "../../src/stores/profile-store.js"
 import type { ContextUsage } from "../../src/runtime.js"
 import type { McpTestResult, McpTestTool } from "../../src/mcp-extension.js"
+import type { AutoChatDefinition, AutoChatInput, AutoChatSchedule } from "../../src/stores/auto-chat-store.js"
 
-export type { AgentSettings, ManagedTool, McpServerSettings, McpTransport, PermissionPreset, PromptTemplate, ShellIdleAction, ToolPermission, CompactionRecord, ModelInfo, ProviderKind, ModelProfile, WorkspaceProfile, RemoteOperatingSystem, SudoPermission, ContextUsage, McpTestResult, McpTestTool }
+export type { AgentSettings, ManagedTool, McpServerSettings, McpTransport, PermissionPreset, PromptTemplate, ShellIdleAction, ToolPermission, CompactionRecord, ModelInfo, ProviderKind, ModelProfile, WorkspaceProfile, RemoteOperatingSystem, SudoPermission, ContextUsage, McpTestResult, McpTestTool, AutoChatDefinition, AutoChatInput, AutoChatSchedule }
 
 export type ConnectionInfo =
   | { configured: false }
